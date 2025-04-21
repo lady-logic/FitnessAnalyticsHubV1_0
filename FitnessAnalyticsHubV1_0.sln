@@ -1,0 +1,63 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Domain", "FitnessAnalyticsHub.Domain\FitnessAnalyticsHub.Domain.csproj", "{8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Application", "FitnessAnalyticsHub.Application\FitnessAnalyticsHub.Application.csproj", "{16654866-63C9-4A9B-BC6E-E297EA6E00A7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A} = {8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Infrastructure", "FitnessAnalyticsHub.Infrastructure\FitnessAnalyticsHub.Infrastructure.csproj", "{FB03840E-E8F7-4122-8B8C-F14DFA774B30}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalytisHub.UI.WPF", "FitnessAnalytisHub.UI.WPF\FitnessAnalytisHub.UI.WPF.csproj", "{6885A52F-030E-4D21-A816-D5221A75DE76}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01_Core", "01_Core", "{7D32FD1A-D648-43C8-818C-05FE96D59C2E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "02_Application", "02_Application", "{9C4ED65D-AF7F-4ABF-809D-2B3A98E4325E}"
+	ProjectSection(SolutionItems) = preProject
+		DependencyInjection.cs = DependencyInjection.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "03_Infrastructure", "03_Infrastructure", "{688E83DB-755F-419A-A003-ACA8A0D09ECA}"
+	ProjectSection(SolutionItems) = preProject
+		DependencyInjection.cs = DependencyInjection.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "04_UI", "04_UI", "{CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16654866-63C9-4A9B-BC6E-E297EA6E00A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16654866-63C9-4A9B-BC6E-E297EA6E00A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16654866-63C9-4A9B-BC6E-E297EA6E00A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16654866-63C9-4A9B-BC6E-E297EA6E00A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB03840E-E8F7-4122-8B8C-F14DFA774B30}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB03840E-E8F7-4122-8B8C-F14DFA774B30}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB03840E-E8F7-4122-8B8C-F14DFA774B30}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB03840E-E8F7-4122-8B8C-F14DFA774B30}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6885A52F-030E-4D21-A816-D5221A75DE76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6885A52F-030E-4D21-A816-D5221A75DE76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6885A52F-030E-4D21-A816-D5221A75DE76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6885A52F-030E-4D21-A816-D5221A75DE76}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A} = {7D32FD1A-D648-43C8-818C-05FE96D59C2E}
+		{16654866-63C9-4A9B-BC6E-E297EA6E00A7} = {9C4ED65D-AF7F-4ABF-809D-2B3A98E4325E}
+		{FB03840E-E8F7-4122-8B8C-F14DFA774B30} = {688E83DB-755F-419A-A003-ACA8A0D09ECA}
+		{6885A52F-030E-4D21-A816-D5221A75DE76} = {CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}
+	EndGlobalSection
+EndGlobal
