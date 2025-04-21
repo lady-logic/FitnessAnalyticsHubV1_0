@@ -4,8 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FitnessAnalyticsHub.Infrastructure;
-// Use a different alias for the Application namespace to avoid the conflict
-using ApplicationServices = FitnessAnalyticsHub.Application;
+using FitnessAnalyticsHub.Application;
 
 namespace FitnessAnalyticsHub.UI.WPF
 {
