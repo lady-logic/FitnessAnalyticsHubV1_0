@@ -1,0 +1,75 @@
+﻿<UserControl
+    x:Class="FitnessAnalytisHub.UI.WPF.Views.StravaAuthView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="clr-namespace:FitnessAnalytisHub.UI.WPF.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:FitnessAnalytisHub.UI.WPF.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+
+    <UserControl.Resources>
+        <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+    </UserControl.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,0,20"
+            FontSize="24"
+            FontWeight="Bold"
+            Text="Strava Authentifizierung" />
+
+        <TextBlock
+            Grid.Row="1"
+            Margin="0,0,0,10"
+            Text="Um deine Strava-Daten zu importieren, musst du dich zuerst bei Strava authentifizieren."
+            TextWrapping="Wrap" />
+
+        <Button
+            Grid.Row="2"
+            Margin="0,0,0,20"
+            Padding="15,10"
+            HorizontalAlignment="Left"
+            Background="#FC4C02"
+            Command="{Binding AuthorizeCommand}"
+            Content="Mit Strava verbinden"
+            Foreground="White"
+            IsEnabled="{Binding IsAuthenticated, Converter={StaticResource InverseBoolConverter}}" />
+
+        <TextBlock
+            Grid.Row="3"
+            Margin="0,0,0,10"
+            Text="{Binding StatusMessage}" />
+
+        <TextBlock
+            Grid.Row="4"
+            Margin="0,0,0,20"
+            Foreground="Red"
+            Text="{Binding ErrorMessage}"
+            Visibility="{Binding ErrorMessage, Converter={StaticResource StringToVisibilityConverter}}" />
+
+        <Button
+            Grid.Row="5"
+            Padding="15,10"
+            HorizontalAlignment="Left"
+            VerticalAlignment="Top"
+            Background="#007ACC"
+            Command="{Binding ImportActivitiesCommand}"
+            Content="Aktivitäten importieren"
+            Foreground="White"
+            IsEnabled="{Binding IsAuthenticated}" />
+    </Grid>
+</UserControl>

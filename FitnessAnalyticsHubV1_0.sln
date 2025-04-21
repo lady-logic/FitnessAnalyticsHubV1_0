@@ -17,14 +17,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01_Core", "01_Core", "{7D32FD1A-D648-43C8-818C-05FE96D59C2E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "02_Application", "02_Application", "{9C4ED65D-AF7F-4ABF-809D-2B3A98E4325E}"
-	ProjectSection(SolutionItems) = preProject
-		DependencyInjection.cs = DependencyInjection.cs
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "03_Infrastructure", "03_Infrastructure", "{688E83DB-755F-419A-A003-ACA8A0D09ECA}"
-	ProjectSection(SolutionItems) = preProject
-		DependencyInjection.cs = DependencyInjection.cs
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "04_UI", "04_UI", "{CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}"
 EndProject
