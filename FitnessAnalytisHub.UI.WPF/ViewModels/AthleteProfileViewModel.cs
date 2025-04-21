@@ -8,7 +8,7 @@ using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using System.Windows.Input;
 
-namespace FitnessAnalytisHub.UI.WPF.ViewModels
+namespace FitnessAnalyticsHub.UI.WPF.ViewModels
 {
     public class AthleteProfileViewModel : ViewModelBase
     {

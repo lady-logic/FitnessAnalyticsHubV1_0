@@ -9,7 +9,7 @@ using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Interfaces;
 using System.Windows.Input;
 
-namespace FitnessAnalytisHub.UI.WPF.ViewModels
+namespace FitnessAnalyticsHub.UI.WPF.ViewModels
 {
     public class StravaAuthViewModel : ViewModelBase
     {

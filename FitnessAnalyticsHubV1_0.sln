@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Applica
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Infrastructure", "FitnessAnalyticsHub.Infrastructure\FitnessAnalyticsHub.Infrastructure.csproj", "{FB03840E-E8F7-4122-8B8C-F14DFA774B30}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalytisHub.UI.WPF", "FitnessAnalytisHub.UI.WPF\FitnessAnalytisHub.UI.WPF.csproj", "{6885A52F-030E-4D21-A816-D5221A75DE76}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.UI.WPF", "FitnessAnalytisHub.UI.WPF\FitnessAnalyticsHub.UI.WPF.csproj", "{6885A52F-030E-4D21-A816-D5221A75DE76}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01_Core", "01_Core", "{7D32FD1A-D648-43C8-818C-05FE96D59C2E}"
 EndProject

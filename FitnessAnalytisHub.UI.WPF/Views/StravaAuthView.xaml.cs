@@ -14,9 +14,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using FitnessAnalyticsHub.Application.Services;
 using FitnessAnalyticsHub.Infrastructure.Services;
-using FitnessAnalytisHub.UI.WPF.ViewModels;
+using FitnessAnalyticsHub.UI.WPF.ViewModels;
 
-namespace FitnessAnalytisHub.UI.WPF.Views
+namespace FitnessAnalyticsHub.UI.WPF.Views
 {
     /// <summary>
     /// Interaction logic for StravaAuthView.xaml

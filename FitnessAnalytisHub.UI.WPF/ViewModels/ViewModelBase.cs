@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace FitnessAnalytisHub.UI.WPF.ViewModels
+namespace FitnessAnalyticsHub.UI.WPF.ViewModels
 {
     public class ViewModelBase : INotifyPropertyChanged
     {

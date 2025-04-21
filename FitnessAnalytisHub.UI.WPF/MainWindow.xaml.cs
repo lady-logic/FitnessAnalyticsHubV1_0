@@ -8,11 +8,11 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using FitnessAnalytisHub.UI.WPF.ViewModels;
-using FitnessAnalytisHub.UI.WPF.Views;
+using FitnessAnalyticsHub.UI.WPF.ViewModels;
+using FitnessAnalyticsHub.UI.WPF.Views;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FitnessAnalytisHub.UI.WPF
+namespace FitnessAnalyticsHub.UI.WPF
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

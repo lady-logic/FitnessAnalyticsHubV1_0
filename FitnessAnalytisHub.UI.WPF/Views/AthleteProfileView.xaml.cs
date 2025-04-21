@@ -12,9 +12,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using FitnessAnalytisHub.UI.WPF.ViewModels;
+using FitnessAnalyticsHub.UI.WPF.ViewModels;
 
-namespace FitnessAnalytisHub.UI.WPF.Views
+namespace FitnessAnalyticsHub.UI.WPF.Views
 {
     /// <summary>
     /// Interaction logic for AthleteProfileView.xaml

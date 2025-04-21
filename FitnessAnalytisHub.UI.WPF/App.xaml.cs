@@ -1,12 +1,12 @@
 ﻿using System.Windows;
-using FitnessAnalytisHub.UI.WPF.ViewModels;
+using FitnessAnalyticsHub.UI.WPF.ViewModels;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FitnessAnalyticsHub.Infrastructure;
 using FitnessAnalyticsHub.Application;
 
-namespace FitnessAnalytisHub.UI.WPF
+namespace FitnessAnalyticsHub.UI.WPF
 {
     /// <summary>
     /// Interaction logic for App.xaml
@@ -26,11 +26,11 @@ namespace FitnessAnalytisHub.UI.WPF
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    // Registriere die Application-Services zuerst
-                    ApplicationServiceRegistration.AddApplication(services);  // Vollqualifizierter Aufruf
+                    // Register Application Services first
+                    services.AddApplication();  // Changed to match the expected extension method
 
-                    // Dann registriere die Infrastructure-Services
-                    InfrastructureServiceRegistration.AddInfrastructure(services, context.Configuration);  // Vollqualifizierter Aufruf
+                    // Then register Infrastructure Services
+                    services.AddInfrastructure(context.Configuration);  // Using the single method
 
                     // Register ViewModels
                     services.AddTransient<MainViewModel>();

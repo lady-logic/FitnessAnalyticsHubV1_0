@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace FitnessAnalytisHub.UI.WPF.Converters
+namespace FitnessAnalyticsHub.UI.WPF.Converters
 {
     public class InverseBoolConverter : IValueConverter
     {

@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace FitnessAnalytisHub.UI.WPF.Views
+namespace FitnessAnalyticsHub.UI.WPF.Views
 {
     /// <summary>
     /// Interaction logic for ActivitiesView.xaml
