@@ -1,7 +1,4 @@
-﻿using System;
-using System;
-using System.Globalization;
-using System.Windows;
+﻿using System.Globalization;
 using System.Windows.Data;
 
 namespace FitnessAnalyticsHub.UI.WPF.Converters

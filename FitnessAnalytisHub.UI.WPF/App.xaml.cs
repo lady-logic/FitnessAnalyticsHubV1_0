@@ -4,14 +4,15 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using FitnessAnalyticsHub.Infrastructure;
-using FitnessAnalyticsHub.Application;
+// Use a different alias for the Application namespace to avoid the conflict
+using ApplicationServices = FitnessAnalyticsHub.Application;
 
 namespace FitnessAnalyticsHub.UI.WPF
 {
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
-    public partial class App : Application
+    public partial class App : System.Windows.Application
     {
         private readonly IHost _host;
 
