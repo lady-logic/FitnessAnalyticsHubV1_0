@@ -27,6 +27,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		logo.png = logo.png
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.WebApi", "FitnessAnalyticsHub.WebApi\FitnessAnalyticsHub.WebApi.csproj", "{E28867E1-68C3-4669-8488-59463A3DD51D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "05_Tests", "05_Tests", "{DD273DC4-89AA-4BA7-8DE4-1C1BD738538D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Tests", "FitnessAnalyticsHub.Tests\FitnessAnalyticsHub.Tests.csproj", "{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +55,14 @@ Global
 		{6885A52F-030E-4D21-A816-D5221A75DE76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6885A52F-030E-4D21-A816-D5221A75DE76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6885A52F-030E-4D21-A816-D5221A75DE76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E28867E1-68C3-4669-8488-59463A3DD51D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E28867E1-68C3-4669-8488-59463A3DD51D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E28867E1-68C3-4669-8488-59463A3DD51D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E28867E1-68C3-4669-8488-59463A3DD51D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,5 +72,7 @@ Global
 		{16654866-63C9-4A9B-BC6E-E297EA6E00A7} = {9C4ED65D-AF7F-4ABF-809D-2B3A98E4325E}
 		{FB03840E-E8F7-4122-8B8C-F14DFA774B30} = {688E83DB-755F-419A-A003-ACA8A0D09ECA}
 		{6885A52F-030E-4D21-A816-D5221A75DE76} = {CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}
+		{E28867E1-68C3-4669-8488-59463A3DD51D} = {CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}
+		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1} = {DD273DC4-89AA-4BA7-8DE4-1C1BD738538D}
 	EndGlobalSection
 EndGlobal
