@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Domain", "FitnessAnalyticsHub.Domain\FitnessAnalyticsHub.Domain.csproj", "{8A4DC612-00D6-4B04-AD1D-D6F0FD3AE57A}"
 EndProject
@@ -33,6 +33,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "05_Tests", "05_Tests", "{DD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Tests", "FitnessAnalyticsHub.Tests\FitnessAnalyticsHub.Tests.csproj", "{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "06_AIAssistant", "06_AIAssistant", "{0594D60F-AF37-45EC-8501-F7CE1ECEC117}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.AIAssistant", "AIAssistant\FitnessAnalyticsHub.AIAssistant.csproj", "{CF8D100F-2A70-41BD-ADCF-33F3C46084C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +67,10 @@ Global
 		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF8D100F-2A70-41BD-ADCF-33F3C46084C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF8D100F-2A70-41BD-ADCF-33F3C46084C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF8D100F-2A70-41BD-ADCF-33F3C46084C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF8D100F-2A70-41BD-ADCF-33F3C46084C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,5 +82,6 @@ Global
 		{6885A52F-030E-4D21-A816-D5221A75DE76} = {CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}
 		{E28867E1-68C3-4669-8488-59463A3DD51D} = {CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}
 		{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1} = {DD273DC4-89AA-4BA7-8DE4-1C1BD738538D}
+		{CF8D100F-2A70-41BD-ADCF-33F3C46084C8} = {0594D60F-AF37-45EC-8501-F7CE1ECEC117}
 	EndGlobalSection
 EndGlobal
