@@ -14,9 +14,8 @@ namespace FitnessAnalyticsHub.Infrastructure
         {
             // Database configuration
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+                options.UseSqlite(
+                    configuration.GetConnectionString("DefaultConnection")));
 
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
