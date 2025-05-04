@@ -1,0 +1,92 @@
+<!-- src/app/components/athletes/strava-import/strava-import.component.html -->
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Athleten von Strava importieren</h2>
+    <button class="btn btn-secondary" (click)="cancel()">
+      <i class="bi bi-arrow-left"></i> Zurück
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="success" class="alert alert-success">
+    {{ success }}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <div class="mb-4">
+        <p>
+          Um einen Athleten von Strava zu importieren, benötigst du einen
+          gültigen Strava-Zugriffstoken. Dieser Token ermöglicht es der
+          Anwendung, auf deine Strava-Daten zuzugreifen.
+        </p>
+        <ol>
+          <li>Gehe zu deinem Strava-Konto und erstelle eine API-Anwendung</li>
+          <li>Generiere einen Zugriffstoken für diese Anwendung</li>
+          <li>Füge den Token in das Formular unten ein</li>
+        </ol>
+        <p>
+          <a
+            href="https://www.strava.com/settings/api"
+            target="_blank"
+            class="btn btn-outline-primary"
+          >
+            <i class="bi bi-box-arrow-up-right"></i> Zu Strava API-Einstellungen
+          </a>
+        </p>
+      </div>
+
+      <form [formGroup]="importForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label for="accessToken" class="form-label"
+            >Strava Zugriffstoken *</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="accessToken"
+            formControlName="accessToken"
+            [ngClass]="{
+              'is-invalid':
+                importForm.get('accessToken')?.invalid &&
+                importForm.get('accessToken')?.touched
+            }"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="importForm.get('accessToken')?.errors?.['required']"
+          >
+            Zugriffstoken ist erforderlich.
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary me-2"
+            (click)="cancel()"
+          >
+            Abbrechen
+          </button>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="importForm.invalid || submitting"
+          >
+            <span
+              *ngIf="submitting"
+              class="spinner-border spinner-border-sm me-1"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            Von Strava importieren
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -16,17 +16,20 @@ namespace FitnessAnalyticsHub.Application.Services
         private readonly IRepository<Activity> _activityRepository;
         private readonly IRepository<Athlete> _athleteRepository;
         private readonly IStravaService _stravaService;
+        private readonly IAIAssistantClient _aiClient;
         private readonly IMapper _mapper;
 
         public ActivityService(
         IRepository<Activity> activityRepository,
         IRepository<Athlete> athleteRepository,
         IStravaService stravaService,
+        IAIAssistantClient aiClient,
         IMapper mapper)
         {
             _activityRepository = activityRepository;
             _athleteRepository = athleteRepository;
             _stravaService = stravaService;
+            _aiClient = aiClient;
             _mapper = mapper;
         }
 
@@ -158,6 +161,17 @@ namespace FitnessAnalyticsHub.Application.Services
             }
 
             await _activityRepository.SaveChangesAsync();
+
+            //// Domain-Objekte in DTOs konvertieren
+            //var workoutData = new WorkoutData { /* Mapping */ };
+
+            //// Microservice aufrufen
+            //var result = await _aiClient.AnalyzeWorkoutAsync(workoutData);
+
+            //// Ergebnis zurück in Domain/ViewModel umwandeln
+            //return new WorkoutAnalysisViewModel { /* Mapping */ };
+
+
             return importedActivities;
         }
 

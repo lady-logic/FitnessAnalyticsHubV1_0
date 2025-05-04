@@ -1,7 +1,9 @@
-﻿using FitnessAnalyticsHub.Domain.Interfaces;
+﻿using FitnessAnalyticsHub.Application.Interfaces;
+using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Infrastructure.Persistence;
 using FitnessAnalyticsHub.Infrastructure.Repositories;
 using FitnessAnalyticsHub.Infrastructure.Services;
+using FitnessAnalyticsHub.Infrastructure.Services.AIAssistant;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,6 +42,12 @@ namespace FitnessAnalyticsHub.Infrastructure
             services.AddHttpClient("StravaApi", client =>
             {
                 client.BaseAddress = new Uri("https://www.strava.com/api/v3/");
+            });
+
+            // HttpClient für AIAssistant registrieren
+            services.AddHttpClient<IAIAssistantClient, AIAssistantClient>(client =>
+            {
+                client.BaseAddress = new Uri(configuration["AIAssistant:BaseUrl"]);
             });
 
             return services;

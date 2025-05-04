@@ -1,0 +1,174 @@
+<!-- src/app/components/athletes/athlete-create/athlete-create.component.html -->
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Neuen Athleten erstellen</h2>
+    <button class="btn btn-secondary" (click)="cancel()">
+      <i class="bi bi-arrow-left"></i> Zurück
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form [formGroup]="athleteForm" (ngSubmit)="onSubmit()">
+        <div class="mb-3">
+          <label for="name" class="form-label">Name *</label>
+          <input
+            type="text"
+            class="form-control"
+            id="name"
+            formControlName="name"
+            [ngClass]="{
+              'is-invalid':
+                athleteForm.get('name')?.invalid &&
+                athleteForm.get('name')?.touched
+            }"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="athleteForm.get('name')?.errors?.['required']"
+          >
+            Name ist erforderlich.
+          </div>
+          <div
+            class="invalid-feedback"
+            *ngIf="athleteForm.get('name')?.errors?.['maxlength']"
+          >
+            Name darf maximal 100 Zeichen lang sein.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">E-Mail *</label>
+          <input
+            type="email"
+            class="form-control"
+            id="email"
+            formControlName="email"
+            [ngClass]="{
+              'is-invalid':
+                athleteForm.get('email')?.invalid &&
+                athleteForm.get('email')?.touched
+            }"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="athleteForm.get('email')?.errors?.['required']"
+          >
+            E-Mail ist erforderlich.
+          </div>
+          <div
+            class="invalid-feedback"
+            *ngIf="athleteForm.get('email')?.errors?.['email']"
+          >
+            Bitte gib eine gültige E-Mail-Adresse ein.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="dateOfBirth" class="form-label">Geburtsdatum *</label>
+          <input
+            type="date"
+            class="form-control"
+            id="dateOfBirth"
+            formControlName="dateOfBirth"
+            [ngClass]="{
+              'is-invalid':
+                athleteForm.get('dateOfBirth')?.invalid &&
+                athleteForm.get('dateOfBirth')?.touched
+            }"
+          />
+          <div
+            class="invalid-feedback"
+            *ngIf="athleteForm.get('dateOfBirth')?.errors?.['required']"
+          >
+            Geburtsdatum ist erforderlich.
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="weight" class="form-label">Gewicht (kg) *</label>
+            <input
+              type="number"
+              class="form-control"
+              id="weight"
+              formControlName="weight"
+              step="0.1"
+              [ngClass]="{
+                'is-invalid':
+                  athleteForm.get('weight')?.invalid &&
+                  athleteForm.get('weight')?.touched
+              }"
+            />
+            <div
+              class="invalid-feedback"
+              *ngIf="athleteForm.get('weight')?.errors?.['required']"
+            >
+              Gewicht ist erforderlich.
+            </div>
+            <div
+              class="invalid-feedback"
+              *ngIf="athleteForm.get('weight')?.errors?.['min']"
+            >
+              Gewicht muss größer als 0 sein.
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-3">
+            <label for="height" class="form-label">Größe (cm) *</label>
+            <input
+              type="number"
+              class="form-control"
+              id="height"
+              formControlName="height"
+              step="0.1"
+              [ngClass]="{
+                'is-invalid':
+                  athleteForm.get('height')?.invalid &&
+                  athleteForm.get('height')?.touched
+              }"
+            />
+            <div
+              class="invalid-feedback"
+              *ngIf="athleteForm.get('height')?.errors?.['required']"
+            >
+              Größe ist erforderlich.
+            </div>
+            <div
+              class="invalid-feedback"
+              *ngIf="athleteForm.get('height')?.errors?.['min']"
+            >
+              Größe muss größer als 0 sein.
+            </div>
+          </div>
+        </div>
+
+        <!-- Weitere Formularfelder entsprechend deinem CreateAthleteDto -->
+
+        <div class="d-flex justify-content-end mt-4">
+          <button
+            type="button"
+            class="btn btn-secondary me-2"
+            (click)="cancel()"
+          >
+            Abbrechen
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="submitting">
+            <span
+              *ngIf="submitting"
+              class="spinner-border spinner-border-sm me-1"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            Speichern
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

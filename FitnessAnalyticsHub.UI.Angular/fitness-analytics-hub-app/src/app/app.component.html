@@ -1,0 +1,44 @@
+<!-- src/app/app.component.html -->
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-custom-background">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center" routerLink="/">
+      <img
+        [src]="'assets/images/logo.png'"
+        alt="Fitness Analytics Hub Logo"
+        height="40"
+        width="40"
+        class="me-2"
+      />
+      <span>Fitness Analytics Hub</span>
+    </a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" routerLink="/athletes" routerLinkActive="active"
+            >Athleten</a
+          >
+        </li>
+        <!-- Hier weitere Navigationslinks für andere Controller hinzufügen -->
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer class="bg-light text-center text-lg-start mt-5">
+  <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.05)">
+    © 2025 Fitness Analytics Hub
+  </div>
+</footer>

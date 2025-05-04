@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using FitnessAnalyticsHub.Application.DTOs;
+using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Application.Mapping;
 using FitnessAnalyticsHub.Application.Services;
 using FitnessAnalyticsHub.Domain.Entities;
@@ -19,6 +20,7 @@ namespace FitnessAnalyticsHub.Tests.Services
         private readonly Mock<IRepository<Activity>> _mockActivityRepository;
         private readonly Mock<IRepository<Athlete>> _mockAthleteRepository;
         private readonly Mock<IStravaService> _mockStravaService;
+        private readonly Mock<IAIAssistantClient> _mockAiAssistantClient;
         private readonly IMapper _mapper;
         private readonly ActivityService _activityService;
 
@@ -27,6 +29,7 @@ namespace FitnessAnalyticsHub.Tests.Services
             _mockActivityRepository = new Mock<IRepository<Activity>>();
             _mockAthleteRepository = new Mock<IRepository<Athlete>>();
             _mockStravaService = new Mock<IStravaService>();
+            _mockAiAssistantClient = new Mock<IAIAssistantClient>();
 
             // Konfiguriere AutoMapper mit dem tatsächlichen Mappingprofil
             var mapperConfig = new MapperConfiguration(cfg =>
@@ -39,6 +42,7 @@ namespace FitnessAnalyticsHub.Tests.Services
                 _mockActivityRepository.Object,
                 _mockAthleteRepository.Object,
                 _mockStravaService.Object,
+                _mockAiAssistantClient.Object,
                 _mapper);
         }
 

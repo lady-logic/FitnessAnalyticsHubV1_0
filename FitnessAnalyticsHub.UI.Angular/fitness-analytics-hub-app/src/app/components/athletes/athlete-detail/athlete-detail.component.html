@@ -1,0 +1,79 @@
+<!-- src/app/components/athletes/athlete-detail/athlete-detail.component.html -->
+
+<div class="container mt-4">
+  <div *ngIf="error" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="text-center p-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Wird geladen...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!loading && athlete">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Athlet: {{ athlete.name }}</h2>
+      <div>
+        <button class="btn btn-primary me-2" (click)="editAthlete()">
+          <i class="bi bi-pencil"></i> Bearbeiten
+        </button>
+        <button class="btn btn-danger me-2" (click)="deleteAthlete()">
+          <i class="bi bi-trash"></i> Löschen
+        </button>
+        <button class="btn btn-secondary" (click)="goBack()">
+          <i class="bi bi-arrow-left"></i> Zurück
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <table class="table">
+              <tbody>
+                <tr>
+                  <th>ID:</th>
+                  <td>{{ athlete.id }}</td>
+                </tr>
+                <tr>
+                  <th>Name:</th>
+                  <td>{{ athlete.name }}</td>
+                </tr>
+                <tr>
+                  <th>E-Mail:</th>
+                  <td>{{ athlete.email }}</td>
+                </tr>
+                <tr>
+                  <th>Geburtsdatum:</th>
+                  <td>{{ athlete.dateOfBirth | date : "dd.MM.yyyy" }}</td>
+                </tr>
+                <tr>
+                  <th>Gewicht:</th>
+                  <td>{{ athlete.weight }} kg</td>
+                </tr>
+                <tr>
+                  <th>Größe:</th>
+                  <td>{{ athlete.height }} cm</td>
+                </tr>
+                <!-- Hier können weitere Athletendaten angezeigt werden -->
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <!-- Hier könntest du Zusatzinformationen, Statistiken oder Grafiken anzeigen -->
+            <div class="card">
+              <div class="card-header">Statistiken</div>
+              <div class="card-body">
+                <p class="card-text">
+                  Hier könnten Athleten-Statistiken angezeigt werden.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
