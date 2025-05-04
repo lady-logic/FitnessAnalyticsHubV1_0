@@ -1,5 +1,6 @@
 ﻿using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Interfaces;
+using FitnessAnalyticsHub.Infrastructure.Extensions;
 using FitnessAnalyticsHub.Infrastructure.Persistence;
 using FitnessAnalyticsHub.Infrastructure.Repositories;
 using FitnessAnalyticsHub.Infrastructure.Services;
@@ -49,6 +50,10 @@ namespace FitnessAnalyticsHub.Infrastructure
             {
                 client.BaseAddress = new Uri(configuration["AIAssistant:BaseUrl"]);
             });
+
+            // HealthChecks für die Infrastruktur hinzufügen
+            services.AddHealthChecks()
+                .AddInfrastructureHealthChecks(configuration);
 
             return services;
         }

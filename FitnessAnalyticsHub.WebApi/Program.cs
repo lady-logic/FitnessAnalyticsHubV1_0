@@ -1,5 +1,8 @@
 using FitnessAnalyticsHub.Application;
 using FitnessAnalyticsHub.Infrastructure;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +38,18 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
+// Base HealthChecks
+builder.Services.AddHealthChecks()
+    .AddCheck("api", () => HealthCheckResult.Healthy(), tags: new[] { "service" });
+
+// UI für HealthChecks
+builder.Services.AddHealthChecksUI(setup =>
+{
+    setup.SetEvaluationTimeInSeconds(60); // Alle 60 Sekunden prüfen
+    setup.MaximumHistoryEntriesPerEndpoint(50); // 50 Einträge in der Historie speichern
+})
+.AddInMemoryStorage(); 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -50,6 +65,25 @@ app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+// HealthChecks Endpoints
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+// Gruppierte HealthChecks nach Tags
+app.MapHealthChecks("/health/infrastructure", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("infrastructure"),
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
+// Health UI Dashboard
+app.MapHealthChecksUI(options =>
+{
+    options.UIPath = "/health-ui";
+});
 
 app.MapControllers();
 
