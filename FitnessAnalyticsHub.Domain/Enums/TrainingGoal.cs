@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FitnessAnalyticsHub.Domain.Entities
+namespace FitnessAnalyticsHub.Domain.Enums
 {
     public enum TrainingGoal
     {

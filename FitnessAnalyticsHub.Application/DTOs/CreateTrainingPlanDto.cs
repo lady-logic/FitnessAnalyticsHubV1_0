@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using FitnessAnalyticsHub.Domain.Entities;
+using FitnessAnalyticsHub.Domain.Enums;
 
 namespace FitnessAnalyticsHub.Application.DTOs
 {

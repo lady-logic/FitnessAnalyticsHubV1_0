@@ -2,6 +2,7 @@
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Domain.Entities;
 using FitnessAnalyticsHub.Domain.Models;
+using FitnessAnalyticsHub.Domain.ValueObjects;
 
 
 namespace FitnessAnalyticsHub.Application.Mapping
@@ -22,7 +23,10 @@ namespace FitnessAnalyticsHub.Application.Mapping
 
             CreateMap<CreateActivityDto, Activity>()
                 .ForMember(dest => dest.MovingTime, opt => opt.MapFrom(src => src.MovingTimeSeconds))
-                .ForMember(dest => dest.ElapsedTime, opt => opt.MapFrom(src => src.ElapsedTimeSeconds));
+                .ForMember(dest => dest.ElapsedTime, opt => opt.MapFrom(src => src.ElapsedTimeSeconds))
+                // Pace als berechneten Wert aus Distance und MovingTime
+                .ForMember(dest => dest.Pace, opt => opt.MapFrom(src =>
+                    CreatePaceFromDistanceAndTime(src.Distance, src.MovingTimeSeconds)));
 
             CreateMap<UpdateActivityDto, Activity>()
                 .ForMember(dest => dest.MovingTime, opt => opt.MapFrom(src => src.MovingTimeSeconds))
@@ -48,6 +52,18 @@ namespace FitnessAnalyticsHub.Application.Mapping
 
             // Prediction mappings
             CreateMap<PredictionResult, PredictionResultDto>();
+        }
+
+        private Pace CreatePaceFromDistanceAndTime(double distanceInKm, int movingTimeSeconds)
+        {
+            if (distanceInKm <= 0 || movingTimeSeconds <= 0)
+                return null; // oder einen Default-Pace
+
+            // Berechne Sekunden pro Kilometer
+            double secondsPerKm = movingTimeSeconds / distanceInKm;
+
+            // Erstelle Pace-Value-Object
+            return new Pace(TimeSpan.FromSeconds(secondsPerKm));
         }
     }
 }

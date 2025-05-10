@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FitnessAnalyticsHub.Domain.ValueObjects;
 
 namespace FitnessAnalyticsHub.Domain.Entities
 {
     public class Activity
     {
+        [Required]
         public int Id { get; set; }
         public string? StravaId { get; set; }
         public int AthleteId { get; set; }
+        [ForeignKey(nameof(AthleteId))]
+        public virtual Athlete? Athlete { get; set; }
+        [Required]
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public double Distance { get; set; }
@@ -31,7 +38,6 @@ namespace FitnessAnalyticsHub.Domain.Entities
         public double? AveragePower { get; set; }
         public double? MaxPower { get; set; }
         public double? AverageCadence { get; set; }
-
-        public virtual Athlete? Athlete { get; set; }
+        public Pace Pace { get; private set; }
     }
 }

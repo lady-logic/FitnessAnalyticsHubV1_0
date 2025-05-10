@@ -58,6 +58,11 @@ namespace FitnessAnalyticsHub.Infrastructure.Persistence
                 entity.Property(e => e.StravaId).HasMaxLength(50);
                 entity.Property(e => e.SportType).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Timezone).HasMaxLength(50);
+                entity.OwnsOne(a => a.Pace, paceBuilder =>
+                {
+                    paceBuilder.Property(p => p.ValuePerKilometer)
+                        .HasColumnName("PacePerKilometerInTicks");
+                });
 
                 entity.HasOne(e => e.Athlete)
                       .WithMany(e => e.Activities)

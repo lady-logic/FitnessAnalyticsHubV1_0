@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -9,9 +10,12 @@ namespace FitnessAnalyticsHub.Domain.Entities
 {
     public class Athlete
     {
+        [Required]
         public int Id { get; set; }
         public string? StravaId { get; set; }
+        [Required]
         public string FirstName { get; set; } = string.Empty;
+        [Required]
         public string LastName { get; set; } = string.Empty;
         public string? Username { get; set; }
         public string? Email { get; set; }
