@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  fitness-webapi:
+    build:
+      context: .
+      dockerfile: FitnessAnalyticsHub.WebApi/Dockerfile
+    container_name: fitness-webapi
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    volumes:
+      - ./data:/app/data
+    networks:
+      - fitness-network
+    restart: unless-stopped
+
+  fitness-ai:
+    build:
+      context: .
+      dockerfile: AIAssistant/Dockerfile
+    container_name: fitness-ai
+    ports:
+      - "8082:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - WebApiBaseUrl=http://fitness-webapi:8080
+    depends_on:
+      - fitness-webapi
+    networks:
+      - fitness-network
+    restart: unless-stopped
+
+networks:
+  fitness-network:
+    driver: bridge
