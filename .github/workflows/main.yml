@@ -9,20 +9,39 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
     
-    - name: Setup .NET
+    steps:
+    - name: 🚚 Checkout Code
+      uses: actions/checkout@v3
+      
+    - name: 🔧 Setup .NET
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: '8.0.x'
         
-    - name: Restore dependencies
+    - name: 📦 Restore Dependencies
       run: dotnet restore
       
-    - name: Build
+    - name: 🏗️ Build Solution
       run: dotnet build --no-restore --configuration Release
       
-    - name: Test
-      run: dotnet test --no-build --configuration Release --verbosity normal
+    - name: ✅ Run Unit Tests
+      run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --filter "Category!=Architecture"
+      
+    - name: 🏛️ Run Architecture Tests
+      run: dotnet test --no-build --configuration Release --verbosity normal --filter "Category=Architecture"
+      
+    - name: 📊 Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: "**/TestResults/**/*.xml"
+        
+    - name: 📈 Upload Code Coverage
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: code-coverage
+        path: "**/TestResults/**/coverage.cobertura.xml"
+      
