@@ -10,6 +10,7 @@ using FitnessAnalyticsHub.Domain.Interfaces;
 
 namespace FitnessAnalyticsHub.Tests.Architecture
 {
+    [Trait("Category", "Architecture")]
     public class CleanArchitectureTests
     {
         private static readonly ArchUnitNET.Domain.Architecture Architecture = new ArchLoader()
