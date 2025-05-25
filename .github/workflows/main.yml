@@ -131,8 +131,8 @@ jobs:
         file: ./AIAssistant/Dockerfile
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}/fitness-ai:latest
-          ghcr.io/${{ github.repository }}/fitness-ai:sha-${{ github.sha }}
+          ghcr.io/lady-logic/fitness-ai:latest
+          ghcr.io/lady-logic/fitness-ai:sha-${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -142,7 +142,7 @@ jobs:
         echo "| Service | Image | Tags |" >> $GITHUB_STEP_SUMMARY
         echo "|---------|-------|------|" >> $GITHUB_STEP_SUMMARY
         echo "| WebApi | \`ghcr.io/${{ github.repository }}/fitness-webapi\` | \`latest\`, \`sha-${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| AI Assistant | \`ghcr.io/${{ github.repository }}/fitness-ai\` | \`latest\`, \`sha-${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| AI Assistant | \`ghcr.io/lady-logic/fitness-ai\` | \`latest\`, \`sha-${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 🚀 Ready for Deployment!" >> $GITHUB_STEP_SUMMARY
         echo "Images are now available in GitHub Container Registry and ready for production deployment." >> $GITHUB_STEP_SUMMARY
