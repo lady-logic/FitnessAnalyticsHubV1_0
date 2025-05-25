@@ -2,9 +2,9 @@ name: .NET CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
   workflow_dispatch:
 
 jobs:
@@ -45,4 +45,38 @@ jobs:
       with:
         name: code-coverage
         path: "**/TestResults/**/coverage.cobertura.xml"
+    
+  # SonarCloud Code Quality Analysis
+  sonarcloud:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: 🚚 Checkout Code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Shallow clones sollten für eine bessere Relevanz der Analyse deaktiviert werden
+        
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: 🔍 Install SonarCloud Scanner
+      run: dotnet tool install --global dotnet-sonarscanner
+      
+    - name: 📦 Restore Dependencies
+      run: dotnet restore
+      
+    - name: 🔬 SonarCloud Analysis
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      run: |
+        dotnet clean
+        dotnet sonarscanner begin /k:"lady-logic_FitnessAnalyticsHubV1_0" /o:"lady-logic" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml"
+        dotnet build --configuration Release
+        dotnet test --configuration Release --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
       
