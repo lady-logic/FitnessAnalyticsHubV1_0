@@ -1,3 +1,8 @@
+![Build Status](https://github.com/lady-logic/FitnessAnalyticsHubV1_0/actions/workflows/main.yml/badge.svg)
+![.NET](https://img.shields.io/badge/.NET-8.0-purple)
+![License](https://img.shields.io/github/license/lady-logic/FitnessAnalyticsHubV1_0)
+![Last Commit](https://img.shields.io/github/last-commit/lady-logic/FitnessAnalyticsHubV1_0)
+
 <!-- Logo -->
 <p align="center">
   <img src="logo.png" alt="FitnessAnalyticsHub Logo" width="200"/>
@@ -62,6 +67,14 @@ Dieses Projekt ist eine persönliche Spielwiese für moderne Softwareentwicklung
 | GitHub Actions | 🚧 In Arbeit | CI/CD Workflow mit Build + Test |
 | Docker | 📝 ToDo | Deployment-Vorbereitung |
 | CQRS | 📝 ToDo | Implementierung von Command/Query Separation |
+
+---
+
+## 🧪 Test Status
+
+- ✅ **Unit Tests**: Controller und Service Layer
+- 🏛️ **Architecture Tests**: Clean Architecture Compliance
+- 📊 **Code Coverage**: Automatisch gesammelt
 
 ---
 
