@@ -14,7 +14,10 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["AIAssistant/FitnessAnalyticsHub.AIAssistant.csproj", "AIAssistant/"]
 RUN dotnet restore "./AIAssistant/FitnessAnalyticsHub.AIAssistant.csproj"
-COPY . .
+COPY ["AIAssistant/", "AIAssistant/"]
+COPY ["FitnessAnalyticsHub.Domain/", "FitnessAnalyticsHub.Domain/"]
+COPY ["FitnessAnalyticsHub.Application/", "FitnessAnalyticsHub.Application/"]
+COPY ["FitnessAnalyticsHub.Infrastructure/", "FitnessAnalyticsHub.Infrastructure/"]
 WORKDIR "/src/AIAssistant"
 RUN dotnet build "./FitnessAnalyticsHub.AIAssistant.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
@@ -26,5 +29,11 @@ RUN dotnet publish "./FitnessAnalyticsHub.AIAssistant.csproj" -c $BUILD_CONFIGUR
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
+
+# Files kopieren (als root)
 COPY --from=publish /app/publish .
+
+# Explizit non-root user verwenden
+USER 1001
+
 ENTRYPOINT ["dotnet", "FitnessAnalyticsHub.AIAssistant.dll"]

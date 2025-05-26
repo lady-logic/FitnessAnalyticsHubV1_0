@@ -16,8 +16,11 @@ COPY ["FitnessAnalyticsHub.Infrastructure/FitnessAnalyticsHub.Infrastructure.csp
 # NuGet Pakete wiederherstellen
 RUN dotnet restore "FitnessAnalyticsHub.WebApi/FitnessAnalyticsHub.WebApi.csproj"
 
-# Alle Quelldateien kopieren
-COPY . .
+# Copy only source code directories
+COPY ["FitnessAnalyticsHub.WebApi/", "FitnessAnalyticsHub.WebApi/"]
+COPY ["FitnessAnalyticsHub.Application/", "FitnessAnalyticsHub.Application/"]
+COPY ["FitnessAnalyticsHub.Domain/", "FitnessAnalyticsHub.Domain/"]
+COPY ["FitnessAnalyticsHub.Infrastructure/", "FitnessAnalyticsHub.Infrastructure/"]
 
 # Zur WebApi wechseln und bauen
 WORKDIR "/src/FitnessAnalyticsHub.WebApi"
@@ -30,5 +33,11 @@ RUN dotnet publish "FitnessAnalyticsHub.WebApi.csproj" -c Release -o /app/publis
 # Finales Image erstellen
 FROM base AS final
 WORKDIR /app
+
+# Files kopieren (als root)
 COPY --from=publish /app/publish .
+
+# Explizit non-root user verwenden
+USER 1001
+
 ENTRYPOINT ["dotnet", "FitnessAnalyticsHub.WebApi.dll"]

@@ -1,3 +1,4 @@
+# Build artifacts
 **/.classpath
 **/.dockerignore
 **/.env
@@ -23,8 +24,78 @@
 **/values.dev.yaml
 LICENSE
 README.md
+
+# SECURITY: Exclude sensitive files
+**/*.env
+**/*.env.*
+**/appsettings.Development.json
+**/appsettings.*.json
+**/*secrets*
+**/*.key
+**/*.pem
+**/*.pfx
+**/*.p12
+**/id_rsa*
+**/id_ed25519*
+**/.ssh/
+**/passwords.txt
+**/tokens.txt
+
+# Development and testing
+**/TestResults/
+**/coverage.cobertura.xml
+**/coverage.opencover.xml
+**/*.coverage
+**/*.coveragexml
+**/TestResults/**
+**/test-results/
+**/BenchmarkDotNet.Artifacts/
+
+# Logs and temporary files
+**/*.log
+**/*.tmp
+**/*.temp
+**/logs/
+**/temp/
+
+# Database files
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/Data/
+
+# User-specific files
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+
+# Git and version control
+**/.git/
+**/.github/
 !**/.gitignore
 !.git/HEAD
 !.git/config
 !.git/packed-refs
 !.git/refs/heads/**
+
+# IDE files
+**/.idea/
+**/*.swp
+**/*.swo
+**/Desktop.ini
+**/Thumbs.db
+
+# Package manager files
+**/packages/
+**/node_modules/
+**/bower_components/
+
+# Monitoring and infrastructure (if not needed in container)
+**/monitoring/
+**/k8s/
+**/helm/
+
+# Documentation (unless needed)
+**/*.md
+**/docs/
