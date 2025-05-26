@@ -4,6 +4,10 @@
 ![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHubV1_0&metric=sqale_rating)
 ![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHubV1_0&metric=security_rating)
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
+![Health Monitoring](https://img.shields.io/badge/Health-Monitoring%20%2B%20UI-brightgreen)
+![Docker](https://img.shields.io/badge/Docker-Multi--Service-blue)
+![API Documentation](https://img.shields.io/badge/API-Swagger%20%2B%20OpenAPI-orange)
+![Microservices](https://img.shields.io/badge/Architecture-Microservices-green)
 ![License](https://img.shields.io/github/license/lady-logic/FitnessAnalyticsHubV1_0)
 ![Last Commit](https://img.shields.io/github/last-commit/lady-logic/FitnessAnalyticsHubV1_0)
 
