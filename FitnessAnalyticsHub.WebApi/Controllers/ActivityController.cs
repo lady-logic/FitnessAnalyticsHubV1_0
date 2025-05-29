@@ -72,11 +72,11 @@ namespace FitnessAnalyticsHub.WebApi.Controllers
         }
 
         [HttpPost("import-from-strava")]
-        public async Task<ActionResult<IEnumerable<ActivityDto>>> ImportFromStrava(int athleteId, string accessToken)
+        public async Task<ActionResult<IEnumerable<ActivityDto>>> ImportFromStrava()
         {
             try
             {
-                var activities = await _activityService.ImportActivitiesFromStravaAsync(athleteId, accessToken);
+                var activities = await _activityService.ImportActivitiesFromStravaAsync();
                 return Ok(activities);
             }
             catch (Exception ex)

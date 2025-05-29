@@ -102,32 +102,62 @@ namespace FitnessAnalyticsHub.Application.Services
             await _activityRepository.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<ActivityDto>> ImportActivitiesFromStravaAsync(int athleteId, string accessToken)
+        public async Task<IEnumerable<ActivityDto>> ImportActivitiesFromStravaAsync()
         {
-            var athlete = await _athleteRepository.GetByIdAsync(athleteId);
-            if (athlete == null)
-                throw new Exception($"Athlete with ID {athleteId} not found");
+            Console.WriteLine("=== IMPORTING YOUR STRAVA ACTIVITIES ===");
 
-            var stravaActivities = await _stravaService.GetActivitiesAsync(accessToken);
+            // StravaService aufrufen
+            var (stravaAthlete, stravaActivities) = await _stravaService.ImportMyActivitiesAsync();
+
+            // Athlet in DB finden oder erstellen
+            var existingAthletes = await _athleteRepository.FindAsync(a => a.StravaId == stravaAthlete.StravaId);
+            var athlete = existingAthletes.FirstOrDefault();
+
+            if (athlete == null)
+            {
+                // Neuen Athleten erstellen
+                athlete = new Athlete
+                {
+                    StravaId = stravaAthlete.StravaId,
+                    FirstName = stravaAthlete.FirstName,
+                    LastName = stravaAthlete.LastName,
+                    Username = stravaAthlete.Username,
+                    Email = stravaAthlete.Email,
+                    City = stravaAthlete.City,
+                    Country = stravaAthlete.Country,
+                    ProfilePictureUrl = stravaAthlete.ProfilePictureUrl,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+
+                await _athleteRepository.AddAsync(athlete);
+                await _athleteRepository.SaveChangesAsync();
+
+                Console.WriteLine($"✅ Created new athlete: {athlete.FirstName} {athlete.LastName} (ID: {athlete.Id})");
+            }
+            else
+            {
+                Console.WriteLine($"✅ Found existing athlete: {athlete.FirstName} {athlete.LastName} (ID: {athlete.Id})");
+            }
+
+            // Aktivitäten verarbeiten und speichern
             var importedActivities = new List<ActivityDto>();
 
             foreach (var stravaActivity in stravaActivities)
             {
-                // Check if activity already exists
+                // Prüfen ob Aktivität bereits existiert
                 var existingActivities = await _activityRepository.FindAsync(a =>
-                    a.AthleteId == athleteId && a.StravaId == stravaActivity.StravaId);
+                    a.AthleteId == athlete.Id && a.StravaId == stravaActivity.StravaId);
 
-                var existingActivity = existingActivities.FirstOrDefault();
-
-                if (existingActivity == null)
+                if (!existingActivities.Any())
                 {
-                    // Create new activity
+                    // Neue Aktivität erstellen
                     var newActivity = new Activity
                     {
-                        AthleteId = athleteId,
+                        AthleteId = athlete.Id,
                         StravaId = stravaActivity.StravaId,
                         Name = stravaActivity.Name,
-                        Description = null, // Strava API might not provide this directly
+                        Description = null,
                         Distance = stravaActivity.Distance,
                         MovingTime = stravaActivity.MovingTime,
                         ElapsedTime = stravaActivity.ElapsedTime,
@@ -152,20 +182,16 @@ namespace FitnessAnalyticsHub.Application.Services
                     var activityDto = _mapper.Map<ActivityDto>(newActivity);
                     activityDto.AthleteFullName = $"{athlete.FirstName} {athlete.LastName}";
                     importedActivities.Add(activityDto);
+
+                    Console.WriteLine($"✅ Imported: {newActivity.Name} ({newActivity.SportType}, {newActivity.Distance / 1000:F1}km)");
                 }
             }
 
             await _activityRepository.SaveChangesAsync();
 
-            //// Domain-Objekte in DTOs konvertieren
-            //var workoutData = new WorkoutData { /* Mapping */ };
-
-            //// Microservice aufrufen
-            //var result = await _aiClient.AnalyzeWorkoutAsync(workoutData);
-
-            //// Ergebnis zurück in Domain/ViewModel umwandeln
-            //return new WorkoutAnalysisViewModel { /* Mapping */ };
-
+            Console.WriteLine($"=== IMPORT COMPLETE ===");
+            Console.WriteLine($"Total activities from Strava: {stravaActivities.Count()}");
+            Console.WriteLine($"New activities imported: {importedActivities.Count}");
 
             return importedActivities;
         }

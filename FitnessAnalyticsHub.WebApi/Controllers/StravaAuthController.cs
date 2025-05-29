@@ -43,7 +43,6 @@ namespace FitnessAnalyticsHub.WebApi.Controllers
         {
             try
             {
-                // Prüfe auf Fehler
                 if (!string.IsNullOrEmpty(error))
                 {
                     return BadRequest($"Authorization failed: {error}");
@@ -55,20 +54,28 @@ namespace FitnessAnalyticsHub.WebApi.Controllers
                 }
 
                 Console.WriteLine($"Received code: {code}");
-                Console.WriteLine($"Received scope: {scope}");
+                Console.WriteLine($"Received scope: {scope}");  // <-- WICHTIG: Was bekommst du hier?
 
                 // Tausche Code gegen Token
                 var tokenInfo = await _stravaService.ExchangeCodeForTokenAsync(code);
 
                 Console.WriteLine($"Token received: {tokenInfo.AccessToken?.Substring(0, 10)}...");
                 Console.WriteLine($"Token expires at: {DateTimeOffset.FromUnixTimeSeconds(tokenInfo.ExpiresAt)}");
-                Console.WriteLine($"Scopes: {scope}");
+
+                // WICHTIG: Prüfe hier, welche Scopes das Token wirklich hat
+                Console.WriteLine($"Token scopes: {scope}");
 
                 // Teste sofort das Token mit Athletendaten
                 var athlete = await _stravaService.GetAthleteProfileAsync(tokenInfo.AccessToken);
                 Console.WriteLine($"Athlete: {athlete.FirstName} {athlete.LastName}");
 
-                // Teste Aktivitäten
+                // BEVOR du Activities abrufst, prüfe den Scope:
+                if (!scope.Contains("read_all"))
+                {
+                    return BadRequest($"Missing required scope. Got: {scope}, but need 'read_all' for activities");
+                }
+
+                // Jetzt erst Activities testen:
                 var activities = await _stravaService.GetActivitiesAsync(tokenInfo.AccessToken, 1, 5);
                 Console.WriteLine($"Found {activities.Count()} activities");
 
@@ -81,7 +88,7 @@ namespace FitnessAnalyticsHub.WebApi.Controllers
                         accessToken = tokenInfo.AccessToken,
                         expiresAt = DateTimeOffset.FromUnixTimeSeconds(tokenInfo.ExpiresAt),
                         refreshToken = tokenInfo.RefreshToken,
-                        scopes = scope
+                        receivedScopes = scope  // Zeige die wirklich erhaltenen Scopes
                     },
                     activitiesCount = activities.Count()
                 });

@@ -14,7 +14,7 @@ namespace FitnessAnalyticsHub.Application.Interfaces
         Task<ActivityDto> CreateActivityAsync(CreateActivityDto activityDto);
         Task UpdateActivityAsync(UpdateActivityDto activityDto);
         Task DeleteActivityAsync(int id);
-        Task<IEnumerable<ActivityDto>> ImportActivitiesFromStravaAsync(int athleteId, string accessToken);
+        Task<IEnumerable<ActivityDto>> ImportActivitiesFromStravaAsync();
         Task<ActivityStatisticsDto> GetAthleteActivityStatisticsAsync(int athleteId);
     }
 }

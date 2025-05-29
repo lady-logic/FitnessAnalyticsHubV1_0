@@ -15,5 +15,6 @@ namespace FitnessAnalyticsHub.Domain.Interfaces
         Task<Athlete> GetAthleteProfileAsync(string accessToken);
         Task<IEnumerable<Activity>> GetActivitiesAsync(string accessToken, int page = 1, int perPage = 30);
         Task<Activity> GetActivityDetailsByIdAsync(string accessToken, string activityId);
+        Task<(Athlete athlete, IEnumerable<Activity> activities)> ImportMyActivitiesAsync();
     }
 }

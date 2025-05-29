@@ -35,8 +35,8 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
             string authUrl = $"{_config.AuthorizeUrl}?client_id={_config.ClientId}" +
                              $"&redirect_uri={Uri.EscapeDataString(_config.RedirectUrl)}" +
                              $"&response_type=code" +
-                             $"&scope=read,activity:read_all,profile:read_all" +  
-                             $"&approval_prompt=force";  // Erzwingt neue Berechtigung
+                             $"&scope=read_all,activity:read_all" +  
+                             $"&approval_prompt=force";
 
             return Task.FromResult(authUrl);
         }
@@ -143,6 +143,77 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
 
             return MapToActivity(stravaActivity);
         }
+
+        public async Task<(Athlete athlete, IEnumerable<Activity> activities)> ImportMyActivitiesAsync()
+        {
+            Console.WriteLine("=== STRAVA AUTO-IMPORT STARTING ===");
+
+            // Frischen Token generieren
+            string accessToken = await GenerateFreshTokenAsync();
+
+            // Athleten-Profil abrufen
+            Console.WriteLine("Fetching your athlete profile...");
+            var athlete = await GetAthleteProfileAsync(accessToken);
+            Console.WriteLine($"✅ Profile loaded: {athlete.FirstName} {athlete.LastName}");
+
+            // Alle Aktivitäten abrufen
+            Console.WriteLine("Fetching your activities...");
+            var activities = await GetActivitiesAsync(accessToken);
+            Console.WriteLine($"✅ Retrieved {activities.Count()} activities");
+
+            Console.WriteLine("=== STRAVA AUTO-IMPORT COMPLETE ===");
+
+            return (athlete, activities);
+        }
+
+
+        private async Task<string> GenerateFreshTokenAsync()
+        {
+            if (string.IsNullOrEmpty(_config.ClientId) || string.IsNullOrEmpty(_config.ClientSecret))
+            {
+                throw new Exception("Strava ClientId and ClientSecret must be configured in User Secrets");
+            }
+
+            Console.WriteLine("=== STRAVA AUTHORIZATION REQUIRED ===");
+            Console.WriteLine("Step 1: Open this URL in your browser:");
+
+            // Authorization URL generieren (mit korrektem Scope!)
+            var authUrl = $"{_config.AuthorizeUrl}?" +
+                         $"client_id={_config.ClientId}&" +
+                         $"response_type=code&" +
+                         $"redirect_uri=http://localhost&" +
+                         $"scope=activity:read_all&" +
+                         $"approval_prompt=force";
+
+            Console.WriteLine($"{authUrl}");
+            Console.WriteLine();
+            Console.WriteLine("Step 2: After authorization, copy the 'code' parameter from the URL");
+            Console.WriteLine("Example: http://localhost/?state=&code=COPY_THIS_PART&scope=...");
+            Console.WriteLine();
+            Console.Write("Paste the authorization code here: ");
+
+            string authCode = Console.ReadLine()?.Trim();
+
+            if (string.IsNullOrEmpty(authCode))
+            {
+                throw new Exception("No authorization code provided");
+            }
+
+            Console.WriteLine("Exchanging code for access token...");
+
+            // Token Exchange über bestehende Methode
+            var tokenInfo = await ExchangeCodeForTokenAsync(authCode);
+
+            if (string.IsNullOrEmpty(tokenInfo.AccessToken))
+            {
+                throw new Exception("Failed to get access token from Strava");
+            }
+
+            Console.WriteLine("✅ Successfully got access token!");
+
+            return tokenInfo.AccessToken;
+        }
+
 
         private static Activity MapToActivity(StravaActivity stravaActivity)
         {
