@@ -37,6 +37,18 @@ WORKDIR /app
 # Files kopieren (als root)
 COPY --from=publish /app/publish .
 
+# Umgebungsvariablen für Strava-Konfiguration (werden zur Laufzeit überschrieben)
+ENV Strava__ClientId=""
+ENV Strava__ClientSecret=""
+ENV Strava__RedirectUrl="http://localhost:8080/auth/strava/callback"
+ENV Strava__BaseUrl="https://www.strava.com/api/v3/"
+ENV Strava__AuthorizeUrl="https://www.strava.com/oauth/authorize"
+ENV Strava__TokenUrl="https://www.strava.com/oauth/token"
+
+# Standard ASP.NET Core Umgebungsvariablen
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:8080
+
 # Explizit non-root user verwenden
 USER 1001
 

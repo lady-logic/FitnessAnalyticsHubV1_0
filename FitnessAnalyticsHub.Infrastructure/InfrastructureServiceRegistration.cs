@@ -23,19 +23,6 @@ namespace FitnessAnalyticsHub.Infrastructure
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
 
-            // Configure Strava service
-            services.Configure<StravaSettings>(configuration.GetSection("Strava"));
-            services.AddSingleton(serviceProvider =>
-            {
-                var config = configuration.GetSection("Strava");
-                return new StravaSettings
-                {
-                    ClientId = config["ClientId"],
-                    ClientSecret = config["ClientSecret"],
-                    RedirectUrl = config["RedirectUrl"]
-                };
-            });
-
             // Register Strava service
             services.AddScoped<IStravaService, StravaService>();
 

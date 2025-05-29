@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
@@ -9,29 +10,33 @@ using System.Web;
 using FitnessAnalyticsHub.Domain.Entities;
 using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Domain.Models;
+using FitnessAnalyticsHub.Infrastructure.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace FitnessAnalyticsHub.Infrastructure.Services
 {
     public class StravaService : IStravaService
     {
         private readonly HttpClient _httpClient;
+        private readonly StravaConfiguration _config;
         private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly string _redirectUrl;
 
-        public StravaService(IHttpClientFactory httpClientFactory, StravaSettings settings)
+        public StravaService(IHttpClientFactory httpClientFactory, IOptions<StravaConfiguration> config)
         {
             _httpClient = httpClientFactory.CreateClient("StravaApi");
-            _clientId = settings.ClientId;
-            _clientSecret = settings.ClientSecret;
-            _redirectUrl = settings.RedirectUrl;
+            _config = config.Value;
+            _httpClient.BaseAddress = new Uri(_config.BaseUrl);
         }
 
         public Task<string> GetAuthorizationUrlAsync()
         {
-            string authUrl = $"https://www.strava.com/oauth/authorize?client_id={_clientId}" +
-                             $"&redirect_uri={Uri.EscapeDataString(_redirectUrl)}" +
-                             $"&response_type=code&scope=activity:read_all,profile:read_all";
+            string authUrl = $"{_config.AuthorizeUrl}?client_id={_config.ClientId}" +
+                             $"&redirect_uri={Uri.EscapeDataString(_config.RedirectUrl)}" +
+                             $"&response_type=code" +
+                             $"&scope=read,activity:read_all,profile:read_all" +  
+                             $"&approval_prompt=force";  // Erzwingt neue Berechtigung
 
             return Task.FromResult(authUrl);
         }
@@ -40,13 +45,13 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
         {
             var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                { "client_id", _clientId },
-                { "client_secret", _clientSecret },
+                { "client_id", _config.ClientId },
+                { "client_secret", _config.ClientSecret },
                 { "code", code },
                 { "grant_type", "authorization_code" }
             });
 
-            var response = await _httpClient.PostAsync("https://www.strava.com/oauth/token", content);
+            var response = await _httpClient.PostAsync(_config.TokenUrl, content);
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -64,10 +69,10 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
 
         public async Task<Athlete> GetAthleteProfileAsync(string accessToken)
         {
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+            using var request = new HttpRequestMessage(HttpMethod.Get, "athlete");
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-            var response = await _httpClient.GetAsync("athlete");
+            var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
@@ -90,40 +95,36 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
 
         public async Task<IEnumerable<Activity>> GetActivitiesAsync(string accessToken, int page = 1, int perPage = 30)
         {
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+            Console.WriteLine($"Requesting activities with token: {accessToken?.Substring(0, 10)}...");
 
-            var response = await _httpClient.GetAsync($"athlete/activities?page={page}&per_page={perPage}");
-            response.EnsureSuccessStatusCode();
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"athlete/activities?page={page}&per_page={perPage}");
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+            Console.WriteLine($"Request URL: {_httpClient.BaseAddress}{request.RequestUri}");
+
+            var response = await _httpClient.SendAsync(request);
+
+            Console.WriteLine($"Response Status: {response.StatusCode}");
+            Console.WriteLine($"Response Headers:");
+            foreach (var header in response.Headers)
+            {
+                Console.WriteLine($"  {header.Key}: {string.Join(", ", header.Value)}");
+            }
 
             var content = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Response Content: {content}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to get activities. Status: {response.StatusCode}, Content: {content}");
+            }
+
             var stravaActivities = JsonSerializer.Deserialize<List<StravaActivity>>(content);
 
             var activities = new List<Activity>();
             foreach (var stravaActivity in stravaActivities)
             {
-                activities.Add(new Activity
-                {
-                    StravaId = stravaActivity.Id.ToString(),
-                    Name = stravaActivity.Name,
-                    Distance = stravaActivity.Distance,
-                    MovingTime = stravaActivity.MovingTime,
-                    ElapsedTime = stravaActivity.ElapsedTime,
-                    TotalElevationGain = stravaActivity.TotalElevationGain,
-                    SportType = stravaActivity.SportType,
-                    StartDate = stravaActivity.StartDate,
-                    StartDateLocal = stravaActivity.StartDateLocal,
-                    Timezone = stravaActivity.Timezone,
-                    AverageSpeed = stravaActivity.AverageSpeed,
-                    MaxSpeed = stravaActivity.MaxSpeed,
-                    AverageHeartRate = stravaActivity.AverageHeartRate,
-                    MaxHeartRate = stravaActivity.MaxHeartRate,
-                    AveragePower = stravaActivity.AveragePower,
-                    MaxPower = stravaActivity.MaxPower,
-                    AverageCadence = stravaActivity.AverageCadence,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
-                });
+                activities.Add(MapToActivity(stravaActivity));
             }
 
             return activities;
@@ -131,15 +132,20 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
 
         public async Task<Activity> GetActivityDetailsByIdAsync(string accessToken, string activityId)
         {
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+            using var request = new HttpRequestMessage(HttpMethod.Get, $"activities/{activityId}");
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-            var response = await _httpClient.GetAsync($"activities/{activityId}");
+            var response = await _httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
             var content = await response.Content.ReadAsStringAsync();
             var stravaActivity = JsonSerializer.Deserialize<StravaActivity>(content);
 
+            return MapToActivity(stravaActivity);
+        }
+
+        private static Activity MapToActivity(StravaActivity stravaActivity)
+        {
             return new Activity
             {
                 StravaId = stravaActivity.Id.ToString(),

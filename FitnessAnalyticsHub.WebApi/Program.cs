@@ -1,5 +1,8 @@
 using FitnessAnalyticsHub.Application;
+using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Infrastructure;
+using FitnessAnalyticsHub.Infrastructure.Configuration;
+using FitnessAnalyticsHub.Infrastructure.Services;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -48,8 +51,18 @@ builder.Services.AddHealthChecksUI(setup =>
     setup.SetEvaluationTimeInSeconds(60); // Alle 60 Sekunden prüfen
     setup.MaximumHistoryEntriesPerEndpoint(50); // 50 Einträge in der Historie speichern
 })
-.AddInMemoryStorage(); 
+.AddInMemoryStorage();
 
+// Strava
+// Configuration
+builder.Services.Configure<StravaConfiguration>(
+    builder.Configuration.GetSection(StravaConfiguration.SectionName));
+
+// HttpClient
+builder.Services.AddHttpClient("StravaApi");
+
+// Service
+builder.Services.AddScoped<IStravaService, StravaService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -11,6 +11,15 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
+      # Strava-Konfiguration aus .env Datei
+      - Strava__ClientId=${STRAVA_CLIENT_ID}
+      - Strava__ClientSecret=${STRAVA_CLIENT_SECRET}
+      - Strava__RedirectUrl=http://localhost:8080/auth/strava/callback
+      - Strava__BaseUrl=https://www.strava.com/api/v3/
+      - Strava__AuthorizeUrl=https://www.strava.com/oauth/authorize
+      - Strava__TokenUrl=https://www.strava.com/oauth/token
+      # Datenbank-Verbindung
+      - ConnectionStrings__DefaultConnection=Host=database;Database=fitnessanalytics;Username=fitness_user;Password=${DB_PASSWORD}
     volumes:
       - ./data:/app/data
     networks:
