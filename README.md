@@ -51,6 +51,49 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 
 ---
 
+## 🏥 Health Monitoring & Observability
+
+### **📊 Health Monitoring Features**
+```csharp
+// Umfassendes Health Monitoring System
+services.AddHealthChecks()
+    .AddCheck("api", () => HealthCheckResult.Healthy())
+    .AddSqlServer(connectionString, tags: new[] { "database" })
+    .AddRedis(redisConnection, tags: new[] { "cache" });
+
+// Health Dashboard mit 60s Auto-Refresh
+services.AddHealthChecksUI(setup => {
+    setup.SetEvaluationTimeInSeconds(60);
+    setup.MaximumHistoryEntriesPerEndpoint(50);
+});
+```
+
+### **🌐 Health Endpoints & Dashboard**
+Nach dem Starten des Systems sind folgende Monitoring-Endpoints verfügbar:
+
+| Endpoint | Beschreibung | Beispiel |
+|----------|--------------|----------|
+| **`/health-ui`** | 📊 **Visual Dashboard** mit Verlauf | `http://localhost:8080/health-ui` |
+| **`/health`** | 🔍 **JSON API** für alle Services | `http://localhost:8080/health` |
+| **`/health/infrastructure`** | 🏗️ **Gruppierte Checks** (DB, Cache) | `http://localhost:8080/health/infrastructure` |
+
+### **✨ Enterprise Health Features**
+- **🏷️ Tag-based Grouping** - Services vs Infrastructure
+- **📈 Historical Tracking** - 50 Health Check Einträge Verlauf
+- **⏱️ Auto-Refresh** - Alle 60 Sekunden automatische Prüfung  
+- **🎯 Production Ready** - Geeignet für Load Balancer Integration
+- **🔄 Container Health** - Docker HEALTHCHECK Integration
+
+```bash
+# Health Status prüfen
+curl http://localhost:8080/health | jq
+
+# Health Dashboard öffnen  
+open http://localhost:8080/health-ui
+```
+
+---
+
 ## 🧱 Architekturüberblick
 
 ```text
@@ -65,7 +108,6 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 │   └── 🏗️ FitnessAnalyticsHub.Infrastructure    // Repositories, externe APIs, Persistence
 │
 ├── 04_UI
-│   ├── 🖼️ FitnessAnalyticsHub.UI.WPF            // Desktop-Client mit MVVM (enthält noch einige offene Baustellen...)
 │   ├── 🌐 FitnessAnalyticsHub.WebApi            // RESTful API für Clients
 │   └── 🌐 UI.Angular                            // Web-Frontend (erste Oberfläche für Athlet 😀)
 │
@@ -88,7 +130,6 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 | Unit Tests | ✅ **Produktiv** | xUnit + FluentAssertions |
 | Architekturtests | ✅ **Produktiv** | NetArchTest für Strukturvalidierung |
 | **Code Coverage** | ✅ **Produktiv** | **Automatische Messung & Reporting** |
-| WPF UI | 🚧 In Arbeit | Desktop-Anwendung mit Charts |
 | Angular UI | 🚧 In Arbeit | Web-Oberfläche mit responsivem Design |
 | Strava API | 🚧 In Arbeit | Abruf von Trainingsdaten |
 | Docker | 📝 ToDo | Deployment-Vorbereitung |
@@ -113,7 +154,6 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 - 🧱 Clean Architecture Pattern
 
 **Frontend & UI:**
-- 🖼️ [WPF](https://learn.microsoft.com/en-us/dotnet/desktop/wpf/) mit MVVM Pattern
 - 🌐 [Angular](https://angular.io/) für moderne Web-UI
 
 **Code Quality & Testing:**
