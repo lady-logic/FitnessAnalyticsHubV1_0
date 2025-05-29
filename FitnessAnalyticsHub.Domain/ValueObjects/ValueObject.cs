@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FitnessAnalyticsHub.Domain.ValueObjects
+﻿namespace FitnessAnalyticsHub.Domain.ValueObjects
 {
     public abstract class ValueObject
     {
@@ -27,22 +21,6 @@ namespace FitnessAnalyticsHub.Domain.ValueObjects
             return GetEqualityComponents()
                 .Select(x => x != null ? x.GetHashCode() : 0)
                 .Aggregate((x, y) => x ^ y);
-        }
-
-        public static bool operator ==(ValueObject left, ValueObject right)
-        {
-            if (ReferenceEquals(left, null) && ReferenceEquals(right, null))
-                return true;
-
-            if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
-                return false;
-
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(ValueObject left, ValueObject right)
-        {
-            return !(left == right);
         }
     }
 }

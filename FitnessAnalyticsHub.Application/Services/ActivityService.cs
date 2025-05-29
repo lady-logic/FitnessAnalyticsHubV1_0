@@ -11,7 +11,7 @@ namespace FitnessAnalyticsHub.Application.Services
         private readonly IRepository<Activity> _activityRepository;
         private readonly IRepository<Athlete> _athleteRepository;
         private readonly IStravaService _stravaService;
-        private readonly IAIAssistantClient _aiClient;
+        //private readonly IAIAssistantClient _aiClient;
         private readonly IMapper _mapper;
 
         public ActivityService(
@@ -24,7 +24,7 @@ namespace FitnessAnalyticsHub.Application.Services
             _activityRepository = activityRepository;
             _athleteRepository = athleteRepository;
             _stravaService = stravaService;
-            _aiClient = aiClient;
+            //_aiClient = aiClient;
             _mapper = mapper;
         }
 
