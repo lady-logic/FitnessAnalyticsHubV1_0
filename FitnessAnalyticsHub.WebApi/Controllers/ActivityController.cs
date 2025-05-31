@@ -19,8 +19,6 @@ namespace FitnessAnalyticsHub.WebApi.Controllers
         public async Task<ActionResult<ActivityDto>> GetById(int id)
         {
             var activity = await _activityService.GetActivityByIdAsync(id);
-            if (activity == null)
-                return NotFound($"Aktivität mit ID {id} wurde nicht gefunden.");
             return Ok(activity);
         }
 
@@ -44,59 +42,30 @@ namespace FitnessAnalyticsHub.WebApi.Controllers
             if (id != updateActivityDto.Id)
                 return BadRequest("ID in der URL stimmt nicht mit der ID im Körper überein.");
 
-            try
-            {
-                await _activityService.UpdateActivityAsync(updateActivityDto);
-            }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
 
+            await _activityService.UpdateActivityAsync(updateActivityDto);
             return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                await _activityService.DeleteActivityAsync(id);
-            }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
-
+            await _activityService.DeleteActivityAsync(id);
             return NoContent();
         }
 
         [HttpPost("import-from-strava")]
         public async Task<ActionResult<IEnumerable<ActivityDto>>> ImportFromStrava()
         {
-            try
-            {
-                var activities = await _activityService.ImportActivitiesFromStravaAsync();
-                return Ok(activities);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var activities = await _activityService.ImportActivitiesFromStravaAsync();
+            return Ok(activities);
         }
 
         [HttpGet("statistics/{athleteId}")]
         public async Task<ActionResult<ActivityStatisticsDto>> GetStatistics(int athleteId)
         {
-            try
-            {
-                var statistics = await _activityService.GetAthleteActivityStatisticsAsync(athleteId);
-                return Ok(statistics);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var statistics = await _activityService.GetAthleteActivityStatisticsAsync(athleteId);
+            return Ok(statistics);
         }
     }
 }

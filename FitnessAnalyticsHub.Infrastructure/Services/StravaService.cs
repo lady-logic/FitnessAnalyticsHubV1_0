@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text;
+﻿using System.Net;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Web;
 using FitnessAnalyticsHub.Domain.Entities;
 using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Domain.Models;
 using FitnessAnalyticsHub.Infrastructure.Configuration;
+using FitnessAnalyticsHub.Infrastructure.Exceptions;
 using Microsoft.Extensions.Options;
 
 namespace FitnessAnalyticsHub.Infrastructure.Services
@@ -35,7 +29,7 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
             string authUrl = $"{_config.AuthorizeUrl}?client_id={_config.ClientId}" +
                              $"&redirect_uri={Uri.EscapeDataString(_config.RedirectUrl)}" +
                              $"&response_type=code" +
-                             $"&scope=read_all,activity:read_all" +  
+                             $"&scope=read_all,activity:read_all" +
                              $"&approval_prompt=force";
 
             return Task.FromResult(authUrl);
@@ -69,6 +63,9 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
 
         public async Task<Athlete> GetAthleteProfileAsync(string accessToken)
         {
+            if (string.IsNullOrWhiteSpace(accessToken))
+                throw new InvalidStravaTokenException("Access token cannot be null or empty");
+
             using var request = new HttpRequestMessage(HttpMethod.Get, "athlete");
             request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
@@ -95,6 +92,10 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
 
         public async Task<IEnumerable<Activity>> GetActivitiesAsync(string accessToken, int page = 1, int perPage = 30)
         {
+            // Token-Validierung
+            if (string.IsNullOrWhiteSpace(accessToken))
+                throw new InvalidStravaTokenException("Access token cannot be null or empty");
+
             Console.WriteLine($"Requesting activities with token: {accessToken?.Substring(0, 10)}...");
 
             using var request = new HttpRequestMessage(HttpMethod.Get, $"athlete/activities?page={page}&per_page={perPage}");
@@ -114,10 +115,18 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
             var content = await response.Content.ReadAsStringAsync();
             Console.WriteLine($"Response Content: {content}");
 
+            // Spezifische HTTP-Status-Behandlung
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+                throw new InvalidStravaTokenException("Access token is invalid or expired");
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+                throw new StravaApiException("Access forbidden - insufficient permissions", (int)response.StatusCode);
+
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                throw new StravaApiException("Rate limit exceeded - too many requests", (int)response.StatusCode);
+
             if (!response.IsSuccessStatusCode)
-            {
-                throw new HttpRequestException($"Failed to get activities. Status: {response.StatusCode}, Content: {content}");
-            }
+                throw new StravaApiException($"Strava API error: {response.ReasonPhrase}", (int)response.StatusCode);
 
             var stravaActivities = JsonSerializer.Deserialize<List<StravaActivity>>(content);
 
@@ -171,7 +180,7 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
         {
             if (string.IsNullOrEmpty(_config.ClientId) || string.IsNullOrEmpty(_config.ClientSecret))
             {
-                throw new Exception("Strava ClientId and ClientSecret must be configured in User Secrets");
+                throw new StravaConfigurationException("ClientId and ClientSecret must be configured in User Secrets");
             }
 
             Console.WriteLine("=== STRAVA AUTHORIZATION REQUIRED ===");
@@ -196,7 +205,7 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
 
             if (string.IsNullOrEmpty(authCode))
             {
-                throw new Exception("No authorization code provided");
+                throw new StravaAuthorizationException("No authorization code provided by user");
             }
 
             Console.WriteLine("Exchanging code for access token...");
@@ -206,7 +215,7 @@ namespace FitnessAnalyticsHub.Infrastructure.Services
 
             if (string.IsNullOrEmpty(tokenInfo.AccessToken))
             {
-                throw new Exception("Failed to get access token from Strava");
+                throw new StravaAuthorizationException("Failed to get access token from Strava - received empty token");
             }
 
             Console.WriteLine("✅ Successfully got access token!");

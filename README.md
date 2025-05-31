@@ -51,6 +51,77 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 
 ---
 
+## 🛡️ Error Handling
+
+This application implements a comprehensive error handling strategy using Clean Architecture principles.
+
+### Exception Hierarchy
+
+```
+Exception
+├── DomainException (Base for all domain exceptions)
+│   ├── NotFoundException
+│   │   ├── ActivityNotFoundException
+│   │   └── AthleteNotFoundException
+│   ├── ValidationException
+│   └── BusinessRuleException
+└── StravaServiceException (Infrastructure exceptions)
+    ├── InvalidStravaTokenException
+    ├── StravaApiException
+    ├── StravaConfigurationException
+    └── StravaAuthorizationException
+```
+
+### Error Response Format
+
+All API errors return a consistent JSON structure:
+
+```json
+{
+  "type": "ActivityNotFound",
+  "message": "Activity with ID 123 not found",
+  "statusCode": 404,
+  "details": "ActivityId: 123",
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### HTTP Status Code Mapping
+
+| Exception Type | HTTP Status | Description |
+|----------------|-------------|-------------|
+| `ActivityNotFoundException` | 404 | Activity not found |
+| `AthleteNotFoundException` | 404 | Athlete not found |
+| `InvalidStravaTokenException` | 401 | Invalid or expired token |
+| `StravaConfigurationException` | 500 | Server configuration error |
+| `StravaApiException` | 400/502 | External API error |
+| Generic exceptions | 500 | Internal server error |
+
+### For Developers
+
+**Controllers are exception-free:**
+```csharp
+[HttpGet("{id}")]
+public async Task<ActionResult<ActivityDto>> GetById(int id)
+{
+    var activity = await _activityService.GetActivityByIdAsync(id);
+    return Ok(activity); // Exceptions handled by middleware
+}
+```
+
+**Services throw specific exceptions:**
+```csharp
+public async Task<ActivityDto> GetActivityByIdAsync(int id)
+{
+    var activity = await _repository.GetByIdAsync(id);
+    if (activity == null)
+        throw new ActivityNotFoundException(id);
+    return _mapper.Map<ActivityDto>(activity);
+}
+```
+
+---
+
 ## 🏥 Health Monitoring & Observability
 
 ### **📊 Health Monitoring Features**

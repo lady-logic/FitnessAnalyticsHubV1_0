@@ -4,8 +4,9 @@ using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Application.Mapping;
 using FitnessAnalyticsHub.Application.Services;
 using FitnessAnalyticsHub.Domain.Entities;
+using FitnessAnalyticsHub.Domain.Exceptions.Activities;
+using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 using FitnessAnalyticsHub.Domain.Interfaces;
-using FluentAssertions;
 using Moq;
 
 namespace FitnessAnalyticsHub.Tests.Services
@@ -67,27 +68,27 @@ namespace FitnessAnalyticsHub.Tests.Services
             var result = await _activityService.GetActivityByIdAsync(activityId);
 
             // Assert
-            result.Should().NotBeNull();
-            result.Id.Should().Be(activityId);
-            result.Name.Should().Be("Morning Run");
-            result.Distance.Should().Be(5000);
-            result.SportType.Should().Be("Run");
-            result.AthleteFullName.Should().Be("Max Mustermann");
+            Assert.NotNull(result);
+            Assert.Equal(activityId, result.Id);
+            Assert.Equal("Morning Run", result.Name);
+            Assert.Equal(5000, result.Distance);
+            Assert.Equal("Run", result.SportType);
+            Assert.Equal("Max Mustermann", result.AthleteFullName);
         }
 
         [Fact]
-        public async Task GetActivityByIdAsync_ShouldReturnNull_WhenActivityDoesNotExist()
+        public async Task GetActivityByIdAsync_ShouldThrowActivityNotFoundException_WhenActivityDoesNotExist()
         {
             // Arrange
             var activityId = 999;
             _mockActivityRepository.Setup(repo => repo.GetByIdAsync(activityId))
                 .ReturnsAsync((Activity)null);
 
-            // Act
-            var result = await _activityService.GetActivityByIdAsync(activityId);
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
+                () => _activityService.GetActivityByIdAsync(activityId));
 
-            // Assert
-            result.Should().BeNull();
+            Assert.Equal(activityId, exception.ActivityId);
         }
 
         [Fact]
@@ -140,12 +141,12 @@ namespace FitnessAnalyticsHub.Tests.Services
             var result = await _activityService.GetActivitiesByAthleteIdAsync(athleteId);
 
             // Assert
-            result.Should().NotBeNull();
-            result.Should().HaveCount(2);
-            result.ElementAt(0).Name.Should().Be("Morning Run");
-            result.ElementAt(1).Name.Should().Be("Evening Ride");
-            result.ElementAt(0).AthleteFullName.Should().Be("Max Mustermann");
-            result.ElementAt(1).AthleteFullName.Should().Be("Max Mustermann");
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Count());
+            Assert.Equal("Morning Run", result.ElementAt(0).Name);
+            Assert.Equal("Evening Ride", result.ElementAt(1).Name);
+            Assert.Equal("Max Mustermann", result.ElementAt(0).AthleteFullName);
+            Assert.Equal("Max Mustermann", result.ElementAt(1).AthleteFullName);
         }
 
         [Fact]
@@ -188,12 +189,12 @@ namespace FitnessAnalyticsHub.Tests.Services
             var result = await _activityService.CreateActivityAsync(createActivityDto);
 
             // Assert
-            result.Should().NotBeNull();
-            result.Id.Should().Be(3);
-            result.Name.Should().Be("Test Activity");
-            result.Distance.Should().Be(10000);
-            result.MovingTime.TotalSeconds.Should().Be(2400);
-            result.AthleteFullName.Should().Be("Max Mustermann");
+            Assert.NotNull(result);
+            Assert.Equal(3, result.Id);
+            Assert.Equal("Test Activity", result.Name);
+            Assert.Equal(10000, result.Distance);
+            Assert.Equal(2400, result.MovingTime.TotalSeconds);
+            Assert.Equal("Max Mustermann", result.AthleteFullName);
 
             _mockActivityRepository.Verify(repo => repo.AddAsync(It.IsAny<Activity>()), Times.Once);
             _mockActivityRepository.Verify(repo => repo.SaveChangesAsync(), Times.Once);
@@ -241,13 +242,13 @@ namespace FitnessAnalyticsHub.Tests.Services
             _mockActivityRepository.Verify(repo => repo.SaveChangesAsync(), Times.Once);
 
             // Überprüfen, dass die Eigenschaften korrekt aktualisiert wurden
-            existingActivity.Name.Should().Be("Updated Activity");
-            existingActivity.Distance.Should().Be(11000);
-            existingActivity.MovingTime.Should().Be(2500);
+            Assert.Equal("Updated Activity", existingActivity.Name);
+            Assert.Equal(11000, existingActivity.Distance);
+            Assert.Equal(2500, existingActivity.MovingTime);
         }
 
         [Fact]
-        public async Task UpdateActivityAsync_ShouldThrowException_WhenActivityDoesNotExist()
+        public async Task UpdateActivityAsync_ShouldThrowActivityNotFoundException_WhenActivityDoesNotExist()
         {
             // Arrange
             var updateActivityDto = new UpdateActivityDto
@@ -260,7 +261,10 @@ namespace FitnessAnalyticsHub.Tests.Services
                 .ReturnsAsync((Activity)null);
 
             // Act & Assert
-            await Assert.ThrowsAsync<Exception>(() => _activityService.UpdateActivityAsync(updateActivityDto));
+            var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
+                () => _activityService.UpdateActivityAsync(updateActivityDto));
+
+            Assert.Equal(999, exception.ActivityId);
             _mockActivityRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Activity>()), Times.Never);
         }
 
@@ -283,7 +287,7 @@ namespace FitnessAnalyticsHub.Tests.Services
         }
 
         [Fact]
-        public async Task DeleteActivityAsync_ShouldThrowException_WhenActivityDoesNotExist()
+        public async Task DeleteActivityAsync_ShouldThrowActivityNotFoundException_WhenActivityDoesNotExist()
         {
             // Arrange
             var activityId = 999;
@@ -291,7 +295,10 @@ namespace FitnessAnalyticsHub.Tests.Services
                 .ReturnsAsync((Activity)null);
 
             // Act & Assert
-            await Assert.ThrowsAsync<Exception>(() => _activityService.DeleteActivityAsync(activityId));
+            var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
+                () => _activityService.DeleteActivityAsync(activityId));
+
+            Assert.Equal(999, exception.ActivityId);
             _mockActivityRepository.Verify(repo => repo.DeleteAsync(It.IsAny<Activity>()), Times.Never);
         }
 
@@ -300,6 +307,8 @@ namespace FitnessAnalyticsHub.Tests.Services
         {
             // Arrange
             var athleteId = 1;
+            var athlete = new Athlete { Id = athleteId, FirstName = "Max", LastName = "Mustermann" };
+
             var activities = new List<Activity>
             {
                 new Activity
@@ -343,6 +352,9 @@ namespace FitnessAnalyticsHub.Tests.Services
                 }
             };
 
+            _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId))
+                .ReturnsAsync(athlete);
+
             _mockActivityRepository.Setup(repo => repo.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Activity, bool>>>()))
                 .ReturnsAsync(activities);
 
@@ -350,19 +362,38 @@ namespace FitnessAnalyticsHub.Tests.Services
             var result = await _activityService.GetAthleteActivityStatisticsAsync(athleteId);
 
             // Assert
-            result.Should().NotBeNull();
-            result.TotalActivities.Should().Be(3);
-            result.TotalDistance.Should().Be(35000); // 5000 + 20000 + 10000
-            result.TotalDuration.TotalSeconds.Should().Be(8400); // 1800 + 3600 + 3000
-            result.TotalElevationGain.Should().Be(550); // 100 + 300 + 150
+            Assert.NotNull(result);
+            Assert.Equal(3, result.TotalActivities);
+            Assert.Equal(35000, result.TotalDistance); // 5000 + 20000 + 10000
+            Assert.Equal(8400, result.TotalDuration.TotalSeconds); // 1800 + 3600 + 3000
+            Assert.Equal(550, result.TotalElevationGain); // 100 + 300 + 150
 
             // Überprüfe die Aktivitäten nach Typ
-            result.ActivitiesByType.Should().ContainKey("Run").WhoseValue.Should().Be(2);
-            result.ActivitiesByType.Should().ContainKey("Ride").WhoseValue.Should().Be(1);
+            Assert.True(result.ActivitiesByType.ContainsKey("Run"));
+            Assert.Equal(2, result.ActivitiesByType["Run"]);
+            Assert.True(result.ActivitiesByType.ContainsKey("Ride"));
+            Assert.Equal(1, result.ActivitiesByType["Ride"]);
 
             // Überprüfe die Aktivitäten nach Monat
-            result.ActivitiesByMonth.Should().ContainKey(1).WhoseValue.Should().Be(1); // Januar
-            result.ActivitiesByMonth.Should().ContainKey(2).WhoseValue.Should().Be(2); // Februar
+            Assert.True(result.ActivitiesByMonth.ContainsKey(1));
+            Assert.Equal(1, result.ActivitiesByMonth[1]); // Januar
+            Assert.True(result.ActivitiesByMonth.ContainsKey(2));
+            Assert.Equal(2, result.ActivitiesByMonth[2]); // Februar
+        }
+
+        [Fact]
+        public async Task GetAthleteActivityStatisticsAsync_ShouldThrowAthleteNotFoundException_WhenAthleteDoesNotExist()
+        {
+            // Arrange
+            var athleteId = 999;
+            _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId))
+                .ReturnsAsync((Athlete)null);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
+                () => _activityService.GetAthleteActivityStatisticsAsync(athleteId));
+
+            Assert.Equal(999, exception.AthleteId);
         }
     }
 }

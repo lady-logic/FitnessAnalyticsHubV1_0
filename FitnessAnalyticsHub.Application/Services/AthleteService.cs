@@ -3,6 +3,7 @@ using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Domain.Entities;
 using AutoMapper;
+using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 
 namespace FitnessAnalyticsHub.Application.Services
 {
@@ -22,10 +23,13 @@ namespace FitnessAnalyticsHub.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<AthleteDto?> GetAthleteByIdAsync(int id)
+        public async Task<AthleteDto> GetAthleteByIdAsync(int id) 
         {
             var athlete = await _athleteRepository.GetByIdAsync(id);
-            return athlete != null ? _mapper.Map<AthleteDto>(athlete) : null;
+            if (athlete == null)
+                throw new AthleteNotFoundException(id); 
+
+            return _mapper.Map<AthleteDto>(athlete);
         }
 
         public async Task<IEnumerable<AthleteDto>> GetAllAthletesAsync()
@@ -46,7 +50,7 @@ namespace FitnessAnalyticsHub.Application.Services
         {
             var athlete = await _athleteRepository.GetByIdAsync(athleteDto.Id);
             if (athlete == null)
-                throw new Exception($"Athlete with ID {athleteDto.Id} not found");
+                throw new AthleteNotFoundException(athleteDto.Id);
 
             _mapper.Map(athleteDto, athlete);
             athlete.UpdatedAt = DateTime.Now;
@@ -59,7 +63,7 @@ namespace FitnessAnalyticsHub.Application.Services
         {
             var athlete = await _athleteRepository.GetByIdAsync(id);
             if (athlete == null)
-                throw new Exception($"Athlete with ID {id} not found");
+                throw new AthleteNotFoundException(id);
 
             await _athleteRepository.DeleteAsync(athlete);
             await _athleteRepository.SaveChangesAsync();
@@ -113,6 +117,5 @@ namespace FitnessAnalyticsHub.Application.Services
                 return _mapper.Map<AthleteDto>(newAthlete);
             }
         }
-
     }
 }
