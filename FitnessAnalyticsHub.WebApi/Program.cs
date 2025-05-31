@@ -3,6 +3,7 @@ using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Infrastructure;
 using FitnessAnalyticsHub.Infrastructure.Configuration;
 using FitnessAnalyticsHub.Infrastructure.Services;
+using FitnessAnalyticsHub.WebApi.Middleware;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
@@ -64,6 +65,9 @@ builder.Services.AddHttpClient("StravaApi");
 // Service
 builder.Services.AddScoped<IStravaService, StravaService>();
 var app = builder.Build();
+
+// Exception Handling
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
