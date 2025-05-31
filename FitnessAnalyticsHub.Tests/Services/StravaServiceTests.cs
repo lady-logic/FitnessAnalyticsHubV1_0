@@ -10,7 +10,7 @@ using Moq.Protected;
 
 namespace FitnessAnalyticsHub.Tests.Services
 {
-    public class StravaServiceTests
+    public class StravaServiceTests : IDisposable
     {
         private readonly Mock<IHttpClientFactory> _mockHttpClientFactory;
         private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
