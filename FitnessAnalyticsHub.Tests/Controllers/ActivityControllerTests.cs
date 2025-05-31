@@ -1,5 +1,6 @@
 ﻿using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
+using FitnessAnalyticsHub.Domain.Exceptions.Activities;
 using FitnessAnalyticsHub.Tests.Base;
 using FitnessAnalyticsHub.WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
@@ -47,16 +48,16 @@ namespace FitnessAnalyticsHub.Tests.Controllers
         public async Task GetById_WithInvalidId_ReturnsNotFound()
         {
             // Arrange
-            var activityId = 999;
-            _mockActivityService.Setup(s => s.GetActivityByIdAsync(activityId))
-                              .ReturnsAsync((ActivityDto)null);
+            var invalidId = 999;
 
-            // Act
-            var result = await _controller.GetById(activityId);
+            _mockActivityService
+                .Setup(s => s.GetActivityByIdAsync(invalidId))
+                .ThrowsAsync(new ActivityNotFoundException(invalidId));
 
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
-            Assert.Equal($"Aktivität mit ID {activityId} wurde nicht gefunden.", notFoundResult.Value);
+            // Act & Assert
+            await Assert.ThrowsAsync<ActivityNotFoundException>(
+                () => _controller.GetById(invalidId)
+            );
         }
         #endregion
 
