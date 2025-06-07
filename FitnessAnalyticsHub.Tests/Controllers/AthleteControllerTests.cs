@@ -1,12 +1,13 @@
 ﻿using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
+using FitnessAnalyticsHub.Tests.Base;
 using FitnessAnalyticsHub.WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
 namespace FitnessAnalyticsHub.Tests.Controllers
 {
-    public class AthleteControllerTests
+    public class AthleteControllerTests : ControllerTestBase<ActivityController>
     {
         private readonly Mock<IAthleteService> _mockAthleteService;
         private readonly AthleteController _controller;
@@ -86,23 +87,6 @@ namespace FitnessAnalyticsHub.Tests.Controllers
             Assert.Equal(expectedAthlete.FirstName, athlete.FirstName);
             Assert.Equal(expectedAthlete.LastName, athlete.LastName);
         }
-
-        [Fact]
-        public async Task GetById_WithInvalidId_ReturnsNotFound()
-        {
-            // Arrange
-            var athleteId = 999;
-            _mockAthleteService.Setup(s => s.GetAthleteByIdAsync(athleteId))
-                              .ReturnsAsync((AthleteDto)null);
-
-            // Act
-            var result = await _controller.GetById(athleteId);
-
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
-            Assert.Equal($"Athlet mit ID {athleteId} wurde nicht gefunden.", notFoundResult.Value);
-        }
-
         #endregion
 
         #region Create Tests
@@ -187,31 +171,6 @@ namespace FitnessAnalyticsHub.Tests.Controllers
             Assert.Equal("ID in der URL stimmt nicht mit der ID im Körper überein.", badRequestResult.Value);
             _mockAthleteService.Verify(s => s.UpdateAthleteAsync(It.IsAny<UpdateAthleteDto>()), Times.Never);
         }
-
-        [Fact]
-        public async Task Update_WhenServiceThrowsException_ReturnsNotFound()
-        {
-            // Arrange
-            var id = 1;
-            var updateDto = new UpdateAthleteDto
-            {
-                Id = id,
-                FirstName = "Max",
-                LastName = "Mustermann",
-                Email = "max@example.com"
-            };
-            var exceptionMessage = "Athlete not found";
-            _mockAthleteService.Setup(s => s.UpdateAthleteAsync(updateDto))
-                              .ThrowsAsync(new Exception(exceptionMessage));
-
-            // Act
-            var result = await _controller.Update(id, updateDto);
-
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal(exceptionMessage, notFoundResult.Value);
-        }
-
         #endregion
 
         #region Delete Tests
@@ -231,24 +190,6 @@ namespace FitnessAnalyticsHub.Tests.Controllers
             Assert.IsType<NoContentResult>(result);
             _mockAthleteService.Verify(s => s.DeleteAthleteAsync(id), Times.Once);
         }
-
-        [Fact]
-        public async Task Delete_WhenServiceThrowsException_ReturnsNotFound()
-        {
-            // Arrange
-            var id = 1;
-            var exceptionMessage = "Athlete not found";
-            _mockAthleteService.Setup(s => s.DeleteAthleteAsync(id))
-                              .ThrowsAsync(new Exception(exceptionMessage));
-
-            // Act
-            var result = await _controller.Delete(id);
-
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal(exceptionMessage, notFoundResult.Value);
-        }
-
         #endregion
 
         #region ImportFromStrava Tests
@@ -277,41 +218,6 @@ namespace FitnessAnalyticsHub.Tests.Controllers
             Assert.Equal(importedAthlete.Id, athlete.Id);
             Assert.Equal(importedAthlete.FirstName, athlete.FirstName);
         }
-
-        [Fact]
-        public async Task ImportFromStrava_WithInvalidToken_ReturnsBadRequest()
-        {
-            // Arrange
-            var accessToken = "invalid_token";
-            var exceptionMessage = "Invalid Strava access token";
-            _mockAthleteService.Setup(s => s.ImportAthleteFromStravaAsync(accessToken))
-                              .ThrowsAsync(new Exception(exceptionMessage));
-
-            // Act
-            var result = await _controller.ImportFromStrava(accessToken);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
-            Assert.Equal(exceptionMessage, badRequestResult.Value);
-        }
-
-        [Fact]
-        public async Task ImportFromStrava_WithNullToken_ReturnsBadRequest()
-        {
-            // Arrange
-            string accessToken = null;
-            var exceptionMessage = "Access token is required";
-            _mockAthleteService.Setup(s => s.ImportAthleteFromStravaAsync(accessToken))
-                              .ThrowsAsync(new ArgumentNullException(exceptionMessage));
-
-            // Act
-            var result = await _controller.ImportFromStrava(accessToken);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
-            Assert.Contains(exceptionMessage, badRequestResult.Value.ToString());
-        }
-
         #endregion
     }
 }

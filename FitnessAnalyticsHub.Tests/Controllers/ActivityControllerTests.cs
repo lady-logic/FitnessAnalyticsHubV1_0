@@ -1,12 +1,14 @@
 ﻿using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
+using FitnessAnalyticsHub.Domain.Exceptions.Activities;
+using FitnessAnalyticsHub.Tests.Base;
 using FitnessAnalyticsHub.WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
 namespace FitnessAnalyticsHub.Tests.Controllers
 {
-    public class ActivityControllerTests
+    public class ActivityControllerTests : ControllerTestBase<ActivityController>
     {
         private readonly Mock<IActivityService> _mockActivityService;
         private readonly ActivityController _controller;
@@ -46,16 +48,16 @@ namespace FitnessAnalyticsHub.Tests.Controllers
         public async Task GetById_WithInvalidId_ReturnsNotFound()
         {
             // Arrange
-            var activityId = 999;
-            _mockActivityService.Setup(s => s.GetActivityByIdAsync(activityId))
-                              .ReturnsAsync((ActivityDto)null);
+            var invalidId = 999;
 
-            // Act
-            var result = await _controller.GetById(activityId);
+            _mockActivityService
+                .Setup(s => s.GetActivityByIdAsync(invalidId))
+                .ThrowsAsync(new ActivityNotFoundException(invalidId));
 
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
-            Assert.Equal($"Aktivität mit ID {activityId} wurde nicht gefunden.", notFoundResult.Value);
+            // Act & Assert
+            await Assert.ThrowsAsync<ActivityNotFoundException>(
+                () => _controller.GetById(invalidId)
+            );
         }
         #endregion
 
@@ -173,28 +175,6 @@ namespace FitnessAnalyticsHub.Tests.Controllers
             Assert.Equal("ID in der URL stimmt nicht mit der ID im Körper überein.", badRequestResult.Value);
             _mockActivityService.Verify(s => s.UpdateActivityAsync(It.IsAny<UpdateActivityDto>()), Times.Never);
         }
-
-        [Fact]
-        public async Task Update_WhenServiceThrowsException_ReturnsNotFound()
-        {
-            // Arrange
-            var id = 1;
-            var updateDto = new UpdateActivityDto
-            {
-                Id = id,
-                Name = "Updated Activity"
-            };
-            var exceptionMessage = "Activity not found";
-            _mockActivityService.Setup(s => s.UpdateActivityAsync(updateDto))
-                              .ThrowsAsync(new Exception(exceptionMessage));
-
-            // Act
-            var result = await _controller.Update(id, updateDto);
-
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal(exceptionMessage, notFoundResult.Value);
-        }
         #endregion
 
         #region Delete Tests
@@ -213,23 +193,6 @@ namespace FitnessAnalyticsHub.Tests.Controllers
             Assert.IsType<NoContentResult>(result);
             _mockActivityService.Verify(s => s.DeleteActivityAsync(id), Times.Once);
         }
-
-        [Fact]
-        public async Task Delete_WhenServiceThrowsException_ReturnsNotFound()
-        {
-            // Arrange
-            var id = 1;
-            var exceptionMessage = "Activity not found";
-            _mockActivityService.Setup(s => s.DeleteActivityAsync(id))
-                              .ThrowsAsync(new Exception(exceptionMessage));
-
-            // Act
-            var result = await _controller.Delete(id);
-
-            // Assert
-            var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal(exceptionMessage, notFoundResult.Value);
-        }
         #endregion
 
         #region ImportFromStrava Tests
@@ -237,41 +200,22 @@ namespace FitnessAnalyticsHub.Tests.Controllers
         public async Task ImportFromStrava_WithValidParameters_ReturnsOkWithActivities()
         {
             // Arrange
-            var athleteId = 1;
-            var accessToken = "valid_token";
             var importedActivities = new List<ActivityDto>
             {
-                new ActivityDto { Id = 1, Name = "Strava Activity 1", AthleteId = athleteId },
-                new ActivityDto { Id = 2, Name = "Strava Activity 2", AthleteId = athleteId }
+                new ActivityDto { Id = 1, Name = "Strava Activity 1", AthleteId = 1 },
+                new ActivityDto { Id = 2, Name = "Strava Activity 2", AthleteId = 1 }
             };
-            _mockActivityService.Setup(s => s.ImportActivitiesFromStravaAsync(athleteId, accessToken))
+            
+            _mockActivityService.Setup(s => s.ImportActivitiesFromStravaAsync())
                               .ReturnsAsync(importedActivities);
 
             // Act
-            var result = await _controller.ImportFromStrava(athleteId, accessToken);
+            var result = await _controller.ImportFromStrava();
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var activities = Assert.IsAssignableFrom<IEnumerable<ActivityDto>>(okResult.Value);
             Assert.Equal(importedActivities.Count, activities.Count());
-        }
-
-        [Fact]
-        public async Task ImportFromStrava_WhenServiceThrowsException_ReturnsBadRequest()
-        {
-            // Arrange
-            var athleteId = 1;
-            var accessToken = "invalid_token";
-            var exceptionMessage = "Invalid access token";
-            _mockActivityService.Setup(s => s.ImportActivitiesFromStravaAsync(athleteId, accessToken))
-                              .ThrowsAsync(new Exception(exceptionMessage));
-
-            // Act
-            var result = await _controller.ImportFromStrava(athleteId, accessToken);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
-            Assert.Equal(exceptionMessage, badRequestResult.Value);
         }
         #endregion
 
@@ -315,23 +259,6 @@ namespace FitnessAnalyticsHub.Tests.Controllers
             Assert.Equal(expectedStatistics.TotalElevationGain, statistics.TotalElevationGain);
             Assert.Equal(expectedStatistics.ActivitiesByType.Count, statistics.ActivitiesByType.Count);
             Assert.Equal(expectedStatistics.ActivitiesByMonth.Count, statistics.ActivitiesByMonth.Count);
-        }
-
-        [Fact]
-        public async Task GetStatistics_WhenServiceThrowsException_ReturnsBadRequest()
-        {
-            // Arrange
-            var athleteId = 1;
-            var exceptionMessage = "Statistics calculation failed";
-            _mockActivityService.Setup(s => s.GetAthleteActivityStatisticsAsync(athleteId))
-                              .ThrowsAsync(new Exception(exceptionMessage));
-
-            // Act
-            var result = await _controller.GetStatistics(athleteId);
-
-            // Assert
-            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
-            Assert.Equal(exceptionMessage, badRequestResult.Value);
         }
         #endregion
     }
