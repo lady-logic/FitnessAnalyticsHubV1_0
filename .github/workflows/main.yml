@@ -23,16 +23,28 @@ jobs:
     - name: 📦 Restore Dependencies
       run: dotnet restore
 
-    - name: 🧹 Clean Before Build
+    - name: 🧹 Deep Clean Before Build
       run: |
-        dotnet clean
-        rm -rf */bin */obj
+        echo "🧹 Performing deep clean..."
+        dotnet clean --verbosity normal
+        
+        echo "🗂️ Removing all bin and obj directories..."
+        find . -type d -name "bin" -exec rm -rf {} + 2>/dev/null || true
+        find . -type d -name "obj" -exec rm -rf {} + 2>/dev/null || true
+        
+        echo "🔍 Killing any remaining dotnet processes..."
+        pkill -f dotnet || true
+        
+        echo "⏰ Waiting for cleanup to complete..."
+        sleep 2
+        
+        echo "✅ Clean completed!"
 
     - name: 📦 Restore After Clean
-      run: dotnet restore
+      run: dotnet restore --verbosity normal
       
-    - name: 🏗️ Build Solution
-      run: dotnet build --no-restore --configuration Release --property:TargetFramework=net8.0 --ignore-failed-sources --verbosity normal
+    - name: 🏗️ Build Solution (Single-threaded)
+      run: dotnet build --no-restore --configuration Release --property:TargetFramework=net8.0 --ignore-failed-sources --verbosity normal --maxcpucount:1
       
     - name: ✅ Run Unit Tests
       run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --filter "Category!=Architecture"
