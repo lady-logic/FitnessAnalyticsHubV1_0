@@ -22,9 +22,14 @@ jobs:
         
     - name: 📦 Restore Dependencies
       run: dotnet restore
+
+    - name: 🧹 Clean Before Build
+      run: |
+        dotnet clean
+        rm -rf */bin */obj
       
-    - name: 🏗️ Build Solution (ohne WPF)
-      run: dotnet build --no-restore --configuration Release --property:TargetFramework=net8.0 --ignore-failed-sources
+    - name: 🏗️ Build Solution
+      run: dotnet build --no-restore --configuration Release --property:TargetFramework=net8.0 --ignore-failed-sources --verbosity normal
       
     - name: ✅ Run Unit Tests
       run: dotnet test --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --filter "Category!=Architecture"
