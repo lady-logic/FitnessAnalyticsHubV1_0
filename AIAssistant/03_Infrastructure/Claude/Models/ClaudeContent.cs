@@ -1,8 +1,7 @@
-﻿namespace FitnessAnalyticsHub.AIAssistant._03_Infrastructure.Claude
+﻿namespace FitnessAnalyticsHub.AIAssistant._03_Infrastructure.Claude;
+
+public class ClaudeContent
 {
-    public class ClaudeContent
-    {
-        public string Type { get; set; }
-        public string Text { get; set; }
-    }
+    public string Type { get; set; }
+    public string Text { get; set; }
 }

@@ -2,101 +2,100 @@
 using FitnessAnalyticsHub.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace FitnessAnalyticsHub.WebApi.Controllers
+namespace FitnessAnalyticsHub.WebApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ActivityController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ActivityController : ControllerBase
+    private readonly IActivityService _activityService;
+
+    public ActivityController(IActivityService activityService)
     {
-        private readonly IActivityService _activityService;
+        _activityService = activityService;
+    }
 
-        public ActivityController(IActivityService activityService)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ActivityDto>> GetById(int id, CancellationToken cancellationToken)
+    {
+        var activity = await _activityService.GetActivityByIdAsync(id, cancellationToken);
+        if (activity == null)
+            return NotFound($"Aktivität mit ID {id} wurde nicht gefunden.");
+        return Ok(activity);
+    }
+
+    [HttpGet("athlete/{athleteId}")]
+    public async Task<ActionResult<IEnumerable<ActivityDto>>> GetByAthleteId(int athleteId, CancellationToken cancellationToken)
+    {
+        var activities = await _activityService.GetActivitiesByAthleteIdAsync(athleteId, cancellationToken);
+        return Ok(activities);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ActivityDto>> Create(CreateActivityDto createActivityDto, CancellationToken cancellationToken)
+    {
+        var activity = await _activityService.CreateActivityAsync(createActivityDto, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = activity.Id }, activity);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, UpdateActivityDto updateActivityDto, CancellationToken cancellationToken)
+    {
+        if (id != updateActivityDto.Id)
+            return BadRequest("ID in der URL stimmt nicht mit der ID im Körper überein.");
+
+        try
         {
-            _activityService = activityService;
+            await _activityService.UpdateActivityAsync(updateActivityDto, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return NotFound(ex.Message);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ActivityDto>> GetById(int id)
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        try
         {
-            var activity = await _activityService.GetActivityByIdAsync(id);
-            if (activity == null)
-                return NotFound($"Aktivität mit ID {id} wurde nicht gefunden.");
-            return Ok(activity);
+            await _activityService.DeleteActivityAsync(id, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            return NotFound(ex.Message);
         }
 
-        [HttpGet("athlete/{athleteId}")]
-        public async Task<ActionResult<IEnumerable<ActivityDto>>> GetByAthleteId(int athleteId)
+        return NoContent();
+    }
+
+    [HttpPost("import-from-strava")]
+    public async Task<ActionResult<IEnumerable<ActivityDto>>> ImportFromStrava(CancellationToken cancellationToken)
+    {
+        try
         {
-            var activities = await _activityService.GetActivitiesByAthleteIdAsync(athleteId);
+            var activities = await _activityService.ImportActivitiesFromStravaAsync(cancellationToken);
             return Ok(activities);
         }
-
-        [HttpPost]
-        public async Task<ActionResult<ActivityDto>> Create(CreateActivityDto createActivityDto)
+        catch (Exception ex)
         {
-            var activity = await _activityService.CreateActivityAsync(createActivityDto);
-            return CreatedAtAction(nameof(GetById), new { id = activity.Id }, activity);
+            return BadRequest(ex.Message);
         }
+    }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdateActivityDto updateActivityDto)
+    [HttpGet("statistics/{athleteId}")]
+    public async Task<ActionResult<ActivityStatisticsDto>> GetStatistics(int athleteId, CancellationToken cancellationToken)
+    {
+        try
         {
-            if (id != updateActivityDto.Id)
-                return BadRequest("ID in der URL stimmt nicht mit der ID im Körper überein.");
-
-            try
-            {
-                await _activityService.UpdateActivityAsync(updateActivityDto);
-            }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
-
-            return NoContent();
+            var statistics = await _activityService.GetAthleteActivityStatisticsAsync(athleteId, cancellationToken);
+            return Ok(statistics);
         }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        catch (Exception ex)
         {
-            try
-            {
-                await _activityService.DeleteActivityAsync(id);
-            }
-            catch (Exception ex)
-            {
-                return NotFound(ex.Message);
-            }
-
-            return NoContent();
-        }
-
-        [HttpPost("import-from-strava")]
-        public async Task<ActionResult<IEnumerable<ActivityDto>>> ImportFromStrava()
-        {
-            try
-            {
-                var activities = await _activityService.ImportActivitiesFromStravaAsync();
-                return Ok(activities);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpGet("statistics/{athleteId}")]
-        public async Task<ActionResult<ActivityStatisticsDto>> GetStatistics(int athleteId)
-        {
-            try
-            {
-                var statistics = await _activityService.GetAthleteActivityStatisticsAsync(athleteId);
-                return Ok(statistics);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return BadRequest(ex.Message);
         }
     }
 }

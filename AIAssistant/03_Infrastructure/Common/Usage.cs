@@ -1,9 +1,8 @@
-﻿namespace AIAssistant._03_Infrastructure.OpenAI.Models
+﻿namespace AIAssistant._03_Infrastructure.OpenAI.Models;
+
+public class Usage
 {
-    public class Usage
-    {
-        public int PromptTokens { get; set; }
-        public int CompletionTokens { get; set; }
-        public int TotalTokens { get; set; }
-    }
+    public int PromptTokens { get; set; }
+    public int CompletionTokens { get; set; }
+    public int TotalTokens { get; set; }
 }

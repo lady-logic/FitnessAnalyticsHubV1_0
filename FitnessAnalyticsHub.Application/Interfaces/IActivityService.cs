@@ -1,20 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using FitnessAnalyticsHub.Application.DTOs;
+﻿using FitnessAnalyticsHub.Application.DTOs;
 
-namespace FitnessAnalyticsHub.Application.Interfaces
+namespace FitnessAnalyticsHub.Application.Interfaces;
+
+public interface IActivityService
 {
-    public interface IActivityService
-    {
-        Task<ActivityDto?> GetActivityByIdAsync(int id);
-        Task<IEnumerable<ActivityDto>> GetActivitiesByAthleteIdAsync(int athleteId);
-        Task<ActivityDto> CreateActivityAsync(CreateActivityDto activityDto);
-        Task UpdateActivityAsync(UpdateActivityDto activityDto);
-        Task DeleteActivityAsync(int id);
-        Task<IEnumerable<ActivityDto>> ImportActivitiesFromStravaAsync();
-        Task<ActivityStatisticsDto> GetAthleteActivityStatisticsAsync(int athleteId);
-    }
+    Task<ActivityDto?> GetActivityByIdAsync(int id, CancellationToken cancellationToken);
+    Task<IEnumerable<ActivityDto>> GetActivitiesByAthleteIdAsync(int athleteId, CancellationToken cancellationToken);
+    Task<ActivityDto> CreateActivityAsync(CreateActivityDto activityDto, CancellationToken cancellationToken);
+    Task UpdateActivityAsync(UpdateActivityDto activityDto, CancellationToken cancellationToken);
+    Task DeleteActivityAsync(int id, CancellationToken cancellationToken);
+    Task<IEnumerable<ActivityDto>> ImportActivitiesFromStravaAsync(CancellationToken cancellationToken);
+    Task<ActivityStatisticsDto> GetAthleteActivityStatisticsAsync(int athleteId, CancellationToken cancellationToken);
 }

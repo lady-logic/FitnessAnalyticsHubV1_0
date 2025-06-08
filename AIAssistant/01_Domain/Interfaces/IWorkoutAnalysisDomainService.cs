@@ -1,10 +1,9 @@
 ﻿using AIAssistant.Domain.Models;
 
-namespace AIAssistant.Domain.Interfaces
+namespace AIAssistant.Domain.Interfaces;
+
+public interface IWorkoutAnalysisDomainService
 {
-    public interface IWorkoutAnalysisDomainService
-    {
-        string FormatWorkoutDataForAnalysis(IEnumerable<WorkoutData> workouts);
-        string FormatAthleteProfileForAnalysis(AthleteProfile profile);
-    }
+    string FormatWorkoutDataForAnalysis(IEnumerable<WorkoutData> workouts);
+    string FormatAthleteProfileForAnalysis(AthleteProfile profile);
 }

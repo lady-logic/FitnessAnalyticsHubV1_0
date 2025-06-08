@@ -2,59 +2,58 @@
 using AIAssistant._02_Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AIAssistant._04_UI.API.Controllers
+namespace AIAssistant._04_UI.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class WorkoutPredictionController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class WorkoutPredictionController : ControllerBase
+    private readonly IWorkoutPredictionService _workoutPredictionService;
+    private readonly ILogger<WorkoutPredictionController> _logger;
+
+    public WorkoutPredictionController(
+        IWorkoutPredictionService workoutPredictionService,
+        ILogger<WorkoutPredictionController> logger)
     {
-        private readonly IWorkoutPredictionService _workoutPredictionService;
-        private readonly ILogger<WorkoutPredictionController> _logger;
+        _workoutPredictionService = workoutPredictionService;
+        _logger = logger;
+    }
 
-        public WorkoutPredictionController(
-            IWorkoutPredictionService workoutPredictionService,
-            ILogger<WorkoutPredictionController> logger)
+    [HttpPost("predict")]
+    public async Task<ActionResult<WorkoutPredictionResponseDto>> PredictOpenAIWorkout(
+        [FromBody] WorkoutPredictionRequestDto request)
+    {
+        try
         {
-            _workoutPredictionService = workoutPredictionService;
-            _logger = logger;
+            _logger.LogInformation("Predicting workout performance for type: {Type}",
+                request.TargetWorkoutType);
+
+            var result = await _workoutPredictionService.PredictOpenAIWorkoutPerformanceAsync(request);
+            return Ok(result);
         }
-
-        [HttpPost("predict")]
-        public async Task<ActionResult<WorkoutPredictionResponseDto>> PredictOpenAIWorkout(
-            [FromBody] WorkoutPredictionRequestDto request)
+        catch (Exception ex)
         {
-            try
-            {
-                _logger.LogInformation("Predicting workout performance for type: {Type}",
-                    request.TargetWorkoutType);
-
-                var result = await _workoutPredictionService.PredictOpenAIWorkoutPerformanceAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error predicting workout performance");
-                return StatusCode(500, "Internal server error");
-            }
+            _logger.LogError(ex, "Error predicting workout performance");
+            return StatusCode(500, "Internal server error");
         }
+    }
 
-        [HttpPost("predict")]
-        public async Task<ActionResult<WorkoutPredictionResponseDto>> PredictClaudeWorkout(
-            [FromBody] WorkoutPredictionRequestDto request)
+    [HttpPost("predict")]
+    public async Task<ActionResult<WorkoutPredictionResponseDto>> PredictClaudeWorkout(
+        [FromBody] WorkoutPredictionRequestDto request)
+    {
+        try
         {
-            try
-            {
-                _logger.LogInformation("Predicting workout performance for type: {Type}",
-                    request.TargetWorkoutType);
+            _logger.LogInformation("Predicting workout performance for type: {Type}",
+                request.TargetWorkoutType);
 
-                var result = await _workoutPredictionService.PredictClaudeWorkoutPerformanceAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error predicting workout performance");
-                return StatusCode(500, "Internal server error");
-            }
+            var result = await _workoutPredictionService.PredictClaudeWorkoutPerformanceAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error predicting workout performance");
+            return StatusCode(500, "Internal server error");
         }
     }
 }
