@@ -2,6 +2,8 @@
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Entities;
+using FitnessAnalyticsHub.Domain.Exceptions.Activities;
+using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 using FitnessAnalyticsHub.Domain.Interfaces;
 
 namespace FitnessAnalyticsHub.Application.Services;
@@ -28,11 +30,11 @@ public class ActivityService : IActivityService
         _mapper = mapper;
     }
 
-    public async Task<ActivityDto?> GetActivityByIdAsync(int id, CancellationToken cancellationToken)
+    public async Task<ActivityDto> GetActivityByIdAsync(int id, CancellationToken cancellationToken)
     {
         var activity = await _activityRepository.GetByIdAsync(id, cancellationToken);
         if (activity == null)
-            return null;
+            throw new ActivityNotFoundException(id);
 
         var activityDto = _mapper.Map<ActivityDto>(activity);
 
@@ -78,7 +80,7 @@ public class ActivityService : IActivityService
     {
         var activity = await _activityRepository.GetByIdAsync(activityDto.Id, cancellationToken);
         if (activity == null)
-            throw new Exception($"Activity with ID {activityDto.Id} not found");
+            throw new ActivityNotFoundException(activityDto.Id);
 
         _mapper.Map(activityDto, activity);
         activity.UpdatedAt = DateTime.Now;
@@ -91,7 +93,7 @@ public class ActivityService : IActivityService
     {
         var activity = await _activityRepository.GetByIdAsync(id, cancellationToken);
         if (activity == null)
-            throw new Exception($"Activity with ID {id} not found");
+            throw new ActivityNotFoundException(id);
 
         await _activityRepository.DeleteAsync(activity);
         await _activityRepository.SaveChangesAsync(cancellationToken);
@@ -161,6 +163,11 @@ public class ActivityService : IActivityService
 
     public async Task<ActivityStatisticsDto> GetAthleteActivityStatisticsAsync(int athleteId, CancellationToken cancellationToken)
     {
+        // Prüfen ob Athlet existiert
+        var athlete = await _athleteRepository.GetByIdAsync(athleteId, cancellationToken);
+        if (athlete == null)
+            throw new AthleteNotFoundException(athleteId);
+
         var activities = await _activityRepository.FindAsync(a => a.AthleteId == athleteId, cancellationToken);
         var activitiesList = activities.ToList();
 

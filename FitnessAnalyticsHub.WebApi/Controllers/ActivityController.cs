@@ -19,8 +19,6 @@ public class ActivityController : ControllerBase
     public async Task<ActionResult<ActivityDto>> GetById(int id, CancellationToken cancellationToken)
     {
         var activity = await _activityService.GetActivityByIdAsync(id, cancellationToken);
-        if (activity == null)
-            return NotFound($"Aktivität mit ID {id} wurde nicht gefunden.");
         return Ok(activity);
     }
 
@@ -44,58 +42,30 @@ public class ActivityController : ControllerBase
         if (id != updateActivityDto.Id)
             return BadRequest("ID in der URL stimmt nicht mit der ID im Körper überein.");
 
-        try
-        {
-            await _activityService.UpdateActivityAsync(updateActivityDto, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            return NotFound(ex.Message);
-        }
 
+        await _activityService.UpdateActivityAsync(updateActivityDto, cancellationToken);
         return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        try
-        {
-            await _activityService.DeleteActivityAsync(id, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            return NotFound(ex.Message);
-        }
-
+        await _activityService.DeleteActivityAsync(id, cancellationToken);
         return NoContent();
     }
 
     [HttpPost("import-from-strava")]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> ImportFromStrava(CancellationToken cancellationToken)
     {
-        try
-        {
-            var activities = await _activityService.ImportActivitiesFromStravaAsync(cancellationToken);
-            return Ok(activities);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        var activities = await _activityService.ImportActivitiesFromStravaAsync(cancellationToken);
+        return Ok(activities);
     }
 
     [HttpGet("statistics/{athleteId}")]
     public async Task<ActionResult<ActivityStatisticsDto>> GetStatistics(int athleteId, CancellationToken cancellationToken)
     {
-        try
-        {
-            var statistics = await _activityService.GetAthleteActivityStatisticsAsync(athleteId, cancellationToken);
-            return Ok(statistics);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        var statistics = await _activityService.GetAthleteActivityStatisticsAsync(athleteId, cancellationToken);
+        return Ok(statistics);
     }
 }
+
