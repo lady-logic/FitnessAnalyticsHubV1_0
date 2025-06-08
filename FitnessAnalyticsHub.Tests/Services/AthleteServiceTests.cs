@@ -133,7 +133,7 @@ public class AthleteServiceTests
         Athlete createdAthlete = null;
 
         _mockAthleteRepository.Setup(repo => repo.AddAsync(It.IsAny<Athlete>(), It.IsAny<CancellationToken>()))
-            .Callback<Athlete>(athlete =>
+            .Callback<Athlete, CancellationToken>((athlete, token) =>
             {
                 athlete.Id = 3; // Simuliere Datenbankgenerierung der ID
                 createdAthlete = athlete;
@@ -272,7 +272,7 @@ public class AthleteServiceTests
 
         Athlete createdAthlete = null;
         _mockAthleteRepository.Setup(repo => repo.AddAsync(It.IsAny<Athlete>(), It.IsAny<CancellationToken>()))
-            .Callback<Athlete>(athlete =>
+            .Callback<Athlete, CancellationToken>((athlete, token) =>
             {
                 athlete.Id = 3; // Simuliere Datenbankgenerierung der ID
                 createdAthlete = athlete;

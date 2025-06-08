@@ -8,6 +8,7 @@ using FitnessAnalyticsHub.Domain.Exceptions.Activities;
 using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 using FitnessAnalyticsHub.Domain.Interfaces;
 using Moq;
+using Activity = FitnessAnalyticsHub.Domain.Entities.Activity;
 
 namespace FitnessAnalyticsHub.Tests.Services;
 
@@ -176,7 +177,7 @@ public class ActivityServiceTests
         Activity createdActivity = null;
 
         _mockActivityRepository.Setup(repo => repo.AddAsync(It.IsAny<Activity>(), It.IsAny<CancellationToken>()))
-            .Callback<Activity>(activity =>
+            .Callback<Activity, CancellationToken>((activity, token) =>
             {
                 activity.Id = 3; // Simuliere Datenbankgenerierung der ID
                 createdActivity = activity;
@@ -355,7 +356,8 @@ public class ActivityServiceTests
         _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(athlete);
 
-        _mockActivityRepository.Setup(repo => repo.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Activity, bool>>>(), It.IsAny<CancellationToken>()))
+        _mockActivityRepository.Setup(repo => repo.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Activity, bool>>>(),
+            It.IsAny<CancellationToken>()))
             .ReturnsAsync(activities);
 
         // Act
