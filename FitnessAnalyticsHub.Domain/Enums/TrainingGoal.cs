@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace FitnessAnalyticsHub.Domain.Enums;
 
-namespace FitnessAnalyticsHub.Domain.Enums
+public enum TrainingGoal
 {
-    public enum TrainingGoal
-    {
-        GeneralFitness,
-        WeightLoss,
-        EnduranceImprovement,
-        StrengthImprovement,
-        RacePreparation,
-        Recovery,
-        Custom
-    }
+    GeneralFitness,
+    WeightLoss,
+    EnduranceImprovement,
+    StrengthImprovement,
+    RacePreparation,
+    Recovery,
+    Custom
 }

@@ -1,31 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace FitnessAnalyticsHub.Domain.Entities
+namespace FitnessAnalyticsHub.Domain.Entities;
+
+public class Athlete
 {
-    public class Athlete
-    {
-        [Required]
-        public int Id { get; set; }
-        public string? StravaId { get; set; }
-        [Required]
-        public string FirstName { get; set; } = string.Empty;
-        [Required]
-        public string LastName { get; set; } = string.Empty;
-        public string? Username { get; set; }
-        public string? Email { get; set; }
-        public string? City { get; set; }
-        public string? Country { get; set; }
-        public string? ProfilePictureUrl { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+    [Required]
+    public int Id { get; set; }
+    public string? StravaId { get; set; }
+    [Required]
+    public string FirstName { get; set; } = string.Empty;
+    [Required]
+    public string LastName { get; set; } = string.Empty;
+    public string? Username { get; set; }
+    public string? Email { get; set; }
+    public string? City { get; set; }
+    public string? Country { get; set; }
+    public string? ProfilePictureUrl { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 
-        public virtual ICollection<Activity> Activities { get; set; } = new List<Activity>();
-        public virtual ICollection<TrainingPlan> TrainingPlans { get; set; } = new List<TrainingPlan>();
-    }
+    public virtual ICollection<Activity> Activities { get; set; } = new List<Activity>();
+    public virtual ICollection<TrainingPlan> TrainingPlans { get; set; } = new List<TrainingPlan>();
 }

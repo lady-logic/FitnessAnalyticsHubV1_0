@@ -191,20 +191,27 @@ open http://localhost:8080/health-ui
 
 ---
 
-## 🧪 Aktueller Fortschritt
+## 🏗️ Recent Architecture Improvements
 
-| Thema | Status | Beschreibung |
-|---|---|---|
-| Clean Architecture | ✅ Basis steht | Projektstruktur aufgebaut |
-| **CI/CD Pipeline** | ✅ **Produktiv** | **GitHub Actions mit SonarCloud Integration** |
-| **Code Quality** | ✅ **Produktiv** | **SonarCloud Monitoring & Branch Protection** |
-| Unit Tests | ✅ **Produktiv** | xUnit + FluentAssertions |
-| Architekturtests | ✅ **Produktiv** | NetArchTest für Strukturvalidierung |
-| **Code Coverage** | ✅ **Produktiv** | **Automatische Messung & Reporting** |
-| Angular UI | 🚧 In Arbeit | Web-Oberfläche mit responsivem Design |
-| Strava API | 🚧 In Arbeit | Abruf von Trainingsdaten |
-| Docker | 📝 ToDo | Deployment-Vorbereitung |
-| CQRS | 📝 ToDo | Implementierung von Command/Query Separation |
+### ✅ Entity Configuration Organization
+- **Before**: All entity configurations mixed in `ApplicationDbContext.OnModelCreating()`
+- **After**: Separated into dedicated `IEntityTypeConfiguration<T>` classes
+- **Benefit**: Better organization, easier maintenance, follows separation of concerns
+
+### ✅ Database Configuration Consolidation
+- **Before**: Database setup duplicated across multiple locations
+- **After**: Centralized `DatabaseConfiguration` helper class
+- **Benefit**: Single source of truth, eliminates inconsistencies
+
+### ✅ AutoMapper Integration
+- **Before**: Manual property mapping scattered throughout codebase
+- **After**: Centralized mapping profiles with business logic
+- **Benefit**: Reduced boilerplate, consistent mapping behavior
+
+### ✅ Async Operations Enhancement
+- **Before**: Limited cancellation token support
+- **After**: Full cancellation token support throughout all layers
+- **Benefit**: Better resource management and application responsiveness
 
 ---
 
