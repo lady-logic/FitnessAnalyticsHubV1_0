@@ -1,11 +1,31 @@
 # Changelog
-
 All notable changes to this project will be documented in this file.
-
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased] - 2024-01-15
+## [1.2.0] - 2025-06-07
+### 🚀 Added
+- **AutoMapper integration** for consistent object mapping
+- **CancellationToken support** across all repository operations
+- **DatabaseConfiguration helper** for centralized database setup
+- **Dedicated entity configuration classes** for better organization
 
+### 🔄 Changed
+- **Entity configurations** moved to separate IEntityTypeConfiguration classes
+- **Database configuration** consolidated to single location
+- **Manual property mapping** replaced with AutoMapper profiles
+
+### 📚 Technical Improvements
+- Reduced code duplication through AutoMapper
+- Improved code organization with separated configurations
+- Enhanced async operation support with cancellation tokens
+- Better maintainability through centralized mapping logic
+
+### 🔧 Internal
+- Refactored ApplicationDbContext.OnModelCreating()
+- Updated InfrastructureServiceRegistration for consolidated DB config
+- Enhanced EfRepository with cancellation token support
+
+## [1.1.0] - 2024-06-01
 ### 🚀 Added
 - **Global Exception Handling Middleware** for centralized error handling
 - **Domain-specific exceptions** for better error categorization:
