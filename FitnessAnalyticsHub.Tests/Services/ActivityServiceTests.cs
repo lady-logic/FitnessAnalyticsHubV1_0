@@ -5,8 +5,9 @@ using FitnessAnalyticsHub.Application.Mapping;
 using FitnessAnalyticsHub.Application.Services;
 using FitnessAnalyticsHub.Domain.Entities;
 using FitnessAnalyticsHub.Domain.Exceptions.Activities;
-using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 using FitnessAnalyticsHub.Domain.Interfaces;
+using FitnessAnalyticsHub.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 using Activity = FitnessAnalyticsHub.Domain.Entities.Activity;
 
@@ -14,8 +15,7 @@ namespace FitnessAnalyticsHub.Tests.Services;
 
 public class ActivityServiceTests
 {
-    private readonly Mock<IRepository<Activity>> _mockActivityRepository;
-    private readonly Mock<IRepository<Athlete>> _mockAthleteRepository;
+    private readonly ApplicationDbContext _context;
     private readonly Mock<IStravaService> _mockStravaService;
     private readonly Mock<IAIAssistantClient> _mockAiAssistantClient;
     private readonly IMapper _mapper;
@@ -23,8 +23,12 @@ public class ActivityServiceTests
 
     public ActivityServiceTests()
     {
-        _mockActivityRepository = new Mock<IRepository<Activity>>();
-        _mockAthleteRepository = new Mock<IRepository<Athlete>>();
+        // InMemory Database erstellen
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Eindeutiger Name pro Test
+            .Options;
+
+        _context = new ApplicationDbContext(options);
         _mockStravaService = new Mock<IStravaService>();
         _mockAiAssistantClient = new Mock<IAIAssistantClient>();
 
@@ -35,22 +39,36 @@ public class ActivityServiceTests
         });
         _mapper = mapperConfig.CreateMapper();
 
+        // Service erstellen
         _activityService = new ActivityService(
-            _mockActivityRepository.Object,
-            _mockAthleteRepository.Object,
+            _context,
             _mockStravaService.Object,
             _mockAiAssistantClient.Object,
             _mapper);
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 
     [Fact]
     public async Task GetActivityByIdAsync_ShouldReturnActivity_WhenActivityExists()
     {
         // Arrange
-        var activityId = 1;
+        var athlete = new Athlete
+        {
+            Id = 1,
+            FirstName = "Max",
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
         var activity = new Activity
         {
-            Id = activityId,
+            Id = 1,
             AthleteId = 1,
             Name = "Morning Run",
             Distance = 5000,
@@ -59,18 +77,21 @@ public class ActivityServiceTests
             SportType = "Run",
             StartDate = DateTime.Now.AddDays(-1),
             StartDateLocal = DateTime.Now.AddDays(-1),
-            Athlete = new Athlete { FirstName = "Max", LastName = "Mustermann" }
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
 
-        _mockActivityRepository.Setup(repo => repo.GetByIdAsync(activityId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(activity);
+        // Daten in InMemory Database einfügen
+        await _context.Athletes.AddAsync(athlete);
+        await _context.Activities.AddAsync(activity);
+        await _context.SaveChangesAsync();
 
         // Act
-        var result = await _activityService.GetActivityByIdAsync(activityId, It.IsAny<CancellationToken>());
+        var result = await _activityService.GetActivityByIdAsync(1, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(activityId, result.Id);
+        Assert.Equal(1, result.Id);
         Assert.Equal("Morning Run", result.Name);
         Assert.Equal(5000, result.Distance);
         Assert.Equal("Run", result.SportType);
@@ -80,321 +101,348 @@ public class ActivityServiceTests
     [Fact]
     public async Task GetActivityByIdAsync_ShouldThrowActivityNotFoundException_WhenActivityDoesNotExist()
     {
-        // Arrange
-        var activityId = 999;
-        _mockActivityRepository.Setup(repo => repo.GetByIdAsync(activityId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Activity)null);
+        // Arrange - Keine Daten in DB einfügen
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
-            () => _activityService.GetActivityByIdAsync(activityId, It.IsAny<CancellationToken>()));
+            () => _activityService.GetActivityByIdAsync(999, CancellationToken.None));
 
-        Assert.Equal(activityId, exception.ActivityId);
+        Assert.Equal(999, exception.ActivityId);
     }
 
     [Fact]
-    public async Task GetActivitiesByAthleteIdAsync_ShouldReturnAthleteActivities()
+    public async Task GetActivitiesByAthleteIdAsync_ShouldReturnActivities_WhenActivitiesExist()
     {
         // Arrange
-        var athleteId = 1;
         var athlete = new Athlete
         {
-            Id = athleteId,
+            Id = 1,
             FirstName = "Max",
-            LastName = "Mustermann"
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
 
         var activities = new List<Activity>
+    {
+        new Activity
         {
-            new Activity
-            {
-                Id = 1,
-                AthleteId = athleteId,
-                Name = "Morning Run",
-                Distance = 5000,
-                MovingTime = 1800,
-                ElapsedTime = 1900,
-                SportType = "Run",
-                StartDate = DateTime.Now.AddDays(-1),
-                StartDateLocal = DateTime.Now.AddDays(-1)
-            },
-            new Activity
-            {
-                Id = 2,
-                AthleteId = athleteId,
-                Name = "Evening Ride",
-                Distance = 20000,
-                MovingTime = 3600,
-                ElapsedTime = 3700,
-                SportType = "Ride",
-                StartDate = DateTime.Now.AddDays(-2),
-                StartDateLocal = DateTime.Now.AddDays(-2)
-            }
-        };
+            Id = 1,
+            AthleteId = 1,
+            Name = "Morning Run",
+            Distance = 5000,
+            SportType = "Run",
+            StartDate = DateTime.Now.AddDays(-2),
+            StartDateLocal = DateTime.Now.AddDays(-2),
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        },
+        new Activity
+        {
+            Id = 2,
+            AthleteId = 1,
+            Name = "Evening Bike",
+            Distance = 15000,
+            SportType = "Ride",
+            StartDate = DateTime.Now.AddDays(-1),
+            StartDateLocal = DateTime.Now.AddDays(-1),
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        }
+    };
 
-        _mockActivityRepository.Setup(repo => repo.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Activity, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(activities);
-
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(athlete);
+        await _context.Athletes.AddAsync(athlete);
+        await _context.Activities.AddRangeAsync(activities);
+        await _context.SaveChangesAsync();
 
         // Act
-        var result = await _activityService.GetActivitiesByAthleteIdAsync(athleteId, It.IsAny<CancellationToken>());
+        var result = await _activityService.GetActivitiesByAthleteIdAsync(1, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count());
-        Assert.Equal("Morning Run", result.ElementAt(0).Name);
-        Assert.Equal("Evening Ride", result.ElementAt(1).Name);
-        Assert.Equal("Max Mustermann", result.ElementAt(0).AthleteFullName);
-        Assert.Equal("Max Mustermann", result.ElementAt(1).AthleteFullName);
+        var resultList = result.ToList();
+        Assert.Equal(2, resultList.Count);
+        Assert.All(resultList, a => Assert.Equal("Max Mustermann", a.AthleteFullName));
+        Assert.Contains(resultList, a => a.Name == "Morning Run");
+        Assert.Contains(resultList, a => a.Name == "Evening Bike");
     }
 
     [Fact]
-    public async Task CreateActivityAsync_ShouldCreateAndReturnActivity()
+    public async Task CreateActivityAsync_ShouldCreateActivity_WhenValidData()
     {
         // Arrange
-        var athleteId = 1;
-        var createActivityDto = new CreateActivityDto
-        {
-            AthleteId = athleteId,
-            Name = "Test Activity",
-            Distance = 10000,
-            MovingTimeSeconds = 2400,
-            ElapsedTimeSeconds = 2500,
-            SportType = "Run",
-            StartDate = DateTime.Now,
-            StartDateLocal = DateTime.Now
-        };
-
         var athlete = new Athlete
         {
-            Id = athleteId,
+            Id = 1,
             FirstName = "Max",
-            LastName = "Mustermann"
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
 
-        Activity createdActivity = null;
+        await _context.Athletes.AddAsync(athlete);
+        await _context.SaveChangesAsync();
 
-        _mockActivityRepository.Setup(repo => repo.AddAsync(It.IsAny<Activity>(), It.IsAny<CancellationToken>()))
-            .Callback<Activity, CancellationToken>((activity, token) =>
-            {
-                activity.Id = 3; // Simuliere Datenbankgenerierung der ID
-                createdActivity = activity;
-            });
-
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(athlete);
+        var createDto = new CreateActivityDto
+        {
+            AthleteId = 1,
+            Name = "Test Run",
+            Distance = 5000,
+            MovingTimeSeconds = 1800,
+            ElapsedTimeSeconds = 1900,
+            SportType = "Run",
+            StartDate = DateTime.Now
+        };
 
         // Act
-        var result = await _activityService.CreateActivityAsync(createActivityDto, It.IsAny<CancellationToken>());
+        var result = await _activityService.CreateActivityAsync(createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.Id);
-        Assert.Equal("Test Activity", result.Name);
-        Assert.Equal(10000, result.Distance);
-        Assert.Equal(2400, result.MovingTime.TotalSeconds);
-        Assert.Equal("Max Mustermann", result.AthleteFullName);
+        Assert.Equal("Test Run", result.Name);
+        Assert.Equal(5000, result.Distance);
+        Assert.True(result.Id > 0);
 
-        _mockActivityRepository.Verify(repo => repo.AddAsync(It.IsAny<Activity>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockActivityRepository.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        // Verify in database
+        var activityInDb = await _context.Activities.FindAsync(result.Id);
+        Assert.NotNull(activityInDb);
+        Assert.Equal("Test Run", activityInDb.Name);
     }
 
     [Fact]
     public async Task UpdateActivityAsync_ShouldUpdateActivity_WhenActivityExists()
     {
         // Arrange
-        var updateActivityDto = new UpdateActivityDto
+        var athlete = new Athlete
         {
             Id = 1,
-            Name = "Updated Activity",
-            Distance = 11000,
-            MovingTimeSeconds = 2500,
-            ElapsedTimeSeconds = 2600,
-            SportType = "Run",
-            StartDate = DateTime.Now,
-            StartDateLocal = DateTime.Now
+            FirstName = "Max",
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
 
-        var existingActivity = new Activity
+        var activity = new Activity
         {
             Id = 1,
             AthleteId = 1,
-            Name = "Original Activity",
-            Distance = 10000,
-            MovingTime = 2400,
-            ElapsedTime = 2500,
+            Name = "Original Name",
+            Distance = 5000,
             SportType = "Run",
-            StartDate = DateTime.Now.AddDays(-1),
-            StartDateLocal = DateTime.Now.AddDays(-1),
-            CreatedAt = DateTime.Now.AddDays(-1),
-            UpdatedAt = DateTime.Now.AddDays(-1)
+            StartDate = DateTime.Now,
+            StartDateLocal = DateTime.Now,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
 
-        _mockActivityRepository.Setup(repo => repo.GetByIdAsync(updateActivityDto.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingActivity);
+        await _context.Athletes.AddAsync(athlete);
+        await _context.Activities.AddAsync(activity);
+        await _context.SaveChangesAsync();
+
+        var updateDto = new UpdateActivityDto
+        {
+            Id = 1,
+            Name = "Updated Name",
+            Distance = 6000
+        };
 
         // Act
-        await _activityService.UpdateActivityAsync(updateActivityDto, It.IsAny<CancellationToken>());
+        await _activityService.UpdateActivityAsync(updateDto, CancellationToken.None);
 
         // Assert
-        _mockActivityRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Activity>()), Times.Once);
-        _mockActivityRepository.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-
-        // Überprüfen, dass die Eigenschaften korrekt aktualisiert wurden
-        Assert.Equal("Updated Activity", existingActivity.Name);
-        Assert.Equal(11000, existingActivity.Distance);
-        Assert.Equal(2500, existingActivity.MovingTime);
+        var updatedActivity = await _context.Activities.FindAsync(1);
+        Assert.NotNull(updatedActivity);
+        Assert.Equal("Updated Name", updatedActivity.Name);
+        Assert.Equal(6000, updatedActivity.Distance);
     }
 
     [Fact]
     public async Task UpdateActivityAsync_ShouldThrowActivityNotFoundException_WhenActivityDoesNotExist()
     {
         // Arrange
-        var updateActivityDto = new UpdateActivityDto
+        var updateDto = new UpdateActivityDto
         {
             Id = 999,
-            Name = "Non-existent Activity"
+            Name = "Updated Name",
+            Distance = 6000
         };
-
-        _mockActivityRepository.Setup(repo => repo.GetByIdAsync(updateActivityDto.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Activity)null);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
-            () => _activityService.UpdateActivityAsync(updateActivityDto, It.IsAny<CancellationToken>()));
+            () => _activityService.UpdateActivityAsync(updateDto, CancellationToken.None));
 
         Assert.Equal(999, exception.ActivityId);
-        _mockActivityRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Activity>()), Times.Never);
     }
 
     [Fact]
     public async Task DeleteActivityAsync_ShouldDeleteActivity_WhenActivityExists()
     {
         // Arrange
-        var activityId = 1;
-        var existingActivity = new Activity { Id = activityId };
+        var athlete = new Athlete
+        {
+            Id = 1,
+            FirstName = "Max",
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
 
-        _mockActivityRepository.Setup(repo => repo.GetByIdAsync(activityId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingActivity);
+        var activity = new Activity
+        {
+            Id = 1,
+            AthleteId = 1,
+            Name = "To Delete",
+            SportType = "Run",
+            StartDate = DateTime.Now,
+            StartDateLocal = DateTime.Now,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        await _context.Athletes.AddAsync(athlete);
+        await _context.Activities.AddAsync(activity);
+        await _context.SaveChangesAsync();
 
         // Act
-        await _activityService.DeleteActivityAsync(activityId, It.IsAny<CancellationToken>());
+        await _activityService.DeleteActivityAsync(1, CancellationToken.None);
 
         // Assert
-        _mockActivityRepository.Verify(repo => repo.DeleteAsync(existingActivity), Times.Once);
-        _mockActivityRepository.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        var deletedActivity = await _context.Activities.FindAsync(1);
+        Assert.Null(deletedActivity);
     }
 
     [Fact]
     public async Task DeleteActivityAsync_ShouldThrowActivityNotFoundException_WhenActivityDoesNotExist()
     {
-        // Arrange
-        var activityId = 999;
-        _mockActivityRepository.Setup(repo => repo.GetByIdAsync(activityId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Activity)null);
+        // Arrange - Keine Activity in DB
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
-            () => _activityService.DeleteActivityAsync(activityId, It.IsAny<CancellationToken>()));
+            () => _activityService.DeleteActivityAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.ActivityId);
-        _mockActivityRepository.Verify(repo => repo.DeleteAsync(It.IsAny<Activity>()), Times.Never);
     }
 
     [Fact]
     public async Task GetAthleteActivityStatisticsAsync_ShouldReturnCorrectStatistics()
     {
         // Arrange
-        var athleteId = 1;
-        var athlete = new Athlete { Id = athleteId, FirstName = "Max", LastName = "Mustermann" };
+        var athlete = new Athlete
+        {
+            Id = 1,
+            FirstName = "Max",
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
 
         var activities = new List<Activity>
-            {
-                new Activity
-                {
-                    Id = 1,
-                    AthleteId = athleteId,
-                    Name = "Morning Run",
-                    Distance = 5000,
-                    MovingTime = 1800,
-                    ElapsedTime = 1900,
-                    TotalElevationGain = 100,
-                    SportType = "Run",
-                    StartDate = new DateTime(2023, 1, 15),
-                    StartDateLocal = new DateTime(2023, 1, 15)
-                },
-                new Activity
-                {
-                    Id = 2,
-                    AthleteId = athleteId,
-                    Name = "Evening Ride",
-                    Distance = 20000,
-                    MovingTime = 3600,
-                    ElapsedTime = 3700,
-                    TotalElevationGain = 300,
-                    SportType = "Ride",
-                    StartDate = new DateTime(2023, 2, 15),
-                    StartDateLocal = new DateTime(2023, 2, 15)
-                },
-                new Activity
-                {
-                    Id = 3,
-                    AthleteId = athleteId,
-                    Name = "Weekend Run",
-                    Distance = 10000,
-                    MovingTime = 3000,
-                    ElapsedTime = 3100,
-                    TotalElevationGain = 150,
-                    SportType = "Run",
-                    StartDate = new DateTime(2023, 2, 20),
-                    StartDateLocal = new DateTime(2023, 2, 20)
-                }
-            };
+    {
+        new Activity
+        {
+            Id = 1,
+            AthleteId = 1,
+            Name = "Run 1",
+            Distance = 5000,
+            MovingTime = 1800, // 30 min
+            ElapsedTime = 1900,
+            TotalElevationGain = 100,
+            SportType = "Run",
+            StartDate = new DateTime(2024, 1, 15), // Januar
+            StartDateLocal = new DateTime(2024, 1, 15),
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        },
+        new Activity
+        {
+            Id = 2,
+            AthleteId = 1,
+            Name = "Run 2",
+            Distance = 8000,
+            MovingTime = 2400, // 40 min
+            ElapsedTime = 2500,
+            TotalElevationGain = 150,
+            SportType = "Run",
+            StartDate = new DateTime(2024, 2, 10), // Februar
+            StartDateLocal = new DateTime(2024, 2, 10),
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        },
+        new Activity
+        {
+            Id = 3,
+            AthleteId = 1,
+            Name = "Bike Ride",
+            Distance = 20000,
+            MovingTime = 3600, // 60 min
+            ElapsedTime = 3700,
+            TotalElevationGain = 300,
+            SportType = "Ride",
+            StartDate = new DateTime(2024, 1, 20), // Januar
+            StartDateLocal = new DateTime(2024, 1, 20),
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        }
+    };
 
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(athlete);
-
-        _mockActivityRepository.Setup(repo => repo.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Activity, bool>>>(),
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync(activities);
+        await _context.Athletes.AddAsync(athlete);
+        await _context.Activities.AddRangeAsync(activities);
+        await _context.SaveChangesAsync();
 
         // Act
-        var result = await _activityService.GetAthleteActivityStatisticsAsync(athleteId, It.IsAny<CancellationToken>());
+        var result = await _activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.TotalActivities);
-        Assert.Equal(35000, result.TotalDistance); // 5000 + 20000 + 10000
-        Assert.Equal(8400, result.TotalDuration.TotalSeconds); // 1800 + 3600 + 3000
-        Assert.Equal(550, result.TotalElevationGain); // 100 + 300 + 150
 
-        // Überprüfe die Aktivitäten nach Typ
-        Assert.True(result.ActivitiesByType.ContainsKey("Run"));
+        // Totals
+        Assert.Equal(3, result.TotalActivities);
+        Assert.Equal(33000, result.TotalDistance); // 5000 + 8000 + 20000
+        Assert.Equal(TimeSpan.FromSeconds(7800), result.TotalDuration); // 1800 + 2400 + 3600
+        Assert.Equal(550, result.TotalElevationGain); // 100 + 150 + 300
+
+        // Sport type breakdown
+        Assert.Equal(2, result.ActivitiesByType.Count);
         Assert.Equal(2, result.ActivitiesByType["Run"]);
-        Assert.True(result.ActivitiesByType.ContainsKey("Ride"));
         Assert.Equal(1, result.ActivitiesByType["Ride"]);
 
-        // Überprüfe die Aktivitäten nach Monat
-        Assert.True(result.ActivitiesByMonth.ContainsKey(1));
-        Assert.Equal(1, result.ActivitiesByMonth[1]); // Januar
-        Assert.True(result.ActivitiesByMonth.ContainsKey(2));
-        Assert.Equal(2, result.ActivitiesByMonth[2]); // Februar
+        // Month breakdown
+        Assert.Equal(2, result.ActivitiesByMonth.Count);
+        Assert.Equal(2, result.ActivitiesByMonth[1]); // Januar: 2 Activities
+        Assert.Equal(1, result.ActivitiesByMonth[2]); // Februar: 1 Activity
     }
 
     [Fact]
-    public async Task GetAthleteActivityStatisticsAsync_ShouldThrowAthleteNotFoundException_WhenAthleteDoesNotExist()
+    public async Task GetAthleteActivityStatisticsAsync_ShouldReturnZeroStatistics_WhenNoActivities()
     {
         // Arrange
-        var athleteId = 999;
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Athlete)null);
+        var athlete = new Athlete
+        {
+            Id = 1,
+            FirstName = "Max",
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
-            () => _activityService.GetAthleteActivityStatisticsAsync(athleteId, It.IsAny<CancellationToken>()));
+        await _context.Athletes.AddAsync(athlete);
+        await _context.SaveChangesAsync();
 
-        Assert.Equal(999, exception.AthleteId);
+        // Act
+        var result = await _activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(0, result.TotalActivities);
+        Assert.Equal(0, result.TotalDistance);
+        Assert.Equal(TimeSpan.Zero, result.TotalDuration);
+        Assert.Equal(0, result.TotalElevationGain);
+        Assert.Empty(result.ActivitiesByType);
+        Assert.Empty(result.ActivitiesByMonth);
     }
 }

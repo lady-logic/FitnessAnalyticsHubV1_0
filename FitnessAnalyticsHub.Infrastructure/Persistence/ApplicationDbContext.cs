@@ -1,9 +1,10 @@
-﻿using FitnessAnalyticsHub.Domain.Entities;
+﻿using FitnessAnalyticsHub.Application.Interfaces;
+using FitnessAnalyticsHub.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace FitnessAnalyticsHub.Infrastructure.Persistence;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : base(options)

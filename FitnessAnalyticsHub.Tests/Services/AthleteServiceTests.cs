@@ -5,20 +5,27 @@ using FitnessAnalyticsHub.Application.Services;
 using FitnessAnalyticsHub.Domain.Entities;
 using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 using FitnessAnalyticsHub.Domain.Interfaces;
+using FitnessAnalyticsHub.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Moq;
 
 namespace FitnessAnalyticsHub.Tests.Services;
 
 public class AthleteServiceTests
 {
-    private readonly Mock<IRepository<Athlete>> _mockAthleteRepository;
+    private readonly ApplicationDbContext _context;
     private readonly Mock<IStravaService> _mockStravaService;
     private readonly IMapper _mapper;
     private readonly AthleteService _athleteService;
 
     public AthleteServiceTests()
     {
-        _mockAthleteRepository = new Mock<IRepository<Athlete>>();
+        // InMemory Database erstellen
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options;
+
+        _context = new ApplicationDbContext(options);
         _mockStravaService = new Mock<IStravaService>();
 
         // Konfiguriere AutoMapper mit dem tatsächlichen Mappingprofil
@@ -28,54 +35,60 @@ public class AthleteServiceTests
         });
         _mapper = mapperConfig.CreateMapper();
 
+        // Service erstellen
         _athleteService = new AthleteService(
-            _mockAthleteRepository.Object,
+            _context,
             _mockStravaService.Object,
             _mapper);
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 
     [Fact]
     public async Task GetAthleteByIdAsync_ShouldReturnAthlete_WhenAthleteExists()
     {
         // Arrange
-        var athleteId = 1;
         var athlete = new Athlete
         {
-            Id = athleteId,
+            Id = 1,
             FirstName = "Max",
             LastName = "Mustermann",
-            Email = "max@example.com",
+            Email = "max@test.com",
+            City = "Berlin",
+            Country = "Germany",
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now
         };
 
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(athlete);
+        await _context.Athletes.AddAsync(athlete);
+        await _context.SaveChangesAsync();
 
         // Act
-        var result = await _athleteService.GetAthleteByIdAsync(athleteId, It.IsAny<CancellationToken>());
+        var result = await _athleteService.GetAthleteByIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(athleteId, result.Id);
+        Assert.Equal(1, result.Id);
         Assert.Equal("Max", result.FirstName);
         Assert.Equal("Mustermann", result.LastName);
-        Assert.Equal("max@example.com", result.Email);
+        Assert.Equal("max@test.com", result.Email);
+        Assert.Equal("Berlin", result.City);
+        Assert.Equal("Germany", result.Country);
     }
 
     [Fact]
     public async Task GetAthleteByIdAsync_ShouldThrowAthleteNotFoundException_WhenAthleteDoesNotExist()
     {
-        // Arrange
-        var athleteId = 999;
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Athlete)null);
+        // Arrange - Keine Daten in DB
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
-            () => _athleteService.GetAthleteByIdAsync(athleteId, It.IsAny<CancellationToken>()));
+            () => _athleteService.GetAthleteByIdAsync(999, CancellationToken.None));
 
-        Assert.Equal(athleteId, exception.AthleteId);
+        Assert.Equal(999, exception.AthleteId);
     }
 
     [Fact]
@@ -83,213 +96,247 @@ public class AthleteServiceTests
     {
         // Arrange
         var athletes = new List<Athlete>
+    {
+        new Athlete
         {
-            new Athlete
-            {
-                Id = 1,
-                FirstName = "Max",
-                LastName = "Mustermann",
-                Email = "max@example.com",
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
-            },
-            new Athlete
-            {
-                Id = 2,
-                FirstName = "Anna",
-                LastName = "Schmidt",
-                Email = "anna@example.com",
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
-            }
-        };
+            Id = 1,
+            FirstName = "Max",
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        },
+        new Athlete
+        {
+            Id = 2,
+            FirstName = "Anna",
+            LastName = "Schmidt",
+            Email = "anna@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        }
+    };
 
-        _mockAthleteRepository.Setup(repo => repo.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(athletes);
+        await _context.Athletes.AddRangeAsync(athletes);
+        await _context.SaveChangesAsync();
 
         // Act
-        var result = await _athleteService.GetAllAthletesAsync(It.IsAny<CancellationToken>());
+        var result = await _athleteService.GetAllAthletesAsync(CancellationToken.None);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count());
-        Assert.Equal("Max", result.ElementAt(0).FirstName);
-        Assert.Equal("Anna", result.ElementAt(1).FirstName);
+        var resultList = result.ToList();
+        Assert.Equal(2, resultList.Count);
+        Assert.Contains(resultList, a => a.FirstName == "Max" && a.LastName == "Mustermann");
+        Assert.Contains(resultList, a => a.FirstName == "Anna" && a.LastName == "Schmidt");
     }
 
     [Fact]
-    public async Task CreateAthleteAsync_ShouldCreateAndReturnAthlete()
+    public async Task CreateAthleteAsync_ShouldCreateAthlete_WhenValidData()
     {
         // Arrange
-        var createAthleteDto = new CreateAthleteDto
+        var createDto = new CreateAthleteDto
         {
-            FirstName = "Lisa",
-            LastName = "Müller",
-            Email = "lisa@example.com",
-            City = "Berlin",
+            FirstName = "Test",
+            LastName = "User",
+            Email = "test@test.com",
+            City = "Munich",
             Country = "Germany"
         };
 
-        Athlete createdAthlete = null;
-
-        _mockAthleteRepository.Setup(repo => repo.AddAsync(It.IsAny<Athlete>(), It.IsAny<CancellationToken>()))
-            .Callback<Athlete, CancellationToken>((athlete, token) =>
-            {
-                athlete.Id = 3; // Simuliere Datenbankgenerierung der ID
-                createdAthlete = athlete;
-            });
-
         // Act
-        var result = await _athleteService.CreateAthleteAsync(createAthleteDto, It.IsAny<CancellationToken>());
+        var result = await _athleteService.CreateAthleteAsync(createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.Id);
-        Assert.Equal("Lisa", result.FirstName);
-        Assert.Equal("Müller", result.LastName);
-        Assert.Equal("lisa@example.com", result.Email);
+        Assert.Equal("Test", result.FirstName);
+        Assert.Equal("User", result.LastName);
+        Assert.Equal("test@test.com", result.Email);
+        Assert.True(result.Id > 0);
 
-        _mockAthleteRepository.Verify(repo => repo.AddAsync(It.IsAny<Athlete>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockAthleteRepository.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        // Verify in database
+        var athleteInDb = await _context.Athletes.FindAsync(result.Id);
+        Assert.NotNull(athleteInDb);
+        Assert.Equal("Test", athleteInDb.FirstName);
     }
 
     [Fact]
     public async Task UpdateAthleteAsync_ShouldUpdateAthlete_WhenAthleteExists()
     {
         // Arrange
-        var updateAthleteDto = new UpdateAthleteDto
-        {
-            Id = 1,
-            FirstName = "Max",
-            LastName = "Mustermann-Update",
-            Email = "max_updated@example.com",
-            City = "München",
-            Country = "Germany"
-        };
-
-        var existingAthlete = new Athlete
+        var athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
             LastName = "Mustermann",
-            Email = "max@example.com",
+            Email = "max@test.com",
             City = "Berlin",
             Country = "Germany",
-            CreatedAt = DateTime.Now.AddDays(-10),
-            UpdatedAt = DateTime.Now.AddDays(-10)
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
         };
 
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(updateAthleteDto.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingAthlete);
+        await _context.Athletes.AddAsync(athlete);
+        await _context.SaveChangesAsync();
+
+        var updateDto = new UpdateAthleteDto
+        {
+            Id = 1,
+            FirstName = "Maximilian",
+            LastName = "Mustermann",
+            City = "Munich",
+            Country = "Germany"
+        };
 
         // Act
-        await _athleteService.UpdateAthleteAsync(updateAthleteDto, It.IsAny<CancellationToken>());
+        await _athleteService.UpdateAthleteAsync(updateDto, CancellationToken.None);
 
         // Assert
-        _mockAthleteRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Athlete>()), Times.Once);
-        _mockAthleteRepository.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-
-        // Überprüfen, dass die Eigenschaften korrekt aktualisiert wurden
-        Assert.Equal("Mustermann-Update", existingAthlete.LastName);
-        Assert.Equal("max_updated@example.com", existingAthlete.Email);
-        Assert.Equal("München", existingAthlete.City);
+        var updatedAthlete = await _context.Athletes.FindAsync(1);
+        Assert.NotNull(updatedAthlete);
+        Assert.Equal("Maximilian", updatedAthlete.FirstName);
+        Assert.Equal("Munich", updatedAthlete.City);
     }
 
     [Fact]
     public async Task UpdateAthleteAsync_ShouldThrowAthleteNotFoundException_WhenAthleteDoesNotExist()
     {
         // Arrange
-        var updateAthleteDto = new UpdateAthleteDto
+        var updateDto = new UpdateAthleteDto
         {
             Id = 999,
-            FirstName = "Nicht",
-            LastName = "Vorhanden"
+            FirstName = "Test",
+            LastName = "User"
         };
-
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(updateAthleteDto.Id, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Athlete)null);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
-            () => _athleteService.UpdateAthleteAsync(updateAthleteDto, It.IsAny<CancellationToken>()));
+            () => _athleteService.UpdateAthleteAsync(updateDto, CancellationToken.None));
 
         Assert.Equal(999, exception.AthleteId);
-        _mockAthleteRepository.Verify(repo => repo.UpdateAsync(It.IsAny<Athlete>()), Times.Never);
     }
 
     [Fact]
     public async Task DeleteAthleteAsync_ShouldDeleteAthlete_WhenAthleteExists()
     {
         // Arrange
-        var athleteId = 1;
-        var existingAthlete = new Athlete { Id = athleteId };
+        var athlete = new Athlete
+        {
+            Id = 1,
+            FirstName = "Max",
+            LastName = "Mustermann",
+            Email = "max@test.com",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
 
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(existingAthlete);
+        await _context.Athletes.AddAsync(athlete);
+        await _context.SaveChangesAsync();
 
         // Act
-        await _athleteService.DeleteAthleteAsync(athleteId, It.IsAny<CancellationToken>());
+        await _athleteService.DeleteAthleteAsync(1, CancellationToken.None);
 
         // Assert
-        _mockAthleteRepository.Verify(repo => repo.DeleteAsync(existingAthlete), Times.Once);
-        _mockAthleteRepository.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        var deletedAthlete = await _context.Athletes.FindAsync(1);
+        Assert.Null(deletedAthlete);
     }
 
     [Fact]
     public async Task DeleteAthleteAsync_ShouldThrowAthleteNotFoundException_WhenAthleteDoesNotExist()
     {
-        // Arrange
-        var athleteId = 999;
-        _mockAthleteRepository.Setup(repo => repo.GetByIdAsync(athleteId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Athlete)null);
+        // Arrange - Keine Daten in DB
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
-            () => _athleteService.DeleteAthleteAsync(athleteId, It.IsAny<CancellationToken>()));
+            () => _athleteService.DeleteAthleteAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.AthleteId);
-        _mockAthleteRepository.Verify(repo => repo.DeleteAsync(It.IsAny<Athlete>()), Times.Never);
     }
 
     [Fact]
     public async Task ImportAthleteFromStravaAsync_ShouldCreateNewAthlete_WhenAthleteDoesNotExist()
     {
         // Arrange
-        var accessToken = "test_token";
         var stravaAthlete = new Athlete
         {
             StravaId = "12345",
-            FirstName = "Strava",
-            LastName = "Athlete",
-            Email = "strava@example.com"
+            FirstName = "John",
+            LastName = "Doe",
+            Username = "johndoe",
+            Email = "john@strava.com",
+            City = "San Francisco",
+            Country = "USA",
+            ProfilePictureUrl = "https://strava.com/profile.jpg"
         };
 
-        _mockStravaService.Setup(service => service.GetAthleteProfileAsync(accessToken))
+        _mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>()))
             .ReturnsAsync(stravaAthlete);
 
-        _mockAthleteRepository.Setup(repo => repo.FindAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Athlete, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<Athlete>());
-
-        Athlete createdAthlete = null;
-        _mockAthleteRepository.Setup(repo => repo.AddAsync(It.IsAny<Athlete>(), It.IsAny<CancellationToken>()))
-            .Callback<Athlete, CancellationToken>((athlete, token) =>
-            {
-                athlete.Id = 3; // Simuliere Datenbankgenerierung der ID
-                createdAthlete = athlete;
-            });
-
         // Act
-        var result = await _athleteService.ImportAthleteFromStravaAsync(accessToken, It.IsAny<CancellationToken>());
+        var result = await _athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(3, result.Id);
-        Assert.Equal("12345", result.StravaId);
-        Assert.Equal("Strava", result.FirstName);
-        Assert.Equal("Athlete", result.LastName);
-        Assert.Equal("strava@example.com", result.Email);
+        Assert.Equal("John", result.FirstName);
+        Assert.Equal("Doe", result.LastName);
+        Assert.Equal("john@strava.com", result.Email);
+        Assert.Equal("johndoe", result.Username);
+        Assert.True(result.Id > 0);
 
-        _mockAthleteRepository.Verify(repo => repo.AddAsync(It.IsAny<Athlete>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockAthleteRepository.Verify(repo => repo.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        // Verify in database
+        var athleteInDb = await _context.Athletes.FirstOrDefaultAsync(a => a.StravaId == "12345");
+        Assert.NotNull(athleteInDb);
+        Assert.Equal("12345", athleteInDb.StravaId);
+        Assert.Equal("John", athleteInDb.FirstName);
+    }
+
+    [Fact]
+    public async Task ImportAthleteFromStravaAsync_ShouldUpdateExistingAthlete_WhenAthleteAlreadyExists()
+    {
+        // Arrange
+        var existingAthlete = new Athlete
+        {
+            Id = 1,
+            StravaId = "12345",
+            FirstName = "John",
+            LastName = "Doe",
+            Email = "old@email.com",
+            City = "Old City",
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        await _context.Athletes.AddAsync(existingAthlete);
+        await _context.SaveChangesAsync();
+
+        var stravaAthlete = new Athlete
+        {
+            StravaId = "12345",
+            FirstName = "John",
+            LastName = "Doe",
+            Username = "johndoe_updated",
+            Email = "new@strava.com",
+            City = "San Francisco",
+            Country = "USA",
+            ProfilePictureUrl = "https://strava.com/new_profile.jpg"
+        };
+
+        _mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>()))
+            .ReturnsAsync(stravaAthlete);
+
+        // Act
+        var result = await _athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(1, result.Id); // Sollte die gleiche ID haben
+        Assert.Equal("new@strava.com", result.Email); // Email sollte aktualisiert sein
+        Assert.Equal("San Francisco", result.City); // City sollte aktualisiert sein
+        Assert.Equal("johndoe_updated", result.Username); // Username sollte aktualisiert sein
+
+        // Verify in database - sollte nur einen Athlete geben
+        var athletesInDb = await _context.Athletes.Where(a => a.StravaId == "12345").ToListAsync();
+        Assert.Single(athletesInDb);
+        Assert.Equal("new@strava.com", athletesInDb[0].Email);
+        Assert.Equal("johndoe_updated", athletesInDb[0].Username);
     }
 }
