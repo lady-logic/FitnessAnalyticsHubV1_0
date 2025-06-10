@@ -1,5 +1,3 @@
-<!-- src/app/components/athletes/athlete-detail/athlete-detail.component.html -->
-
 <div class="container mt-4">
   <div *ngIf="error" class="alert alert-danger">
     {{ error }}
@@ -15,6 +13,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h2>Athlet: {{ athlete.name }}</h2>
       <div>
+        <!-- NEUER Dashboard-Button -->
+        <button class="btn btn-success me-2" (click)="openDashboard()">
+          <i class="bi bi-speedometer2"></i> Fitness Dashboard
+        </button>
         <button class="btn btn-primary me-2" (click)="editAthlete()">
           <i class="bi bi-pencil"></i> Bearbeiten
         </button>
@@ -57,18 +59,36 @@
                   <th>Größe:</th>
                   <td>{{ athlete.height }} cm</td>
                 </tr>
-                <!-- Hier können weitere Athletendaten angezeigt werden -->
               </tbody>
             </table>
           </div>
           <div class="col-md-6">
-            <!-- Hier könntest du Zusatzinformationen, Statistiken oder Grafiken anzeigen -->
+            <!-- Quick Actions Card -->
             <div class="card">
-              <div class="card-header">Statistiken</div>
+              <div class="card-header">
+                <i class="bi bi-lightning"></i> Schnellaktionen
+              </div>
               <div class="card-body">
-                <p class="card-text">
-                  Hier könnten Athleten-Statistiken angezeigt werden.
-                </p>
+                <div class="d-grid gap-2">
+                  <button
+                    class="btn btn-outline-success"
+                    (click)="openDashboard()"
+                  >
+                    <i class="bi bi-graph-up"></i> Fitness Dashboard öffnen
+                  </button>
+                  <button
+                    class="btn btn-outline-info"
+                    (click)="viewActivities()"
+                  >
+                    <i class="bi bi-list-ul"></i> Aktivitäten anzeigen
+                  </button>
+                  <button
+                    class="btn btn-outline-warning"
+                    (click)="generateReport()"
+                  >
+                    <i class="bi bi-file-earmark-text"></i> Bericht erstellen
+                  </button>
+                </div>
               </div>
             </div>
           </div>

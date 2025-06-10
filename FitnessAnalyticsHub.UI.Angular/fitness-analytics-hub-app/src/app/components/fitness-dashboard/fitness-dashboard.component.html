@@ -1,0 +1,335 @@
+<div class="dashboard">
+  <!-- Header -->
+  <div class="header">
+    <h1>🏃‍♀️ Fitness Analytics Hub</h1>
+    <p *ngIf="currentAthlete$ | async as athlete">
+      {{ athlete.name }}'s Personal Training Intelligence
+    </p>
+    <p *ngIf="!(currentAthlete$ | async)">
+      Your Personal Training Intelligence
+    </p>
+  </div>
+
+  <!-- Ladeanzeige -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="loading-spinner-large"></div>
+    <p>Dashboard wird geladen...</p>
+  </div>
+
+  <!-- Fehleranzeige -->
+  <div *ngIf="error" class="error-banner">
+    <h3>⚠️ Hinweis</h3>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div *ngIf="!loading">
+    <!-- Motivation Message -->
+    <div class="motivation-banner" *ngIf="aiAnalysis$ | async as analysis">
+      <h3>🎯 Today's Motivation</h3>
+      <p *ngIf="analysis.performanceScore && analysis.performanceScore > 70">
+        "Fantastic! Your performance score is
+        {{ analysis.performanceScore }}/100. You're crushing your goals!"
+      </p>
+      <p *ngIf="analysis.performanceScore && analysis.performanceScore <= 70">
+        "Keep going! Every workout counts. Your dedication will pay off!"
+      </p>
+      <p *ngIf="!analysis.performanceScore">
+        "Ready for today's challenge? Let's analyze your latest activities and
+        unlock new insights!"
+      </p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid" *ngIf="statistics$ | async as stats">
+      <div class="stat-card">
+        <div class="icon">🏃‍♂️</div>
+        <div class="number">{{ stats.totalActivities }}</div>
+        <div class="label">Total Activities</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">📏</div>
+        <div class="number">{{ stats.totalDistance | number : "1.1-1" }}</div>
+        <div class="label">Total Distance (km)</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">⏱️</div>
+        <div class="number">{{ stats.totalDuration }}</div>
+        <div class="label">Total Duration</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">🔥</div>
+        <div class="number">{{ getEstimatedCalories(stats) }}</div>
+        <div class="label">Calories Burned</div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+      <!-- Recent Activities -->
+      <div class="recent-activities">
+        <h2>🏃 Recent Activities</h2>
+
+        <div
+          *ngIf="
+            recentActivities$ | async as activities;
+            else noActivitiesTemplate
+          "
+        >
+          <div
+            class="activity-item"
+            *ngFor="let activity of activities; trackBy: trackByActivityId"
+          >
+            <div
+              class="activity-icon"
+              [ngClass]="getActivityIconClass(activity.sportType)"
+            >
+              {{ getActivityEmoji(activity.sportType) }}
+            </div>
+            <div class="activity-details">
+              <h4>{{ activity.name }}</h4>
+              <p>
+                {{ activity.distance | number : "1.1-1" }} km •
+                {{ formatDuration(activity.duration) }} •
+                {{ activity.startDate | date : "dd.MM.yyyy" }}
+              </p>
+            </div>
+            <div class="activity-actions">
+              <button
+                class="btn btn-analyze"
+                (click)="analyzeActivity(activity)"
+                [disabled]="analyzingActivity === activity.id"
+              >
+                <span
+                  *ngIf="analyzingActivity === activity.id"
+                  class="loading-spinner"
+                ></span>
+                <span *ngIf="analyzingActivity !== activity.id">Analyze</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noActivitiesTemplate>
+          <div class="no-activities">
+            <div class="icon">📊</div>
+            <p>No activities yet. Start your fitness journey!</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- AI Insights -->
+      <div class="ai-insights">
+        <h2><span class="robot-icon">🤖</span> AI Insights</h2>
+
+        <div *ngIf="aiAnalysis$ | async as analysis; else loadingInsights">
+          <!-- Performance Analysis -->
+          <div class="insight-card" *ngIf="analysis.analysis">
+            <h4>🎯 Performance Analysis</h4>
+            <p>{{ analysis.analysis }}</p>
+            <ul *ngIf="analysis.keyInsights && analysis.keyInsights.length > 0">
+              <li *ngFor="let insight of analysis.keyInsights.slice(0, 3)">
+                {{ insight }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Recommendations -->
+          <div
+            class="insight-card"
+            *ngIf="
+              analysis.recommendations && analysis.recommendations.length > 0
+            "
+          >
+            <h4>💡 Recommendations</h4>
+            <ul>
+              <li
+                *ngFor="
+                  let recommendation of analysis.recommendations.slice(0, 3)
+                "
+              >
+                {{ recommendation }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Performance Score -->
+          <div class="insight-card" *ngIf="analysis.performanceScore">
+            <h4>📊 Performance Score: {{ analysis.performanceScore }}/100</h4>
+            <div class="score-bar">
+              <div
+                class="score-fill"
+                [style.width.%]="analysis.performanceScore"
+                [ngClass]="getScoreClass(analysis.performanceScore)"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #loadingInsights>
+          <!-- Default Insights -->
+          <div class="insight-card">
+            <h4>🔄 Ready for Analysis</h4>
+            <div class="loading-container-small">
+              <span>Click "Analyze" on any activity to get AI insights...</span>
+            </div>
+          </div>
+        </ng-template>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <button class="btn btn-action" (click)="analyzePerformanceTrends()">
+            📈 Performance Trends
+          </button>
+          <button class="btn btn-action" (click)="getTrainingRecommendations()">
+            💡 Training Tips
+          </button>
+          <button class="btn btn-action" (click)="analyzeHealthMetrics()">
+            ❤️ Health Analysis
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section - ERWEITERT MIT ECHTEN DATEN -->
+    <div class="charts-section">
+      <!-- Weekly Progress Chart -->
+      <div class="chart-container">
+        <h3>📈 Weekly Progress</h3>
+        <div class="weekly-progress-chart" *ngIf="statistics$ | async as stats">
+          <!-- Progress Bars für letzte 4 Wochen -->
+          <div
+            class="week-item"
+            *ngFor="let week of getWeeklyProgress(); let i = index"
+          >
+            <div class="week-label">Week {{ 4 - i }}</div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-bg">
+                <div
+                  class="progress-bar-fill"
+                  [style.width.%]="week.percentage"
+                  [style.background]="getWeekColor(i)"
+                ></div>
+              </div>
+              <span class="week-value">{{ week.distance }}km</span>
+            </div>
+          </div>
+
+          <!-- Trend Indicator -->
+          <div class="trend-summary">
+            <div class="trend-item">
+              <span class="trend-icon">📊</span>
+              <span>Avg: {{ getAverageWeeklyDistance() }}km/week</span>
+            </div>
+            <div class="trend-item">
+              <span class="trend-icon">📈</span>
+              <span>Trend: {{ getWeeklyTrend() }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Distribution Chart -->
+      <div class="chart-container">
+        <h3>🎯 Activity Distribution</h3>
+        <div
+          class="activity-distribution-chart"
+          *ngIf="statistics$ | async as stats"
+        >
+          <!-- Pie Chart Simulation -->
+          <div class="pie-chart">
+            <div
+              class="pie-slice"
+              *ngFor="
+                let type of getActivityTypes(stats.activitiesByType);
+                let i = index
+              "
+              [style.background]="getActivityColor(type.name)"
+              [style.height.px]="type.percentage * 2"
+              [title]="type.name + ': ' + type.percentage + '%'"
+            ></div>
+          </div>
+
+          <!-- Legend -->
+          <div class="chart-legend">
+            <div
+              class="legend-item"
+              *ngFor="let type of getActivityTypes(stats.activitiesByType)"
+              [class.no-data]="type.percentage === 0"
+            >
+              <div
+                class="legend-color"
+                [style.background]="getActivityColor(type.name)"
+              ></div>
+              <span class="legend-emoji">{{
+                getActivityEmoji(type.name)
+              }}</span>
+              <span class="legend-text">{{ type.name }}</span>
+              <span class="legend-percentage">{{ type.percentage }}%</span>
+              <span class="legend-count">({{ type.count }})</span>
+            </div>
+          </div>
+
+          <!-- Summary Stats -->
+          <div class="distribution-summary">
+            <div class="summary-item">
+              <strong>{{ stats.mostCommonSport || "Running" }}</strong>
+              <small>Most Active Sport</small>
+            </div>
+            <div class="summary-item">
+              <strong>{{ stats.totalActivities }}</strong>
+              <small>Total Activities</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Activity Heatmap (BONUS) -->
+    <div class="charts-section-bonus">
+      <div class="chart-container-wide">
+        <h3>🗓️ Monthly Activity Heatmap</h3>
+        <div class="heatmap-chart" *ngIf="statistics$ | async as stats">
+          <div class="heatmap-container">
+            <div
+              class="heatmap-month"
+              *ngFor="let month of getMonthlyData(stats.activitiesByMonth)"
+              [class.active]="month.count > 0"
+            >
+              <div class="month-label">{{ month.name }}</div>
+              <div
+                class="month-bar"
+                [style.height.%]="month.percentage"
+                [style.background]="getMonthHeatColor(month.count)"
+                [title]="month.name + ': ' + month.count + ' activities'"
+              ></div>
+              <div class="month-count">{{ month.count }}</div>
+            </div>
+          </div>
+
+          <div class="heatmap-legend">
+            <span>Less</span>
+            <div class="heat-scale">
+              <div class="heat-box heat-0"></div>
+              <div class="heat-box heat-1"></div>
+              <div class="heat-box heat-2"></div>
+              <div class="heat-box heat-3"></div>
+              <div class="heat-box heat-4"></div>
+            </div>
+            <span>More</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Actions -->
+    <div class="navigation-actions">
+      <button class="btn btn-secondary" (click)="goBack()">
+        ← Back to Athletes
+      </button>
+      <button class="btn btn-primary" (click)="refreshData()">
+        🔄 Refresh Data
+      </button>
+    </div>
+  </div>
+</div>
