@@ -3,7 +3,6 @@ using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Infrastructure.Configuration;
 using FitnessAnalyticsHub.Infrastructure.Extensions;
 using FitnessAnalyticsHub.Infrastructure.Persistence;
-using FitnessAnalyticsHub.Infrastructure.Repositories;
 using FitnessAnalyticsHub.Infrastructure.Services;
 using FitnessAnalyticsHub.Infrastructure.Services.AIAssistant;
 using Microsoft.Extensions.Configuration;
@@ -19,8 +18,9 @@ public static class InfrastructureServiceRegistration
         services.AddDbContext<ApplicationDbContext>(options =>
                 DatabaseConfiguration.ConfigureDatabase(options, configuration));
 
-        // Register repositories
-        services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+        // Register DbContext Interface
+        services.AddScoped<IApplicationDbContext>(provider =>
+            provider.GetRequiredService<ApplicationDbContext>());
 
         // Register Strava service
         services.AddScoped<IStravaService, StravaService>();

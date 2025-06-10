@@ -49,6 +49,31 @@ export class AthleteDetailComponent implements OnInit {
     });
   }
 
+  // NEUE Methode für Dashboard
+  openDashboard(): void {
+    if (this.athlete) {
+      this.router.navigate(['/dashboard', this.athlete.id]);
+    }
+  }
+
+  // NEUE Methode für Aktivitäten (kann später implementiert werden)
+  viewActivities(): void {
+    if (this.athlete) {
+      // Später implementieren wenn Activities-Component existiert
+      console.log('Aktivitäten für Athlet', this.athlete.id);
+      // this.router.navigate(['/activities', this.athlete.id]);
+    }
+  }
+
+  // NEUE Methode für Berichte (kann später implementiert werden)
+  generateReport(): void {
+    if (this.athlete) {
+      // Später implementieren wenn Report-Feature existiert
+      console.log('Bericht für Athlet', this.athlete.id);
+      // this.router.navigate(['/reports', this.athlete.id]);
+    }
+  }
+
   editAthlete(): void {
     if (this.athlete) {
       this.router.navigate(['/athletes/edit', this.athlete.id]);
