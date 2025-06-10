@@ -2,6 +2,21 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.3.0] - 2025-06-10
+
+### 🎉 Major Features
+- **NEW: Dashboard Interface** - Complete dashboard implementation with activity analytics and visualizations
+- Interactive charts and metrics for fitness data analysis
+- Responsive design for desktop and mobile devices
+
+### ✨ Added
+- Activity overview with key performance indicators
+- Visual charts for tracking progress over time
+- Modern UI components with intuitive navigation
+
+### 🛠️ Technical
+- Implemented new dashboard architecture
+
 ## [1.2.0] - 2025-06-07
 ### 🚀 Added
 - **AutoMapper integration** for consistent object mapping
