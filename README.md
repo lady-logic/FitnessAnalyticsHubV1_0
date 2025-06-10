@@ -4,10 +4,8 @@
 ![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHubV1_0&metric=sqale_rating)
 ![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHubV1_0&metric=security_rating)
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
-![Health Monitoring](https://img.shields.io/badge/Health-Monitoring%20%2B%20UI-brightgreen)
 ![Docker](https://img.shields.io/badge/Docker-Multi--Service-blue)
 ![API Documentation](https://img.shields.io/badge/API-Swagger%20%2B%20OpenAPI-orange)
-![Microservices](https://img.shields.io/badge/Architecture-Microservices-green)
 ![License](https://img.shields.io/github/license/lady-logic/FitnessAnalyticsHubV1_0)
 ![Last Commit](https://img.shields.io/github/last-commit/lady-logic/FitnessAnalyticsHubV1_0)
 
@@ -16,10 +14,22 @@
   <img src="logo.png" alt="FitnessAnalyticsHub Logo" width="200"/>
 </p>
 
-<h1 align="center">🏋️‍♀️ FitnessAnalyticsHubV1_0</h1>
+<h1 align="center">🏋️‍♀️ FitnessAnalyticsHub</h1>
 <p align="center">
   Ein wachsendes Analyse- und Lernprojekt rund um Fitness, Trainingsdaten und moderne .NET-Technologien.
 </p>
+
+---
+
+## ✨ Features
+
+- 🏃‍♂️ **Strava Integration** - Automatic activity import and synchronization
+- 📊 **Interactive Dashboard** - Comprehensive analytics and visualizations for fitness data
+- 📈 **Activity Tracking** - Support for running, cycling, strength training, and more
+- 🎯 **Performance Metrics** - Detailed statistics including pace, heart rate, power analysis
+- 📱 **Modern Web UI** - Responsive Angular frontend with intuitive navigation
+- 🛡️ **Enterprise Error Handling** - Comprehensive exception management with consistent API responses
+- 🏥 **Health Monitoring** - Built-in health checks and observability dashboard
 
 ---
 
@@ -28,7 +38,7 @@
 Dieses Projekt ist eine persönliche Spielwiese für moderne Softwareentwicklung mit Fokus auf:
 
 - 🧱 Clean Architecture mit Domain, Application, Infrastructure
-- 🖥️ Moderne UI mit Angular & evtl. auch noch WPF
+- 🖥️ Moderne UI mit Angular
 - 🧪 Architekturtests mit NetArchTest
 - 🐳 Dockerisierung & Bereitstellung
 - 🤖 Automatisierung durch GitHub Actions
@@ -51,167 +61,35 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 
 ---
 
-## 🛡️ Error Handling
-
-This application implements a comprehensive error handling strategy using Clean Architecture principles.
-
-### Exception Hierarchy
-
-```
-Exception
-├── DomainException (Base for all domain exceptions)
-│   ├── NotFoundException
-│   │   ├── ActivityNotFoundException
-│   │   └── AthleteNotFoundException
-│   ├── ValidationException
-│   └── BusinessRuleException
-└── StravaServiceException (Infrastructure exceptions)
-    ├── InvalidStravaTokenException
-    ├── StravaApiException
-    ├── StravaConfigurationException
-    └── StravaAuthorizationException
-```
-
-### Error Response Format
-
-All API errors return a consistent JSON structure:
-
-```json
-{
-  "type": "ActivityNotFound",
-  "message": "Activity with ID 123 not found",
-  "statusCode": 404,
-  "details": "ActivityId: 123",
-  "timestamp": "2024-01-15T10:30:00Z"
-}
-```
-
-### HTTP Status Code Mapping
-
-| Exception Type | HTTP Status | Description |
-|----------------|-------------|-------------|
-| `ActivityNotFoundException` | 404 | Activity not found |
-| `AthleteNotFoundException` | 404 | Athlete not found |
-| `InvalidStravaTokenException` | 401 | Invalid or expired token |
-| `StravaConfigurationException` | 500 | Server configuration error |
-| `StravaApiException` | 400/502 | External API error |
-| Generic exceptions | 500 | Internal server error |
-
-### For Developers
-
-**Controllers are exception-free:**
-```csharp
-[HttpGet("{id}")]
-public async Task<ActionResult<ActivityDto>> GetById(int id)
-{
-    var activity = await _activityService.GetActivityByIdAsync(id);
-    return Ok(activity); // Exceptions handled by middleware
-}
-```
-
-**Services throw specific exceptions:**
-```csharp
-public async Task<ActivityDto> GetActivityByIdAsync(int id)
-{
-    var activity = await _repository.GetByIdAsync(id);
-    if (activity == null)
-        throw new ActivityNotFoundException(id);
-    return _mapper.Map<ActivityDto>(activity);
-}
-```
-
----
-
-## 🏥 Health Monitoring & Observability
-
-### **📊 Health Monitoring Features**
-```csharp
-// Umfassendes Health Monitoring System
-services.AddHealthChecks()
-    .AddCheck("api", () => HealthCheckResult.Healthy())
-    .AddSqlServer(connectionString, tags: new[] { "database" })
-    .AddRedis(redisConnection, tags: new[] { "cache" });
-
-// Health Dashboard mit 60s Auto-Refresh
-services.AddHealthChecksUI(setup => {
-    setup.SetEvaluationTimeInSeconds(60);
-    setup.MaximumHistoryEntriesPerEndpoint(50);
-});
-```
-
-### **🌐 Health Endpoints & Dashboard**
-Nach dem Starten des Systems sind folgende Monitoring-Endpoints verfügbar:
-
-| Endpoint | Beschreibung | Beispiel |
-|----------|--------------|----------|
-| **`/health-ui`** | 📊 **Visual Dashboard** mit Verlauf | `http://localhost:8080/health-ui` |
-| **`/health`** | 🔍 **JSON API** für alle Services | `http://localhost:8080/health` |
-| **`/health/infrastructure`** | 🏗️ **Gruppierte Checks** (DB, Cache) | `http://localhost:8080/health/infrastructure` |
-
-### **✨ Enterprise Health Features**
-- **🏷️ Tag-based Grouping** - Services vs Infrastructure
-- **📈 Historical Tracking** - 50 Health Check Einträge Verlauf
-- **⏱️ Auto-Refresh** - Alle 60 Sekunden automatische Prüfung  
-- **🎯 Production Ready** - Geeignet für Load Balancer Integration
-- **🔄 Container Health** - Docker HEALTHCHECK Integration
-
-```bash
-# Health Status prüfen
-curl http://localhost:8080/health | jq
-
-# Health Dashboard öffnen  
-open http://localhost:8080/health-ui
-```
-
----
-
 ## 🧱 Architekturüberblick
 
 ```text
-📦 FitnessAnalyticsHubV1_0
+📦 FitnessAnalyticsHub
 ├── 01_Core
 │   └── 🧠 FitnessAnalyticsHub.Domain            // Entitäten, Value Objects, Interfaces
 │
 ├── 02_Application
-│   └── 🧰 FitnessAnalyticsHub.Application       // Services, DTOs, Interfaces
+│   └── 🧰 FitnessAnalyticsHub.Application       // Services, DTOs, CQRS Commands/Queries
 │
 ├── 03_Infrastructure
-│   └── 🏗️ FitnessAnalyticsHub.Infrastructure    // Repositories, externe APIs, Persistence
+│   └── 🏗️ FitnessAnalyticsHub.Infrastructure    // Repositories, Strava API, Entity Framework
 │
 ├── 04_UI
-│   ├── 🌐 FitnessAnalyticsHub.WebApi            // RESTful API für Clients
-│   └── 🌐 UI.Angular                            // Web-Frontend (erste Oberfläche für Athlet 😀)
+│   ├── 🌐 FitnessAnalyticsHub.WebApi            // RESTful API mit Swagger/OpenAPI
+│   └── 🌐 UI.Angular                            // Interactive Dashboard & Web-Frontend
 │
 ├── 05_Tests
-│   └── 🧪 FitnessAnalyticsHub.Tests             // Architekturtests und Unit-Tests
+│   └── 🧪 FitnessAnalyticsHub.Tests             // Unit Tests, Integration Tests, Architecture Tests
 │
 └── 06_AIAssistant
-    └── 🤖 FitnessAnalyticsHub.AIAssistant       // KI-Integration (rudimentäre Implementierung)
+    └── 🤖 FitnessAnalyticsHub.AIAssistant       // KI-Integration (in Entwicklung)
 ```
 
----
-
-## 🏗️ Recent Architecture Improvements
-
-### ✅ Entity Configuration Organization
-- **Before**: All entity configurations mixed in `ApplicationDbContext.OnModelCreating()`
-- **After**: Separated into dedicated `IEntityTypeConfiguration<T>` classes
-- **Benefit**: Better organization, easier maintenance, follows separation of concerns
-
-### ✅ Database Configuration Consolidation
-- **Before**: Database setup duplicated across multiple locations
-- **After**: Centralized `DatabaseConfiguration` helper class
-- **Benefit**: Single source of truth, eliminates inconsistencies
-
-### ✅ AutoMapper Integration
-- **Before**: Manual property mapping scattered throughout codebase
-- **After**: Centralized mapping profiles with business logic
-- **Benefit**: Reduced boilerplate, consistent mapping behavior
-
-### ✅ Async Operations Enhancement
-- **Before**: Limited cancellation token support
-- **After**: Full cancellation token support throughout all layers
-- **Benefit**: Better resource management and application responsiveness
+### Key Architecture Features
+- **Clean Architecture** mit strikter Dependency Inversion
+- **Domain-Driven Design** Prinzipien
+- **Entity Framework Core** mit automatischen Migrations
+- **Comprehensive Error Handling** mit custom exception hierarchy
 
 ---
 
@@ -229,34 +107,56 @@ open http://localhost:8080/health-ui
 **Backend & Framework:**
 - 🧠 [.NET 8](https://dotnet.microsoft.com/) (Latest LTS)
 - 🔄 [Entity Framework Core](https://docs.microsoft.com/ef/core/) mit SQLite
-- 🧱 Clean Architecture Pattern
+- 🧱 Clean Architecture Pattern 
 
 **Frontend & UI:**
-- 🌐 [Angular](https://angular.io/) für moderne Web-UI
+- 🌐 [Angular](https://angular.io/) mit TypeScript
+- 📊 Interactive Charts und Data Visualizations
+- 📱 Responsive Design für Desktop und Mobile
 
 **Code Quality & Testing:**
-- 🧪 [xUnit Testing Framework](https://xunit.net/) mit umfassenden Unit Tests
-- 🧪 [FluentAssertions](https://fluentassertions.com/) für aussagekräftige Test-Assertions
-- 🏛️ [NetArchTest](https://github.com/BenMorris/NetArchTest) für Architecture Tests
-- 🔬 **SonarCloud Integration** für kontinuierliche Code-Qualitätsüberwachung
-- 📊 Code Coverage Tracking und Reporting
+- 🧪 [xUnit](https://xunit.net/) + [FluentAssertions](https://fluentassertions.com/)
+- 🏛️ [NetArchTest](https://github.com/BenMorris/NetArchTest) für Architecture Compliance
+- 🔬 **SonarCloud Integration** für kontinuierliche Code-Qualität
+- 📊 Automated Code Coverage mit detailliertem Reporting
 
 **DevOps & CI/CD:**
 - 🤖 **GitHub Actions** - Vollautomatisierte CI/CD Pipeline
-- ✅ Automatisierte Tests bei jedem Commit
-- 🛡️ **Branch Protection Rules** - Code Review Workflow enforced
-- 🔄 **Multi-Stage Pipeline**: Build → Test → Code Quality Analysis
-- 📦 Artifact Management für Test-Reports und Coverage-Daten
+- 🛡️ **Branch Protection** mit enforced Code Reviews
+- 🐳 **Docker Multi-Stage Builds** für Production Deployments
+- 📦 **Health Monitoring** mit `/health-ui` Dashboard
 
 **Integration & APIs:**
-- 🔗 [Strava API](https://developers.strava.com/) für Fitness-Datenintegration
-- 🤖 AI Assistant Integration (in Entwicklung)
+- 🔗 [Strava API v3](https://developers.strava.com/) Integration
+- 🤖 AI Assistant Module (in Development)
+- 📋 Swagger/OpenAPI Documentation
 
-**Entwicklungsstandards:**
-- 📋 Git Workflow mit Feature Branches
-- 💬 Semantic Commit Messages
-- 📖 Comprehensive Documentation
-- 🏆 Professional README mit Quality Badges
+---
+
+## 🔗 Strava API Integration
+
+Umfassende Integration mit der Strava API für:
+
+**Datenimport:**
+- 🏃‍♂️ **Activities**: Laufen, Radfahren, Schwimmen, Krafttraining
+- 📊 **Performance Metrics**: Pace, Herzfrequenz, Power, Cadence  
+- 🗺️ **Route Data**: GPS-Tracks und Elevation profiles
+- 👤 **Athlete Profiles**: Benutzerdaten und Präferenzen
+
+**Features:**
+- 🔄 **OAuth 2.0**: Sichere Authentifizierung
+- 📈 **Data Validation**: Robuste Datenverarbeitung für alle Activity-Typen
+- 🚫 **Flexible Schema**: Unterstützt Activities mit/ohne GPS, Pace, etc.
+
+---
+
+## 🏥 Enterprise Features
+
+**Error Handling:** Comprehensive exception hierarchy mit consistent API responses und HTTP status mapping.
+
+**Health Monitoring:** Built-in health checks für Database, Cache und externe APIs mit Visual Dashboard unter `/health-ui`.
+
+**Observability:** Structured logging, performance metrics und automatic health status tracking.
 
 ---
 
@@ -264,48 +164,26 @@ open http://localhost:8080/health-ui
 
 ### Voraussetzungen
 - .NET 8.0 SDK
-- Visual Studio 2022 oder VS Code
+- Node.js (für Angular Frontend)
 
-### Installation
+### Quick Start
 ```bash
 git clone https://github.com/lady-logic/FitnessAnalyticsHubV1_0.git
 cd FitnessAnalyticsHubV1_0
-dotnet restore
-dotnet build
+dotnet restore && dotnet build
+
+# API starten
+cd FitnessAnalyticsHub.WebApi && dotnet run
+
+# Frontend starten (separates Terminal)
+cd UI.Angular && npm install && ng serve
 ```
 
-### Tests ausführen
-```bash
-# Alle Tests
-dotnet test
-
-# Nur Unit Tests
-dotnet test --filter "Category!=Architecture"
-
-# Nur Architecture Tests
-dotnet test --filter "Category=Architecture"
-
-# Mit Coverage
-dotnet test --collect:"XPlat Code Coverage"
-```
-
-### API starten
-```bash
-cd FitnessAnalyticsHub.WebApi
-dotnet run
-```
-
-Die API ist dann verfügbar unter: `https://localhost:7001`
-
----
-
-## 🔗 Strava API Integration
-
-Die Integration mit der Strava API ermöglicht den Zugriff auf:
-- Aktivitätsdaten (Laufen, Radfahren, etc.)
-- Leistungsmetriken
-- Strecken und Routen
-- Benutzerprofildaten
+**Endpoints:**
+- API: `https://localhost:7001`
+- Dashboard: `http://localhost:4200`
+- Health UI: `https://localhost:7001/health-ui`
+- Swagger: `https://localhost:7001/swagger`
 
 ---
 
@@ -320,14 +198,19 @@ Das FitnessAnalyticsHub.AIAssistant-Modul ist derzeit nur rudimentär implementi
 
 ## 🎯 Roadmap
 
-- ✅ GitHub CI/CD Workflows integrieren
+**Current Sprint:**
+- ✅ Interactive Dashboard Implementation
+- ✅ Strava API Integration & Activity Import
+- ✅ GitHub CI/CD Workflows
 - ✅ Code Quality Monitoring mit SonarCloud
-- ✅ Tests + Testabdeckung ausbauen
-- 🚧 Trainingsdaten via Strava API laden
-- 📝 Dockerisieren für lokale + Cloud-Deployments
-- 📝 CQRS-Pattern implementieren für bessere Trennung von Lese- und Schreiboperationen
-- 📝 Fehlende Oberflächen in Angular ergänzen
-- 📝 AIAssistant anbinden...uvm 😅
+
+**Next Steps:**
+- 🚧 **Enhanced Analytics**: Advanced charts und performance trends
+- 🚧 **Data Export**: PDF reports und data export functionality  
+- 📝 **Docker Deployment**: Production-ready containerization
+- 📝 **Real-time Updates**: WebSocket integration für live dashboard updates
+- 📝 **AIAssistant Integration**: Intelligent training recommendations
+- 📝 **Multi-Sport Analytics**: Sport-specific metrics und insights
 
 ---
 
