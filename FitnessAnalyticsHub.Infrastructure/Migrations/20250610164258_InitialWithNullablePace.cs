@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace FitnessAnalyticsHub.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialWithNullablePace : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -59,7 +59,8 @@ namespace FitnessAnalyticsHub.Infrastructure.Migrations
                     MaxHeartRate = table.Column<int>(type: "INTEGER", nullable: true),
                     AveragePower = table.Column<double>(type: "REAL", nullable: true),
                     MaxPower = table.Column<double>(type: "REAL", nullable: true),
-                    AverageCadence = table.Column<double>(type: "REAL", nullable: true)
+                    AverageCadence = table.Column<double>(type: "REAL", nullable: true),
+                    PacePerKilometerInTicks = table.Column<TimeSpan>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

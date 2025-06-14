@@ -20,6 +20,12 @@ public class Pace : ValueObject
         return new Pace(TimeSpan.FromSeconds(timePerKm));
     }
 
+    // Helper für Anzeige
+    public string ToDisplayString()
+    {
+        return $"{ValuePerKilometer:mm\\:ss} min/km";
+    }
+
     protected override IEnumerable<object> GetEqualityComponents()
     {
         yield return ValuePerKilometer;

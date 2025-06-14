@@ -17,7 +17,6 @@ public static class ApplicationServiceRegistration
         // Registriere Services
         services.AddScoped<IActivityService, ActivityService>();
         services.AddScoped<IAthleteService, AthleteService>();
-        services.AddScoped<IPredictionService, PredictionService>();
         services.AddScoped<ITrainingPlanService, TrainingPlanService>();
 
         return services;

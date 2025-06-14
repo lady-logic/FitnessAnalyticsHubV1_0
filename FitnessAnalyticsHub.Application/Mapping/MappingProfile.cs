@@ -1,7 +1,6 @@
 ﻿using AutoMapper;
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Domain.Entities;
-using FitnessAnalyticsHub.Domain.Models;
 using FitnessAnalyticsHub.Domain.ValueObjects;
 
 namespace FitnessAnalyticsHub.Application.Mapping;
@@ -62,9 +61,6 @@ public class MappingProfile : Profile
         CreateMap<UpdatePlannedActivityDto, PlannedActivity>()
             .ForMember(dest => dest.PlannedDuration, opt =>
                 opt.MapFrom(src => src.PlannedDurationMinutes));
-
-        // Prediction mappings
-        CreateMap<PredictionResult, PredictionResultDto>();
     }
 
     private Pace CreatePaceFromDistanceAndTime(double distanceInKm, int movingTimeSeconds)

@@ -4,9 +4,6 @@ namespace AIAssistant._02_Application.Interfaces;
 
 public interface IMotivationCoachService
 {
-    Task<MotivationResponseDto> GetOpenAIMotivationalMessageAsync(
-        MotivationRequestDto request);
-
-    Task<MotivationResponseDto> GetClaudeMotivationalMessageAsync(
+    Task<MotivationResponseDto> GetHuggingFaceMotivationalMessageAsync(
         MotivationRequestDto request);
 }
