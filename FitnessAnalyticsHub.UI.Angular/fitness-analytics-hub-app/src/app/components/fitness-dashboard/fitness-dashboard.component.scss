@@ -945,4 +945,119 @@
   .progress-bar-container {
     justify-content: center;
   }
+
+  /* ========== AI ANALYSIS FORMATTING ========== */
+  .formatted-analysis {
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .analysis-header {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 15px 0 10px 0;
+    color: #fff;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .analysis-header::before {
+    content: "🎯";
+    font-size: 1.2em;
+  }
+
+  .analysis-bold {
+    font-weight: 600;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .analysis-paragraph {
+    margin: 12px 0;
+    line-height: 1.5;
+  }
+
+  .analysis-numbered-list {
+    margin: 15px 0;
+    padding-left: 0;
+    counter-reset: analysis-counter;
+  }
+
+  .analysis-list-item {
+    list-style: none;
+    margin: 8px 0;
+    padding: 10px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #fff;
+    position: relative;
+    counter-increment: analysis-counter;
+  }
+
+  .analysis-list-item::before {
+    content: counter(analysis-counter);
+    position: absolute;
+    left: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #fff;
+    color: #667eea;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.9em;
+  }
+
+  .analysis-bullet-list {
+    margin: 15px 0;
+    padding-left: 0;
+  }
+
+  .analysis-bullet-item {
+    list-style: none;
+    margin: 8px 0;
+    padding: 10px 15px 10px 40px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    position: relative;
+  }
+
+  .analysis-bullet-item::before {
+    content: "💡";
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1em;
+  }
+
+  /* Responsive anpassungen */
+  @media (max-width: 768px) {
+    .analysis-header {
+      font-size: 1em;
+      margin: 12px 0 8px 0;
+    }
+
+    .analysis-list-item,
+    .analysis-bullet-item {
+      padding: 8px 12px 8px 35px;
+      margin: 6px 0;
+    }
+
+    .analysis-list-item::before {
+      width: 20px;
+      height: 20px;
+      left: -12px;
+      font-size: 0.8em;
+    }
+  }
 }

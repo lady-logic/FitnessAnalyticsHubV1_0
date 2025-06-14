@@ -376,8 +376,6 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
     return 'Getting Started 🌱';
   }
 
-  // ========== BESTEHENDE METHODEN (UNVERÄNDERT) ==========
-
   // Utility Methods for Modern Design
   getActivityEmoji(sportType: string): string {
     const emojis: { [key: string]: string } = {
@@ -468,6 +466,55 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
   // Navigation
   refreshData() {
     this.loadDashboardData();
+  }
+
+  formatMarkdown(text: string | undefined): string {
+    if (!text) return '';
+
+    return (
+      text
+        // Headers: ## Text → <h4>Text</h4>
+        .replace(/## (.*?)(\n|$)/g, '<h4 class="analysis-header">$1</h4>')
+
+        // Bold: **Text** → <strong>Text</strong>
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="analysis-bold">$1</strong>')
+
+        // Numbered lists: 1. Text → <ol><li>Text</li></ol>
+        .replace(/(\d+\.\s+.*?)(?=\n\d+\.|\n\n|$)/gs, (match) => {
+          const items = match.split(/\n(?=\d+\.)/);
+          const listItems = items
+            .map((item) =>
+              item
+                .replace(/^\d+\.\s+/, '<li class="analysis-list-item">')
+                .replace(/$/, '</li>')
+            )
+            .join('');
+          return `<ol class="analysis-numbered-list">${listItems}</ol>`;
+        })
+
+        // Bullet Points: • Text oder - Text → <ul><li>Text</li></ul>
+        .replace(/((?:•|-)\s+.*?)(?=\n(?:•|-)|$)/gs, (match) => {
+          const items = match.split(/\n(?=•|-)/);
+          const listItems = items
+            .map((item) =>
+              item
+                .replace(/^(?:•|-)\s+/, '<li class="analysis-bullet-item">')
+                .replace(/$/, '</li>')
+            )
+            .join('');
+          return `<ul class="analysis-bullet-list">${listItems}</ul>`;
+        })
+
+        // Paragraphs: Doppelte Line breaks → <p>
+        .replace(/\n\n/g, '</p><p class="analysis-paragraph">')
+
+        // Single line breaks → <br>
+        .replace(/\n/g, '<br>')
+
+        // Wrap in paragraph if not starting with header
+        .replace(/^(?!<[h4|ol|ul])/, '<p class="analysis-paragraph">')
+        .replace(/(?<!>)$/, '</p>')
+    );
   }
 
   goBack() {

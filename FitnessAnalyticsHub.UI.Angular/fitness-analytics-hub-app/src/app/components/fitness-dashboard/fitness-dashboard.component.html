@@ -126,7 +126,10 @@
           <!-- Performance Analysis -->
           <div class="insight-card" *ngIf="analysis.analysis">
             <h4>🎯 Performance Analysis</h4>
-            <p>{{ analysis.analysis }}</p>
+            <div
+              [innerHTML]="formatMarkdown(analysis.analysis)"
+              class="formatted-analysis"
+            ></div>
             <ul *ngIf="analysis.keyInsights && analysis.keyInsights.length > 0">
               <li *ngFor="let insight of analysis.keyInsights.slice(0, 3)">
                 {{ insight }}

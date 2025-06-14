@@ -39,6 +39,25 @@ public class WorkoutAnalysisController : ControllerBase
         }
     }
 
+    [HttpPost("analyze/googlegemini")]
+    public async Task<ActionResult<WorkoutAnalysisResponseDto>> AnalyzeGoogleGeminiWorkouts(
+        [FromBody] WorkoutAnalysisRequestDto request)
+    {
+        try
+        {
+            _logger.LogInformation("Analyzing workouts with GoogleGemini for analysis type: {AnalysisType}",
+                request.AnalysisType);
+
+            var result = await _workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error analyzing workouts with GoogleGemini");
+            return StatusCode(500, "An error occurred while analyzing workouts");
+        }
+    }
+
     // Performance Trends Endpoint
     [HttpGet("performance-trends/{athleteId}")]
     public async Task<ActionResult<WorkoutAnalysisResponseDto>> AnalyzePerformanceTrends(

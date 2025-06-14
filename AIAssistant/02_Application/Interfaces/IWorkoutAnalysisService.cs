@@ -7,4 +7,7 @@ public interface IWorkoutAnalysisService
 {
     Task<WorkoutAnalysisResponseDto> AnalyzeHuggingFaceWorkoutsAsync(
         WorkoutAnalysisRequestDto request);
+
+    Task<WorkoutAnalysisResponseDto> AnalyzeGoogleGeminiWorkoutsAsync(
+        WorkoutAnalysisRequestDto request);
 }

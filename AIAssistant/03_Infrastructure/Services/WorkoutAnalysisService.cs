@@ -1,62 +1,95 @@
 ﻿using AIAssistant._02_Application.DTOs;
 using AIAssistant._02_Application.Interfaces;
 using AIAssistant.Application.DTOs;
+using FitnessAnalyticsHub.AIAssistant._03_Infrastructure.Services;
 
 namespace AIAssistant._03_Infrastructure.Services;
 
 public class WorkoutAnalysisService : IWorkoutAnalysisService
 {
-    private readonly IAIPromptService _aiPromptService;
+    private readonly HuggingFaceService _huggingFaceService;
+    private readonly GoogleGeminiService _googleGeminiService;
     private readonly ILogger<WorkoutAnalysisService> _logger;
+    private readonly IConfiguration _configuration;
 
     public WorkoutAnalysisService(
-        IAIPromptService aiPromptService,
+        HuggingFaceService huggingFaceService,
+        GoogleGeminiService googleGeminiService,
+        IConfiguration configuration,
         ILogger<WorkoutAnalysisService> logger)
     {
-        _aiPromptService = aiPromptService;
+        _huggingFaceService = huggingFaceService;
+        _googleGeminiService = googleGeminiService;
+        _configuration = configuration;
         _logger = logger;
     }
 
+    // Generic method 
     public async Task<WorkoutAnalysisResponseDto> AnalyzeWorkoutsAsync(
         WorkoutAnalysisRequestDto request)
     {
+        var defaultProvider = _configuration["AI:DefaultProvider"] ?? "GoogleGemini";
+        return await AnalyzeWorkoutsWithProviderAsync(request, defaultProvider);
+    }
+
+    // HuggingFace specific method
+    public async Task<WorkoutAnalysisResponseDto> AnalyzeHuggingFaceWorkoutsAsync(
+        WorkoutAnalysisRequestDto request)
+    {
+        return await AnalyzeWorkoutsWithProviderAsync(request, "HuggingFace");
+    }
+
+    // NEW: Google Gemini specific method
+    public async Task<WorkoutAnalysisResponseDto> AnalyzeGoogleGeminiWorkoutsAsync(
+        WorkoutAnalysisRequestDto request)
+    {
+        return await AnalyzeWorkoutsWithProviderAsync(request, "GoogleGemini");
+    }
+
+    // Core analysis method with provider selection
+    private async Task<WorkoutAnalysisResponseDto> AnalyzeWorkoutsWithProviderAsync(
+        WorkoutAnalysisRequestDto request,
+        string provider)
+    {
         try
         {
-            _logger.LogInformation("Analyzing workouts for {WorkoutCount} recent workouts, analysis type: {AnalysisType}",
-                request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
+            _logger.LogInformation("Analyzing workouts with {Provider} for {WorkoutCount} recent workouts, analysis type: {AnalysisType}",
+                provider, request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
             var prompt = BuildAnalysisPrompt(request);
 
-            // Die passende AI-Methode basierend auf Analyse-Typ wählen
+            // Select the appropriate AI service
+            IAIPromptService aiService = provider.ToLower() switch
+            {
+                "huggingface" => _huggingFaceService,
+                "googlegemini" => _googleGeminiService,
+                _ => _huggingFaceService // Default fallback
+            };
+
+            // Call the appropriate AI method based on analysis type
             string aiResponse = request.AnalysisType?.ToLower() switch
             {
-                "health" => await _aiPromptService.GetHealthAnalysisAsync(prompt),
-                "performance" => await _aiPromptService.GetFitnessAnalysisAsync(prompt),
-                "trends" => await _aiPromptService.GetFitnessAnalysisAsync(prompt),
-                _ => await _aiPromptService.GetFitnessAnalysisAsync(prompt)
+                "health" => await aiService.GetHealthAnalysisAsync(prompt),
+                "performance" => await aiService.GetFitnessAnalysisAsync(prompt),
+                "trends" => await aiService.GetFitnessAnalysisAsync(prompt),
+                _ => await aiService.GetFitnessAnalysisAsync(prompt)
             };
 
             var result = ParseAnalysisResponse(aiResponse, request.AnalysisType);
+            result.Provider = provider; // Add provider info to response
 
-            _logger.LogInformation("Successfully generated workout analysis with {InsightCount} insights and {RecommendationCount} recommendations",
-                result.KeyInsights?.Count ?? 0, result.Recommendations?.Count ?? 0);
+            _logger.LogInformation("Successfully generated workout analysis with {Provider}: {InsightCount} insights and {RecommendationCount} recommendations",
+                provider, result.KeyInsights?.Count ?? 0, result.Recommendations?.Count ?? 0);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error analyzing workouts");
+            _logger.LogError(ex, "Error analyzing workouts with {Provider}", provider);
 
-            // Fallback analysis
-            return GetFallbackAnalysis(request);
+            // Provider-specific fallback
+            return GetFallbackAnalysis(request, provider);
         }
-    }
-
-    // Legacy method für Backwards Compatibility
-    public async Task<WorkoutAnalysisResponseDto> AnalyzeHuggingFaceWorkoutsAsync(
-        WorkoutAnalysisRequestDto request)
-    {
-        return await AnalyzeWorkoutsAsync(request);
     }
 
     private string BuildAnalysisPrompt(WorkoutAnalysisRequestDto request)
@@ -88,117 +121,117 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
 
     private string BuildHealthAnalysisPrompt(string workoutsData, string athleteContext)
     {
-        return $@"As a health and fitness expert, analyze the following workout data for health insights:
+        return $@"Du bist ein Gesundheits- und Fitnessexperte. Analysiere die folgenden Trainingsdaten für Gesundheitserkenntnisse:
 
-WORKOUT DATA:
+TRAININGSDATEN:
 {workoutsData}
 {athleteContext}
 
-Provide a health-focused analysis covering:
+Erstelle eine gesundheitsfokussierte Analyse mit:
 
-HEALTH ANALYSIS:
-- Training load assessment (is it appropriate/excessive?)
-- Recovery patterns and recommendations
-- Injury prevention insights
-- Cardiovascular health indicators
+GESUNDHEITSANALYSE:
+- Bewertung der Trainingsbelastung (angemessen/übermäßig?)
+- Regenerationsmuster und Empfehlungen
+- Verletzungspräventions-Erkenntnisse
+- Herz-Kreislauf-Gesundheitsindikatoren
 
-KEY INSIGHTS:
-- 3-4 specific health-related observations
-- Warning signs if any
+WICHTIGE ERKENNTNISSE:
+- 3-4 spezifische gesundheitsbezogene Beobachtungen
+- Warnzeichen falls vorhanden
 
-RECOMMENDATIONS:
-- Health-focused actionable advice
-- Recovery strategies
-- Training modifications for optimal health
+EMPFEHLUNGEN:
+- Gesundheitsorientierte umsetzbare Ratschläge
+- Regenerationsstrategien
+- Trainingsmodifikationen für optimale Gesundheit
 
-Keep your response focused on health and injury prevention.";
+Konzentriere dich auf Gesundheit und Verletzungsprävention.";
     }
 
     private string BuildPerformanceAnalysisPrompt(string workoutsData, string athleteContext)
     {
-        return $@"As a performance coach, analyze the following workout data for performance optimization:
+        return $@"Du bist ein Leistungstrainer. Analysiere die folgenden Trainingsdaten für Leistungsoptimierung:
 
-WORKOUT DATA:
+TRAININGSDATEN:
 {workoutsData}
 {athleteContext}
 
-Provide a performance-focused analysis covering:
+Erstelle eine leistungsfokussierte Analyse mit:
 
-PERFORMANCE ANALYSIS:
-- Progress evaluation and trends
-- Performance strengths and weaknesses
-- Training efficiency assessment
-- Goal achievement potential
+LEISTUNGSANALYSE:
+- Fortschrittsbewertung und Trends
+- Leistungsstärken und -schwächen
+- Bewertung der Trainingseffizienz
+- Zielerreichungspotential
 
-KEY INSIGHTS:
-- 3-4 specific performance observations
-- Areas of improvement identified
+WICHTIGE ERKENNTNISSE:
+- 3-4 spezifische Leistungsbeobachtungen
+- Identifizierte Verbesserungsbereiche
 
-RECOMMENDATIONS:
-- Performance optimization strategies
-- Training intensity adjustments
-- Specific techniques for improvement
+EMPFEHLUNGEN:
+- Strategien zur Leistungsoptimierung
+- Anpassungen der Trainingsintensität
+- Spezifische Techniken zur Verbesserung
 
-Focus on athletic performance and competitive improvement.";
+Fokussiere dich auf sportliche Leistung und Wettkampfverbesserung.";
     }
 
     private string BuildTrendsAnalysisPrompt(string workoutsData, string athleteContext)
     {
-        return $@"As a data analyst specializing in fitness trends, analyze the following workout patterns:
+        return $@"Du bist ein Datenanalyst spezialisiert auf Fitnesstrends. Analysiere die folgenden Trainingsmuster:
 
-WORKOUT DATA:
+TRAININGSDATEN:
 {workoutsData}
 {athleteContext}
 
-Provide a trend-focused analysis covering:
+Erstelle eine trendfokussierte Analyse mit:
 
-TRENDS ANALYSIS:
-- Training consistency patterns over time
-- Performance progression or regression
-- Weekly/monthly patterns identification
-- Workout variety and distribution
+TRENDANALYSE:
+- Trainingskonsistenzmuster über die Zeit
+- Leistungsfortschritt oder -rückgang
+- Wöchentliche/monatliche Mustererkennung
+- Trainingsvielfalt und -verteilung
 
-KEY INSIGHTS:
-- 3-4 significant trend observations
-- Pattern recognition findings
+WICHTIGE ERKENNTNISSE:
+- 3-4 bedeutsame Trendbeobachtungen
+- Mustererkennung-Befunde
 
-RECOMMENDATIONS:
-- Trend-based training advice
-- Consistency improvement strategies
-- Future planning suggestions
+EMPFEHLUNGEN:
+- Trendbasierte Trainingsratschläge
+- Strategien zur Konsistenzverbesserung
+- Vorschläge für zukünftige Planung
 
-Focus on patterns, trends, and long-term progression analysis.";
+Fokussiere dich auf Muster, Trends und langfristige Fortschrittsanalyse.";
     }
 
     private string BuildGeneralAnalysisPrompt(string workoutsData, string athleteContext, string analysisType)
     {
-        return $@"As a fitness expert, provide a comprehensive analysis of the following workout data:
+        return $@"Du bist ein Fitnessexperte. Erstelle eine umfassende Analyse der folgenden Trainingsdaten:
 
-WORKOUT DATA:
+TRAININGSDATEN:
 {workoutsData}
 {athleteContext}
 
-Analysis focus: {analysisType}
+Analysefokus: {analysisType}
 
-Provide a detailed fitness analysis covering:
+Erstelle eine detaillierte Fitnessanalyse mit:
 
-ANALYSIS:
-- Overall workout assessment
-- Training effectiveness evaluation
-- Progress indicators
-- Areas for improvement
+ANALYSE:
+- Gesamtbewertung des Trainings
+- Bewertung der Trainingseffektivität
+- Fortschrittsindikatoren
+- Verbesserungsbereiche
 
-KEY INSIGHTS:
-- 3-4 specific observations from the data
-- Important patterns or trends
-- Performance highlights
+WICHTIGE ERKENNTNISSE:
+- 3-4 spezifische Beobachtungen aus den Daten
+- Wichtige Muster oder Trends
+- Leistungshöhepunkte
 
-RECOMMENDATIONS:
-- Actionable training advice
-- Specific improvement strategies
-- Goal-oriented suggestions
+EMPFEHLUNGEN:
+- Umsetzbare Trainingsratschläge
+- Spezifische Verbesserungsstrategien
+- Zielorientierte Vorschläge
 
-Provide practical, actionable insights for fitness improvement.";
+Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
     }
 
     private WorkoutAnalysisResponseDto ParseAnalysisResponse(string aiResponse, string? analysisType)
@@ -219,8 +252,11 @@ Provide practical, actionable insights for fitness improvement.";
         if (string.IsNullOrWhiteSpace(aiResponse))
             return "Unable to generate analysis at this time. Please try again later.";
 
-        // Suche nach verschiedenen Analysis-Section Headers
-        var analysisHeaders = new[] { "ANALYSIS:", "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:" };
+        // Suche nach verschiedenen Analysis-Section Headers (deutsch und englisch)
+        var analysisHeaders = new[] {
+            "ANALYSE:", "GESUNDHEITSANALYSE:", "LEISTUNGSANALYSE:", "TRENDANALYSE:",
+            "ANALYSIS:", "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:"
+        };
 
         foreach (var header in analysisHeaders)
         {
@@ -229,8 +265,10 @@ Provide practical, actionable insights for fitness improvement.";
                 var analysisParts = aiResponse.Split(header, StringSplitOptions.RemoveEmptyEntries);
                 if (analysisParts.Length > 1)
                 {
-                    var analysisSection = analysisParts[1].Split(new[] { "KEY INSIGHTS:", "RECOMMENDATIONS:" },
-                        StringSplitOptions.RemoveEmptyEntries)[0];
+                    var analysisSection = analysisParts[1].Split(new[] {
+                        "WICHTIGE ERKENNTNISSE:", "EMPFEHLUNGEN:",
+                        "KEY INSIGHTS:", "RECOMMENDATIONS:"
+                    }, StringSplitOptions.RemoveEmptyEntries)[0];
 
                     var cleanAnalysis = analysisSection.Trim();
                     if (!string.IsNullOrWhiteSpace(cleanAnalysis) && cleanAnalysis.Length > 20)
@@ -248,8 +286,10 @@ Provide practical, actionable insights for fitness improvement.";
             var cleanLine = line.Trim();
             if (string.IsNullOrWhiteSpace(cleanLine)) continue;
 
-            // Stoppe bei strukturierten Abschnitten
-            if (cleanLine.StartsWith("KEY INSIGHTS", StringComparison.OrdinalIgnoreCase) ||
+            // Stoppe bei strukturierten Abschnitten (deutsch und englisch)
+            if (cleanLine.StartsWith("WICHTIGE ERKENNTNISSE", StringComparison.OrdinalIgnoreCase) ||
+                cleanLine.StartsWith("EMPFEHLUNGEN", StringComparison.OrdinalIgnoreCase) ||
+                cleanLine.StartsWith("KEY INSIGHTS", StringComparison.OrdinalIgnoreCase) ||
                 cleanLine.StartsWith("RECOMMENDATIONS", StringComparison.OrdinalIgnoreCase))
                 break;
 
@@ -274,12 +314,12 @@ Provide practical, actionable insights for fitness improvement.";
 
     private List<string>? ExtractKeyInsights(string aiResponse)
     {
-        return ExtractListSection(aiResponse, new[] { "KEY INSIGHTS:", "INSIGHTS:" });
+        return ExtractListSection(aiResponse, new[] { "WICHTIGE ERKENNTNISSE:", "KEY INSIGHTS:", "INSIGHTS:", "ERKENNTNISSE:" });
     }
 
     private List<string>? ExtractRecommendations(string aiResponse)
     {
-        return ExtractListSection(aiResponse, new[] { "RECOMMENDATIONS:", "ADVICE:" });
+        return ExtractListSection(aiResponse, new[] { "EMPFEHLUNGEN:", "RECOMMENDATIONS:", "ADVICE:", "RATSCHLÄGE:" });
     }
 
     private List<string>? ExtractListSection(string aiResponse, string[] sectionHeaders)
@@ -296,8 +336,13 @@ Provide practical, actionable insights for fitness improvement.";
                 var headerIndex = aiResponse.IndexOf(header, StringComparison.OrdinalIgnoreCase);
                 var section = aiResponse.Substring(headerIndex + header.Length);
 
-                // Stoppe bei nächstem Header
-                var nextHeaders = new[] { "ANALYSIS:", "KEY INSIGHTS:", "RECOMMENDATIONS:", "ADVICE:", "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:" };
+                // Stoppe bei nächstem Header (deutsch und englisch)
+                var nextHeaders = new[] {
+                    "ANALYSE:", "WICHTIGE ERKENNTNISSE:", "EMPFEHLUNGEN:", "RATSCHLÄGE:",
+                    "GESUNDHEITSANALYSE:", "LEISTUNGSANALYSE:", "TRENDANALYSE:",
+                    "ANALYSIS:", "KEY INSIGHTS:", "RECOMMENDATIONS:", "ADVICE:",
+                    "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:"
+                };
                 foreach (var nextHeader in nextHeaders)
                 {
                     if (nextHeader != header && section.Contains(nextHeader, StringComparison.OrdinalIgnoreCase))
@@ -330,7 +375,7 @@ Provide practical, actionable insights for fitness improvement.";
         return items.Any() ? items : null;
     }
 
-    private WorkoutAnalysisResponseDto GetFallbackAnalysis(WorkoutAnalysisRequestDto request)
+    private WorkoutAnalysisResponseDto GetFallbackAnalysis(WorkoutAnalysisRequestDto request, string provider = "Unknown")
     {
         var workoutCount = request.RecentWorkouts?.Count ?? 0;
         var totalDistance = request.RecentWorkouts?.Sum(w => w.Distance) ?? 0;
@@ -342,54 +387,54 @@ Provide practical, actionable insights for fitness improvement.";
 
         var analysis = analysisType.ToLower() switch
         {
-            "health" => $"Based on your {workoutCount} recent workouts, your training load appears well-balanced. " +
-                       $"Total distance of {totalDistance:F1}km over {TimeSpan.FromSeconds(totalDuration):h\\:mm} shows good cardiovascular engagement. " +
-                       $"No concerning overtraining patterns detected. Your average calorie burn of {avgCalories:F0} per session indicates appropriate workout intensity.",
+            "health" => $"Basierend auf Ihren {workoutCount} letzten Trainingseinheiten scheint Ihre Trainingsbelastung gut ausgewogen zu sein. " +
+                       $"Die Gesamtdistanz von {totalDistance:F1}km über {TimeSpan.FromSeconds(totalDuration):h\\:mm} zeigt gutes Herz-Kreislauf-Engagement. " +
+                       $"Keine bedenklichen Übertrainingsmuster erkannt. Ihr durchschnittlicher Kalorienverbrauch von {avgCalories:F0} pro Einheit deutet auf angemessene Trainingsintensität hin.",
 
-            "performance" => $"Your performance data shows {workoutCount} completed workouts with {totalDistance:F1}km total distance. " +
-                           $"Training consistency appears strong with varied workout types. " +
-                           $"Average session duration of {TimeSpan.FromSeconds(workoutCount > 0 ? totalDuration / workoutCount : 0):h\\:mm} suggests good endurance building. " +
-                           $"Performance metrics indicate steady progression toward your goals.",
+            "performance" => $"Ihre Leistungsdaten zeigen {workoutCount} absolvierte Trainingseinheiten mit {totalDistance:F1}km Gesamtdistanz. " +
+                           $"Die Trainingskonsistenz erscheint stark mit variierenden Trainingsarten. " +
+                           $"Die durchschnittliche Einheitsdauer von {TimeSpan.FromSeconds(workoutCount > 0 ? totalDuration / workoutCount : 0):h\\:mm} deutet auf guten Ausdaueraufbau hin. " +
+                           $"Leistungsmetriken zeigen stetigen Fortschritt in Richtung Ihrer Ziele.",
 
-            "trends" => $"Training trend analysis reveals {workoutCount} workouts over the recent period. " +
-                       $"Total distance progression to {totalDistance:F1}km shows positive training consistency. " +
-                       $"Workout frequency and duration patterns indicate sustainable training habits. " +
-                       $"Calorie expenditure trends suggest effective energy management.",
+            "trends" => $"Die Trainingstrendanalyse zeigt {workoutCount} Trainingseinheiten über den letzten Zeitraum. " +
+                       $"Der Gesamtdistanzfortschritt auf {totalDistance:F1}km zeigt positive Trainingskonsistenz. " +
+                       $"Trainingshäufigkeits- und Dauermuster deuten auf nachhaltige Trainingsgewohnheiten hin. " +
+                       $"Kalorienverbrauchstrends deuten auf effektives Energiemanagement hin.",
 
-            _ => $"Comprehensive analysis of your {workoutCount} recent workouts covering {totalDistance:F1}km shows excellent training consistency. " +
-                $"Your {analysisType.ToLower()} metrics indicate steady progress toward your fitness goals. " +
-                $"Training load and recovery balance appears appropriate for continued improvement."
+            _ => $"Umfassende Analyse Ihrer {workoutCount} letzten Trainingseinheiten über {totalDistance:F1}km zeigt exzellente Trainingskonsistenz. " +
+                $"Ihre {analysisType.ToLower()}-Metriken deuten auf stetigen Fortschritt in Richtung Ihrer Fitnessziele hin. " +
+                $"Trainingsbelastung und Regenerationsbalance scheinen angemessen für kontinuierliche Verbesserung."
         };
 
         var insights = analysisType.ToLower() switch
         {
             "health" => new List<string>
             {
-                $"Completed {workoutCount} workouts with no overtraining indicators",
-                $"Average calorie burn of {avgCalories:F0} suggests appropriate intensity",
-                "Training frequency supports good cardiovascular health",
-                "No concerning health patterns detected in workout data"
+                $"{workoutCount} Trainingseinheiten ohne Übertrainingsindikatoren absolviert",
+                $"Durchschnittlicher Kalorienverbrauch von {avgCalories:F0} deutet auf angemessene Intensität hin",
+                "Trainingshäufigkeit unterstützt gute Herz-Kreislauf-Gesundheit",
+                "Keine bedenklichen Gesundheitsmuster in den Trainingsdaten erkannt"
             },
             "performance" => new List<string>
             {
-                $"Achieved {totalDistance:F1}km total distance across {workoutCount} sessions",
-                "Training consistency shows strong commitment to performance goals",
-                $"Average workout intensity of {avgCalories:F0} calories is performance-oriented",
-                "Workout variety supports well-rounded athletic development"
+                $"{totalDistance:F1}km Gesamtdistanz über {workoutCount} Einheiten erreicht",
+                "Trainingskonsistenz zeigt starkes Engagement für Leistungsziele",
+                $"Durchschnittliche Trainingsintensität von {avgCalories:F0} Kalorien ist leistungsorientiert",
+                "Trainingsvielfalt unterstützt vielseitige sportliche Entwicklung"
             },
             "trends" => new List<string>
             {
-                $"Training frequency of {workoutCount} workouts shows consistent habit formation",
-                "Distance and duration trends indicate progressive overload application",
-                "Calorie expenditure patterns suggest effective workout intensity management",
-                "Overall trajectory points toward continued fitness improvement"
+                $"Trainingshäufigkeit von {workoutCount} Einheiten zeigt konsistente Gewohnheitsbildung",
+                "Distanz- und Dauertrends deuten auf Anwendung progressiver Überlastung hin",
+                "Kalorienverbrauchsmuster deuten auf effektives Trainingsintensitätsmanagement hin",
+                "Gesamttrajektorie deutet auf anhaltende Fitnessverbesserung hin"
             },
             _ => new List<string>
             {
-                $"Completed {workoutCount} workouts with total distance of {totalDistance:F1}km",
-                "Training consistency demonstrates commitment to fitness goals",
-                "Performance metrics indicate steady improvement trajectory",
-                "Workout intensity and frequency appear well-balanced"
+                $"{workoutCount} Trainingseinheiten mit Gesamtdistanz von {totalDistance:F1}km absolviert",
+                "Trainingskonsistenz zeigt Engagement für Fitnessziele",
+                "Leistungsmetriken deuten auf stetige Verbesserungstrajektorie hin",
+                "Trainingsintensität und -häufigkeit scheinen gut ausgewogen"
             }
         };
 
@@ -397,31 +442,31 @@ Provide practical, actionable insights for fitness improvement.";
         {
             "health" => new List<string>
             {
-                "Continue current training schedule to maintain health benefits",
-                "Monitor recovery signs and adjust intensity if feeling fatigued",
-                "Ensure adequate sleep and nutrition to support training load",
-                "Consider adding mobility work to prevent injury"
+                "Aktuellen Trainingsplan fortsetzen, um Gesundheitsvorteile zu erhalten",
+                "Regenerationszeichen überwachen und Intensität bei Müdigkeit anpassen",
+                "Ausreichend Schlaf und Ernährung sicherstellen, um Trainingsbelastung zu unterstützen",
+                "Mobilitätsarbeit hinzufügen, um Verletzungen vorzubeugen"
             },
             "performance" => new List<string>
             {
-                "Gradually increase workout intensity by 5-10% for performance gains",
-                "Add interval training to boost speed and power development",
-                "Consider performance testing to track specific improvements",
-                "Incorporate sport-specific drills for targeted skill development"
+                "Trainingsintensität schrittweise um 5-10% für Leistungssteigerungen erhöhen",
+                "Intervalltraining hinzufügen, um Geschwindigkeits- und Kraftentwicklung zu fördern",
+                "Leistungstests in Betracht ziehen, um spezifische Verbesserungen zu verfolgen",
+                "Sportspezifische Übungen für gezielte Fertigkeitsentwicklung integrieren"
             },
             "trends" => new List<string>
             {
-                "Maintain current training frequency for continued positive trends",
-                "Plan progressive increases in distance and duration",
-                "Track weekly trends to identify optimal training patterns",
-                "Set monthly goals based on current progression rate"
+                "Aktuelle Trainingshäufigkeit für anhaltende positive Trends beibehalten",
+                "Progressive Steigerungen in Distanz und Dauer planen",
+                "Wöchentliche Trends verfolgen, um optimale Trainingsmuster zu identifizieren",
+                "Monatliche Ziele basierend auf aktueller Fortschrittsrate setzen"
             },
             _ => new List<string>
             {
-                "Continue with current training schedule and intensity",
-                "Gradually increase workout difficulty by 5-10% every 2-3 weeks",
-                "Ensure adequate rest between intense training sessions",
-                "Consider adding variety to workout types for balanced development"
+                "Mit aktuellem Trainingsplan und -intensität fortfahren",
+                "Trainingsschwierigkeit alle 2-3 Wochen schrittweise um 5-10% erhöhen",
+                "Ausreichende Erholung zwischen intensiven Trainingseinheiten sicherstellen",
+                "Trainingsvielfalt für ausgewogene Entwicklung hinzufügen"
             }
         };
 
@@ -430,7 +475,8 @@ Provide practical, actionable insights for fitness improvement.";
             Analysis = analysis,
             KeyInsights = insights,
             Recommendations = recommendations,
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
+            Provider = provider
         };
     }
 }
