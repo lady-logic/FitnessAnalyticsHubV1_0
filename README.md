@@ -55,7 +55,7 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 
 ## 🤖 AI-Powered Fitness Analytics
 
-### **🧠 HuggingFace Integration**
+### **🧠 HuggingFace und Google Gemini Integration**
 Das Projekt integriert moderne KI-Technologien für intelligente Trainingsanalyse:
 
 - **🔥 Meta-Llama-3.1-8B-Instruct** - Hochmodernes Sprachmodell für Fitnessanalyse
@@ -80,7 +80,6 @@ http://localhost:5169/swagger
 - **Trend-Analyse**: Erkennung von Trainingsmustern über Zeit
 - **Performance-Insights**: Intelligente Leistungsbewertung
 - **Gesundheitsmetriken**: KI-gestützte Verletzungsprävention
-- **Motivations-Content**: Dynamische, personalisierte Ermutigung
 
 ---
 
