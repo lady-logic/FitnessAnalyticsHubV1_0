@@ -1,6 +1,6 @@
 ![Build Status](https://github.com/lady-logic/FitnessAnalyticsHubV1_0/actions/workflows/main.yml/badge.svg)
 ![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHubV1_0&metric=alert_status)
-![Coverage](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHubV1_0&metric=coverage)
+![Coverage](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHub_0&metric=coverage)
 ![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHubV1_0&metric=sqale_rating)
 ![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=lady-logic_FitnessAnalyticsHubV1_0&metric=security_rating)
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
@@ -8,6 +8,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Multi--Service-blue)
 ![API Documentation](https://img.shields.io/badge/API-Swagger%20%2B%20OpenAPI-orange)
 ![Microservices](https://img.shields.io/badge/Architecture-Microservices-green)
+![AI Integration](https://img.shields.io/badge/AI-HuggingFace%20%2B%20Llama-orange)
 ![License](https://img.shields.io/github/license/lady-logic/FitnessAnalyticsHubV1_0)
 ![Last Commit](https://img.shields.io/github/last-commit/lady-logic/FitnessAnalyticsHubV1_0)
 
@@ -33,6 +34,7 @@ Dieses Projekt ist eine persönliche Spielwiese für moderne Softwareentwicklung
 - 🐳 Dockerisierung & Bereitstellung
 - 🤖 Automatisierung durch GitHub Actions
 - 🔄 Datenintegration mit externen Services (Strava API)
+- 🧠 **KI-Integration** mit HuggingFace für intelligente Trainingsanalyse
 
 ---
 
@@ -48,6 +50,37 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 - 📈 **Technical Debt** - Refactoring-Bedarf wird geschätzt
 
 [**→ Live SonarCloud Dashboard ansehen**](https://sonarcloud.io/project/overview?id=lady-logic_FitnessAnalyticsHubV1_0)
+
+---
+
+## 🤖 AI-Powered Fitness Analytics
+
+### **🧠 HuggingFace Integration**
+Das Projekt integriert moderne KI-Technologien für intelligente Trainingsanalyse:
+
+- **🔥 Meta-Llama-3.1-8B-Instruct** - Hochmodernes Sprachmodell für Fitnessanalyse
+- **📊 Intelligente Workout-Analyse** - KI-basierte Trend- und Leistungsanalyse
+- **💪 AI Motivation Coach** - Personalisierte, kontextbezogene Trainingsmotivation
+- **🎯 Smarte Empfehlungen** - Datengestützte Trainingsoptimierung
+- **🛡️ Fallback-System** - Robuste Fehlerbehandlung bei API-Limits
+
+### **🔄 Microservice-Architektur**
+```bash
+# AI-Service verfügbar auf:
+http://localhost:5169/api/WorkoutAnalysis/analyze/huggingface
+
+# Health Check:
+http://localhost:5169/api/WorkoutAnalysis/health
+
+# Swagger UI:
+http://localhost:5169/swagger
+```
+
+### **📈 AI Features im Detail**
+- **Trend-Analyse**: Erkennung von Trainingsmustern über Zeit
+- **Performance-Insights**: Intelligente Leistungsbewertung
+- **Gesundheitsmetriken**: KI-gestützte Verletzungsprävention
+- **Motivations-Content**: Dynamische, personalisierte Ermutigung
 
 ---
 
@@ -186,7 +219,7 @@ open http://localhost:8080/health-ui
 │   └── 🧪 FitnessAnalyticsHub.Tests             // Architekturtests und Unit-Tests
 │
 └── 06_AIAssistant
-    └── 🤖 FitnessAnalyticsHub.AIAssistant       // KI-Integration (rudimentäre Implementierung)
+    └── 🤖 FitnessAnalyticsHub.AIAssistant       // KI-Integration mit HuggingFace
 ```
 
 ---
@@ -213,6 +246,12 @@ open http://localhost:8080/health-ui
 - **After**: Full cancellation token support throughout all layers
 - **Benefit**: Better resource management and application responsiveness
 
+### ✅ AI Integration with HuggingFace
+- **New**: Complete AI microservice architecture for workout analysis
+- **Features**: Intelligent trend analysis, motivation coaching, health insights
+- **Technology**: Meta-Llama-3.1-8B-Instruct model via HuggingFace Inference API
+- **Benefit**: Personalized, data-driven fitness recommendations and motivation
+
 ---
 
 ## 🧪 Test Status
@@ -230,6 +269,12 @@ open http://localhost:8080/health-ui
 - 🧠 [.NET 8](https://dotnet.microsoft.com/) (Latest LTS)
 - 🔄 [Entity Framework Core](https://docs.microsoft.com/ef/core/) mit SQLite
 - 🧱 Clean Architecture Pattern
+
+**AI & Machine Learning:**
+- 🤖 [HuggingFace Inference API](https://huggingface.co/inference-api) für KI-Integration
+- 🧠 **Meta-Llama-3.1-8B-Instruct** für natürliche Sprachverarbeitung
+- 🔄 **Microservice-Architektur** für AI-Services
+- 🛡️ **Fallback-Mechanismen** für robuste AI-Integration
 
 **Frontend & UI:**
 - 🌐 [Angular](https://angular.io/) für moderne Web-UI
@@ -250,7 +295,7 @@ open http://localhost:8080/health-ui
 
 **Integration & APIs:**
 - 🔗 [Strava API](https://developers.strava.com/) für Fitness-Datenintegration
-- 🤖 AI Assistant Integration (in Entwicklung)
+- 🤖 **AI Assistant Integration** mit HuggingFace
 
 **Entwicklungsstandards:**
 - 📋 Git Workflow mit Feature Branches
@@ -291,11 +336,17 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ### API starten
 ```bash
+# Haupt-API
 cd FitnessAnalyticsHub.WebApi
+dotnet run
+
+# AI-Microservice
+cd FitnessAnalyticsHub.AIAssistant
 dotnet run
 ```
 
-Die API ist dann verfügbar unter: `https://localhost:7001`
+Die Haupt-API ist verfügbar unter: `https://localhost:7001`
+Der AI-Service ist verfügbar unter: `http://localhost:5169`
 
 ---
 
@@ -311,10 +362,30 @@ Die Integration mit der Strava API ermöglicht den Zugriff auf:
 
 ## 🤖 AIAssistant-Modul
 
-Das FitnessAnalyticsHub.AIAssistant-Modul ist derzeit nur rudimentär implementiert und noch nicht mit dem Hauptprojekt verbunden. Zukünftig soll es folgende Funktionen bieten:
-- **Trainingsanalyse**: Auswertung von Leistungsdaten
-- **Prognosen**: Vorhersage von Leistungsentwicklungen
-- **Motivationscoaching**: Personalisierte Trainingstipps
+Das FitnessAnalyticsHub.AIAssistant-Modul ist **vollständig integriert** und bietet:
+- **🔥 Trainingsanalyse**: KI-basierte Auswertung von Leistungsdaten mit Meta-Llama-3.1-8B
+- **📈 Intelligente Prognosen**: Trend-Analyse und Leistungsentwicklung
+- **💪 Motivationscoaching**: Personalisierte, kontextbezogene Trainingstipps
+- **🎯 Smarte Empfehlungen**: Datengestützte Trainingsoptimierung
+- **🛡️ Robuste Integration**: Fallback-Mechanismen für zuverlässige Funktion
+
+### **Verfügbare AI-Endpoints:**
+```bash
+# Workout-Analyse mit KI
+POST http://localhost:5169/api/WorkoutAnalysis/analyze/huggingface
+
+# Performance-Trends
+GET http://localhost:5169/api/WorkoutAnalysis/performance-trends/{athleteId}
+
+# Training-Empfehlungen  
+GET http://localhost:5169/api/WorkoutAnalysis/recommendations/{athleteId}
+
+# Gesundheitsanalyse
+POST http://localhost:5169/api/WorkoutAnalysis/health-analysis
+
+# Service Health Check
+GET http://localhost:5169/api/WorkoutAnalysis/health
+```
 
 ---
 
@@ -323,11 +394,12 @@ Das FitnessAnalyticsHub.AIAssistant-Modul ist derzeit nur rudimentär implementi
 - ✅ GitHub CI/CD Workflows integrieren
 - ✅ Code Quality Monitoring mit SonarCloud
 - ✅ Tests + Testabdeckung ausbauen
+- ✅ **KI-Integration mit HuggingFace für intelligente Trainingsanalyse**
 - 🚧 Trainingsdaten via Strava API laden
 - 📝 Dockerisieren für lokale + Cloud-Deployments
 - 📝 CQRS-Pattern implementieren für bessere Trennung von Lese- und Schreiboperationen
 - 📝 Fehlende Oberflächen in Angular ergänzen
-- 📝 AIAssistant anbinden...uvm 😅
+- 📝 AI-Features in Frontend integrieren...uvm 😅
 
 ---
 
