@@ -17,7 +17,7 @@ public class ActivityServiceTests
 {
     private readonly ApplicationDbContext _context;
     private readonly Mock<IStravaService> _mockStravaService;
-    private readonly Mock<IAIAssistantClient> _mockAiAssistantClient;
+    private readonly Mock<IAIAssistantClientService> _mockAiAssistantClient;
     private readonly IMapper _mapper;
     private readonly ActivityService _activityService;
 
@@ -30,7 +30,7 @@ public class ActivityServiceTests
 
         _context = new ApplicationDbContext(options);
         _mockStravaService = new Mock<IStravaService>();
-        _mockAiAssistantClient = new Mock<IAIAssistantClient>();
+        _mockAiAssistantClient = new Mock<IAIAssistantClientService>();
 
         // Konfiguriere AutoMapper mit dem tatsächlichen Mappingprofil
         var mapperConfig = new MapperConfiguration(cfg =>

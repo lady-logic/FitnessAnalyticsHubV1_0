@@ -1,63 +1,88 @@
-using AIAssistant._02_Application.Interfaces;
-using AIAssistant._03_Infrastructure.OpenAI.Models;
+Ôªøusing AIAssistant._02_Application.Interfaces;
 using AIAssistant._03_Infrastructure.Services;
 using FitnessAnalyticsHub.AIAssistant._03_Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// OpenAI Konfiguration
-builder.Services.Configure<OpenAISettings>(
-    builder.Configuration.GetSection("OpenAI"));
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
-// Service-Registrierungen
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<IAIPromptService, LLMService>();
-builder.Services.AddScoped<IWorkoutAnalysisService, WorkoutAnalysisService>();
-builder.Services.AddScoped<IMotivationCoachService, MotivationCoachService>();
-builder.Services.AddScoped<IWorkoutPredictionService, WorkoutPredictionService>();
-
-// Controller hinzuf¸gen
-builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Configuration.AddEnvironmentVariables();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "Fitness Analytics Hub - AI Assistant",
+        Version = "v1",
+        Description = "AI-powered fitness analytics using HuggingFace"
+    });
+});
 
-// CORS konfigurieren
+// CORS configuration
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFitnessApp", builder =>
+    options.AddPolicy("AllowAngularApp", policy =>
     {
-        builder.WithOrigins("http://localhost:5000") // URL deiner Hauptanwendung
-               .AllowAnyHeader()
-               .AllowAnyMethod();
+        policy.WithOrigins("http://localhost:4200", "https://localhost:4200") // Angular dev server
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
+});
+
+// HTTP Clients registrieren
+builder.Services.AddHttpClient<HuggingFaceService>();
+
+// HuggingFace Service registrieren
+builder.Services.AddScoped<IAIPromptService, HuggingFaceService>();
+
+// Application Services registrieren
+builder.Services.AddScoped<IMotivationCoachService, MotivationCoachService>();
+builder.Services.AddScoped<IWorkoutAnalysisService, WorkoutAnalysisService>();
+
+// Logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
 });
 
 var app = builder.Build();
 
-// API-Schl¸ssel ¸berpr¸fen
-if (string.IsNullOrEmpty(app.Configuration["OpenAI:ApiKey"]))
-{
-    app.Logger.LogError("OpenAI API-Key fehlt! Der Service wird nicht korrekt funktionieren.");
-    if (app.Environment.IsDevelopment())
-    {
-        app.Logger.LogError("F¸hre 'dotnet user-secrets set \"OpenAI:ApiKey\" \"dein-api-key\"' aus, um den Schl¸ssel einzurichten.");
-    }
-    else if (app.Environment.IsProduction())
-    {
-        app.Logger.LogError("Stelle sicher, dass die Umgebungsvariable OPENAI__APIKEY gesetzt ist.");
-    }
-}
-
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "AI Assistant API v1");
+        c.RoutePrefix = string.Empty; // Swagger UI at root
+    });
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowFitnessApp");
+
+// CORS aktivieren
+app.UseCors("AllowAngularApp");
+
 app.UseAuthorization();
+
 app.MapControllers();
+
+// Health check endpoint
+app.MapGet("/health", () => new
+{
+    status = "healthy",
+    service = "AI Assistant",
+    timestamp = DateTime.UtcNow
+});
+
+Console.WriteLine("ü§ñ AI Assistant Service starting...");
+Console.WriteLine("üìä Using HuggingFace for AI processing");
+Console.WriteLine("üåê Swagger UI available at: https://localhost:7276");
 
 app.Run();

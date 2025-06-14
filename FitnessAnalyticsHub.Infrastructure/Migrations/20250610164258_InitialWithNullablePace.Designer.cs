@@ -11,14 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FitnessAnalyticsHub.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250423174106_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250610164258_InitialWithNullablePace")]
+    partial class InitialWithNullablePace
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
 
             modelBuilder.Entity("FitnessAnalyticsHub.Domain.Entities.Activity", b =>
                 {
@@ -244,7 +244,26 @@ namespace FitnessAnalyticsHub.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsOne("FitnessAnalyticsHub.Domain.ValueObjects.Pace", "Pace", b1 =>
+                        {
+                            b1.Property<int>("ActivityId")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<TimeSpan>("ValuePerKilometer")
+                                .HasColumnType("TEXT")
+                                .HasColumnName("PacePerKilometerInTicks");
+
+                            b1.HasKey("ActivityId");
+
+                            b1.ToTable("Activities");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ActivityId");
+                        });
+
                     b.Navigation("Athlete");
+
+                    b.Navigation("Pace");
                 });
 
             modelBuilder.Entity("FitnessAnalyticsHub.Domain.Entities.PlannedActivity", b =>

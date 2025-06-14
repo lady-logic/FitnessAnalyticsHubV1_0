@@ -1,6 +1,7 @@
-// src/environments/environment.ts
+import { Environment } from './environment.interface';
 
-export const environment = {
+export const environment: Environment = {
   production: false,
-  apiUrl: 'http://localhost:5000', // Hier die URL deines C# Backends eintragen
+  apiUrl: 'http://localhost:5000', // Athleten, Activities, etc.
+  aiApiUrl: 'https://localhost:5001', // AI-Services
 };

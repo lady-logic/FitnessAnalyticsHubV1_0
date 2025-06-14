@@ -1,4 +1,5 @@
 using FitnessAnalyticsHub.Application;
+using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Infrastructure;
 using FitnessAnalyticsHub.Infrastructure.Configuration;
@@ -32,11 +33,11 @@ builder.Services.AddApplication();
 // Register infrastructure services
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Add CORS for development
+//Add CORS for development
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        builder => builder
+       builder => builder
             .AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader());
@@ -61,6 +62,7 @@ builder.Services.Configure<StravaConfiguration>(
 
 // HttpClient
 builder.Services.AddHttpClient("StravaApi");
+builder.Services.AddHttpClient<IAIAssistantClientService, AIAssistantClientService>();
 
 // Service
 builder.Services.AddScoped<IStravaService, StravaService>();

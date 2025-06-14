@@ -4,7 +4,6 @@ using FitnessAnalyticsHub.Infrastructure.Configuration;
 using FitnessAnalyticsHub.Infrastructure.Extensions;
 using FitnessAnalyticsHub.Infrastructure.Persistence;
 using FitnessAnalyticsHub.Infrastructure.Services;
-using FitnessAnalyticsHub.Infrastructure.Services.AIAssistant;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,10 +30,13 @@ public static class InfrastructureServiceRegistration
             client.BaseAddress = new Uri("https://www.strava.com/api/v3/");
         });
 
+        // Service registrieren
+        services.AddScoped<IAIAssistantClientService, AIAssistantClientService>();
+
         // HttpClient für AIAssistant registrieren
-        services.AddHttpClient<IAIAssistantClient, AIAssistantClient>(client =>
+        services.AddHttpClient<IAIAssistantClientService, AIAssistantClientService>(client =>
         {
-            client.BaseAddress = new Uri(configuration["AIAssistant:BaseUrl"]);
+            client.BaseAddress = new Uri(configuration["AIAssistant:BaseUrl"] ?? "http://localhost:5169");
         });
 
         // HealthChecks für die Infrastruktur hinzufügen

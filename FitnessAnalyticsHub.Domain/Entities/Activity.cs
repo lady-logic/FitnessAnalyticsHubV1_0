@@ -33,5 +33,26 @@ public class Activity
     public double? AveragePower { get; set; }
     public double? MaxPower { get; set; }
     public double? AverageCadence { get; set; }
-    public Pace Pace { get; private set; }
+    public Pace? Pace { get; private set; }
+
+    // Helper-Methode zum Setzen der Pace
+    public void SetPace(double distance, TimeSpan duration)
+    {
+        if (distance > 0 && duration > TimeSpan.Zero)
+        {
+            try
+            {
+                var distanceInKm = distance / 1000.0; // Strava gibt Meter zurück
+                Pace = Pace.FromDistanceAndDuration(distanceInKm, duration);
+            }
+            catch (ArgumentException)
+            {
+                Pace = null; // Falls Pace ungültig ist
+            }
+        }
+        else
+        {
+            Pace = null; // Keine gültige Distanz/Zeit
+        }
+    }
 }
