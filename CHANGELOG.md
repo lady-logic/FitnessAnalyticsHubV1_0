@@ -5,16 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [1.3.0] - 2025-06-14
 ### 🤖 Added
 - **HuggingFace AI Integration** for intelligent fitness analytics
+- **Gemini AI Integration** for enhanced workout analysis and insights
 - **AIAssistantClientService** with HttpClient-based communication
 - **Workout Analysis AI Endpoints** powered by Meta-Llama-3.1-8B-Instruct model
-- **AI Motivation Coach** for personalized fitness motivation
 - **Intelligent fallback system** for API rate limiting and errors
 - **Health checks** for AI service availability monitoring
+- **AI-powered markdown formatting** for structured response display
 
 ### 🔄 Changed
 - **Enhanced workout analysis** with AI-powered insights and trends
 - **Improved user experience** with motivational AI responses
 - **Service architecture** extended with AI microservice communication
+- **AI Insights Panel** redesigned with structured content presentation
+- **Dashboard UI** enhanced with formatted AI response display
+
+### 🎨 UI/UX Improvements
+- **Structured AI Response Display** with headers, lists, and emphasis
+- **Performance Score Visualization** with color-coded progress bars
+- **Enhanced Typography** for AI insights with improved readability
+- **Responsive Design** for AI content on mobile devices
+- **Visual Hierarchy** improvements in AI insights panel
 
 ### 🔧 Technical Improvements
 - Integrated HuggingFace Inference API for natural language processing
@@ -22,25 +32,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Added dependency injection configuration for AI services
 - Created robust HTTP client setup with base address configuration
 - Established microservice communication patterns
+- **Advanced markdown parsing** for AI response formatting
+- **CSS styling system** for structured AI content display
+- **Error boundary implementation** for AI service failures
 
 ### 🛠️ Infrastructure
 - **AI Microservice** configured on port 5169
 - **Service-to-service communication** via HTTP API calls
 - **Endpoint routing** for `/api/WorkoutAnalysis/analyze/huggingface`
 - **Cross-service error handling** with graceful degradation
+- **Frontend AI service integration** with proper TypeScript interfaces
 
 ### 📊 Features
-- **Trend Analysis**: AI-powered workout pattern recognition
 - **Performance Insights**: Intelligent progression tracking
 - **Training Recommendations**: Personalized coaching suggestions
-- **Health Metrics Analysis**: Injury prevention and wellness insights
-- **Motivational Content**: Dynamic, context-aware encouragement
+- **Interactive AI Analysis**: Click-to-analyze individual activities
+- **Real-time Performance Scoring**: Immediate feedback on workouts
+- **Structured Insights Display**: Headers, bullet points, and emphasis formatting
 
 ### 🔧 Internal
 - Fixed endpoint URL routing issues (404 → 200 responses)
 - Implemented proper JSON serialization for AI requests
 - Added comprehensive logging for AI service interactions
 - Created fallback response generation for service availability
+- **Enhanced error handling** for frontend AI integration
+- **Improved loading states** for AI analysis operations
+- **TypeScript interfaces** for AI service communication
+- **Markdown sanitization** and formatting pipeline
 
 ## [1.2.0] - 2025-06-07
 ### 🚀 Added
