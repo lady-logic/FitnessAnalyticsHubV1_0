@@ -18,7 +18,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Fitness Analytics Hub - AI Assistant",
         Version = "v1",
-        Description = "AI-powered fitness analytics using HuggingFace"
+        Description = "AI-powered fitness analytics"
     });
 });
 
@@ -36,9 +36,20 @@ builder.Services.AddCors(options =>
 
 // HTTP Clients registrieren
 builder.Services.AddHttpClient<HuggingFaceService>();
+builder.Services.AddHttpClient<GoogleGeminiService>();
 
-// HuggingFace Service registrieren
-builder.Services.AddScoped<IAIPromptService, HuggingFaceService>();
+builder.Services.AddScoped<IAIPromptService>(provider =>
+{
+    var defaultProvider = builder.Configuration["AI:DefaultProvider"] ?? "GoogleGemini";
+    return defaultProvider.ToLower() switch
+    {
+        "huggingface" => provider.GetRequiredService<HuggingFaceService>(),
+        "googlegemini" => provider.GetRequiredService<GoogleGeminiService>(),
+        _ => provider.GetRequiredService<GoogleGeminiService>()
+    };
+});
+builder.Services.AddScoped<HuggingFaceService>();
+builder.Services.AddScoped<GoogleGeminiService>();
 
 // Application Services registrieren
 builder.Services.AddScoped<IMotivationCoachService, MotivationCoachService>();
@@ -82,7 +93,7 @@ app.MapGet("/health", () => new
 });
 
 Console.WriteLine("🤖 AI Assistant Service starting...");
-Console.WriteLine("📊 Using HuggingFace for AI processing");
+Console.WriteLine("📊 Using HuggingFace / GoogleGemini for AI processing");
 Console.WriteLine("🌐 Swagger UI available at: https://localhost:7276");
 
 app.Run();
