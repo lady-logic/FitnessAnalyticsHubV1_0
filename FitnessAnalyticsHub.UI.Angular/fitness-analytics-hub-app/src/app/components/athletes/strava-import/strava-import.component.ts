@@ -47,7 +47,7 @@ export class StravaImportComponent implements OnInit {
     this.athleteService.importFromStrava(accessToken).subscribe({
       next: (athlete) => {
         this.submitting = false;
-        this.success = `Athlet ${athlete.name} wurde erfolgreich importiert.`;
+        this.success = `Athlet ${athlete.firstName} ${athlete.lastName} wurde erfolgreich importiert.`;
         setTimeout(() => {
           this.router.navigate(['/athletes', athlete.id]);
         }, 2000);

@@ -3,7 +3,7 @@
   <div class="header">
     <h1>🏃‍♀️ Fitness Analytics Hub</h1>
     <p *ngIf="currentAthlete$ | async as athlete">
-      {{ athlete.name }}'s Personal Training Intelligence
+      {{ athlete.firstName }}'s Personal Training Intelligence
     </p>
     <p *ngIf="!(currentAthlete$ | async)">
       Your Personal Training Intelligence
@@ -90,7 +90,7 @@
               <h4>{{ activity.name }}</h4>
               <p>
                 {{ activity.distance | number : "1.1-1" }} km •
-                {{ formatDuration(activity.duration) }} •
+                {{ formatMovingTime(activity.movingTime) }} •
                 {{ activity.startDate | date : "dd.MM.yyyy" }}
               </p>
             </div>

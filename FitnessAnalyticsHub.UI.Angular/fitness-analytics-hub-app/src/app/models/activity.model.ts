@@ -5,7 +5,7 @@ export interface ActivityDto {
   distance: number;
   startDate: string;
   athleteFullName: string;
-  duration?: number;
+  movingTime?: number;
   averageHeartRate?: number;
   maxHeartRate?: number;
   calories?: number;
@@ -26,7 +26,7 @@ export interface WorkoutData {
   date: string;
   activityType: string;
   distance: number;
-  duration?: number;
+  movingTime?: number;
   heartRate?: number;
   calories?: number;
 }

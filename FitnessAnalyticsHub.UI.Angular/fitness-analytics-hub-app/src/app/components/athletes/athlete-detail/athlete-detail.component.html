@@ -11,7 +11,7 @@
 
   <div *ngIf="!loading && athlete">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>Athlet: {{ athlete.name }}</h2>
+      <h2>Athlet: {{ athlete.firstName }} {{ athlete.lastName }}</h2>
       <div>
         <!-- NEUER Dashboard-Button -->
         <button class="btn btn-success me-2" (click)="openDashboard()">
@@ -40,8 +40,12 @@
                   <td>{{ athlete.id }}</td>
                 </tr>
                 <tr>
-                  <th>Name:</th>
-                  <td>{{ athlete.name }}</td>
+                  <th>Vorname:</th>
+                  <td>{{ athlete.firstName }}</td>
+                </tr>
+                <tr>
+                  <th>Nachname:</th>
+                  <td>{{ athlete.lastName }}</td>
                 </tr>
                 <tr>
                   <th>E-Mail:</th>

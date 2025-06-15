@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FitnessAnalyticsHub.Application;
 using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Interfaces;
@@ -13,7 +14,11 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 
 // Learn more about configuring Swagger
 builder.Services.AddEndpointsApiExplorer();
