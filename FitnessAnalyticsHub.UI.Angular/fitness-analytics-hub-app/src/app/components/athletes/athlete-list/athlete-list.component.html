@@ -1,5 +1,3 @@
-<!-- src/app/components/athletes/athlete-list/athlete-list.component.html -->
-
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Athleten Übersicht</h2>
@@ -45,7 +43,7 @@
           <tbody>
             <tr *ngFor="let athlete of athletes">
               <td>{{ athlete.id }}</td>
-              <td>{{ athlete.name }}</td>
+              <td>{{ athlete.firstName }} {{ athlete.lastName }}</td>
               <td>{{ athlete.email }}</td>
               <td>{{ athlete.dateOfBirth | date : "dd.MM.yyyy" }}</td>
               <td>{{ athlete.weight }}</td>

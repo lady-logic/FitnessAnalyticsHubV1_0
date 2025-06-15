@@ -73,7 +73,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         catchError((err) => {
           this.error = 'Athlet nicht gefunden. Verwende Demo-Daten.';
           this.loading = false;
-          return of({ id: 1, name: 'Demo User' } as Athlete);
+          return of({ id: 1, firstName: 'Demo', lastName: 'User' } as Athlete);
         })
       );
 
@@ -130,7 +130,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
       date: activity.startDate,
       activityType: activity.sportType,
       distance: activity.distance,
-      duration: activity.duration,
+      movingTime: activity.movingTime,
       heartRate: activity.averageHeartRate,
       calories: activity.calories,
     };
@@ -199,7 +199,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
           date: activity.startDate,
           activityType: activity.sportType,
           distance: activity.distance,
-          duration: activity.duration,
+          duration: activity.movingTime,
           heartRate: activity.averageHeartRate,
           calories: activity.calories,
         }));
@@ -414,16 +414,64 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
     return 'poor';
   }
 
-  formatDuration(duration?: number): string {
-    if (!duration) return 'N/A';
+  formatMovingTime(movingTime?: number | string): string {
+    let seconds: number;
 
-    const hours = Math.floor(duration / 3600);
-    const minutes = Math.floor((duration % 3600) / 60);
+    if (typeof movingTime === 'string') {
+      // Parse TimeSpan format "HH:MM:SS" oder "Days.HH:MM:SS"
+      seconds = this.parseTimeSpanToSeconds(movingTime);
+    } else if (typeof movingTime === 'number') {
+      seconds = movingTime;
+    } else {
+      return 'N/A';
+    }
+
+    if (!seconds || seconds === 0 || isNaN(seconds)) {
+      return 'N/A';
+    }
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
 
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return `${hours}h ${minutes}m ${remainingSeconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${remainingSeconds}s`;
+    } else {
+      return `${remainingSeconds}s`;
     }
-    return `${minutes}m`;
+  }
+
+  private parseTimeSpanToSeconds(timeSpan: string): number {
+    try {
+      // Format: "HH:MM:SS" oder "Days.HH:MM:SS"
+      const parts = timeSpan.split(':');
+
+      if (parts.length === 3) {
+        const [hoursOrDaysHours, minutes, seconds] = parts;
+
+        // Check if first part contains days (e.g., "1.02" meaning 1 day and 2 hours)
+        if (hoursOrDaysHours.includes('.')) {
+          const [days, hours] = hoursOrDaysHours.split('.');
+          return (
+            parseInt(days) * 24 * 3600 +
+            parseInt(hours) * 3600 +
+            parseInt(minutes) * 60 +
+            parseInt(seconds)
+          );
+        } else {
+          return (
+            parseInt(hoursOrDaysHours) * 3600 +
+            parseInt(minutes) * 60 +
+            parseInt(seconds)
+          );
+        }
+      }
+      return 0;
+    } catch {
+      return 0;
+    }
   }
 
   getEstimatedCalories(stats: ActivityStatistics): string {
@@ -432,7 +480,6 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
     return estimated.toLocaleString();
   }
 
-  // ERWEITERTE VERSION der getActivityTypes Methode
   getActivityTypes(activitiesByType: {
     [key: string]: number;
   }): Array<{ name: string; count: number; percentage: number }> {
@@ -555,7 +602,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         distance: 5.2,
         startDate: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 Stunden her
         athleteFullName: 'Demo User',
-        duration: 1680, // 28 Minuten
+        movingTime: 1680, // 28 Minuten
         averageHeartRate: 145,
         maxHeartRate: 168,
         calories: 420,
@@ -567,7 +614,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         distance: 24.8,
         startDate: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // Gestern
         athleteFullName: 'Demo User',
-        duration: 4500, // 75 Minuten
+        movingTime: 4500, // 75 Minuten
         averageHeartRate: 132,
         maxHeartRate: 156,
         calories: 890,
@@ -579,7 +626,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         distance: 1.5,
         startDate: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(), // 2 Tage her
         athleteFullName: 'Demo User',
-        duration: 2700, // 45 Minuten
+        movingTime: 2700, // 45 Minuten
         averageHeartRate: 125,
         maxHeartRate: 148,
         calories: 380,
@@ -591,7 +638,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         distance: 3.1,
         startDate: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(), // 3 Tage her
         athleteFullName: 'Demo User',
-        duration: 1080, // 18 Minuten
+        movingTime: 1080, // 18 Minuten
         averageHeartRate: 128,
         maxHeartRate: 142,
         calories: 245,
@@ -603,7 +650,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         distance: 8.7,
         startDate: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(), // 4 Tage her
         athleteFullName: 'Demo User',
-        duration: 3240, // 54 Minuten
+        movingTime: 3240, // 54 Minuten
         averageHeartRate: 138,
         maxHeartRate: 162,
         calories: 580,
@@ -615,7 +662,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         distance: 0,
         startDate: new Date(Date.now() - 1000 * 60 * 60 * 120).toISOString(), // 5 Tage her
         athleteFullName: 'Demo User',
-        duration: 2400, // 40 Minuten
+        movingTime: 2400, // 40 Minuten
         averageHeartRate: 142,
         maxHeartRate: 165,
         calories: 350,

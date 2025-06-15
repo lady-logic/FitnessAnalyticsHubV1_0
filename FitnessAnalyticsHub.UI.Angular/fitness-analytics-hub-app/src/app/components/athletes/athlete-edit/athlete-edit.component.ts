@@ -32,12 +32,12 @@ export class AthleteEditComponent implements OnInit {
   ) {
     this.athleteForm = this.fb.group({
       id: [0, Validators.required],
-      name: ['', [Validators.required, Validators.maxLength(100)]],
+      firstName: ['', [Validators.required, Validators.maxLength(100)]],
+      lastName: ['', [Validators.required, Validators.maxLength(100)]],
       email: ['', [Validators.required, Validators.email]],
       dateOfBirth: ['', Validators.required],
       weight: ['', [Validators.required, Validators.min(0)]],
       height: ['', [Validators.required, Validators.min(0)]],
-      // Weitere Felder entsprechend deinem UpdateAthleteDto
     });
   }
 
@@ -84,11 +84,12 @@ export class AthleteEditComponent implements OnInit {
 
     this.athleteForm.patchValue({
       id: athlete.id,
-      name: athlete.name,
+      firstName: athlete.firstName,
+      lastName: athlete.lastName,
       email: athlete.email,
       dateOfBirth: dateOfBirth,
       weight: athlete.weight,
-      height: athlete.height
+      height: athlete.height,
     });
   }
 
@@ -100,11 +101,13 @@ export class AthleteEditComponent implements OnInit {
 
     this.submitting = true;
     const formValue = this.athleteForm.value;
-    
+
     // Konvertiere das Datum-String in ein Date-Objekt
     const updatedAthlete: UpdateAthleteDto = {
       ...formValue,
-      dateOfBirth: formValue.dateOfBirth ? new Date(formValue.dateOfBirth) : new Date()
+      dateOfBirth: formValue.dateOfBirth
+        ? new Date(formValue.dateOfBirth)
+        : new Date(),
     };
 
     this.athleteService.updateAthlete(updatedAthlete).subscribe({

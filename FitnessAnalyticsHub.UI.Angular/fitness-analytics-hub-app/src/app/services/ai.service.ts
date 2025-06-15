@@ -23,7 +23,7 @@ interface AIMotivationRequest {
     date: string;
     activityType: string;
     distance: number;
-    duration: number;
+    movingTime: number;
     calories: number;
   }>;
   preferredTone?: string;
@@ -40,7 +40,7 @@ interface AIWorkoutAnalysisRequest {
     date: string;
     activityType: string;
     distance: number;
-    duration: number;
+    movingTime: number;
     calories: number;
   }>;
   analysisType: string;
@@ -80,7 +80,7 @@ export class AIService {
         date: workout.date,
         activityType: workout.activityType,
         distance: workout.distance,
-        duration: workout.duration || 0,
+        movingTime: workout.movingTime || 0,
         calories: workout.calories || 0,
       })),
       analysisType: request.analysisType || 'Performance',
@@ -126,7 +126,7 @@ export class AIService {
         date: w.date,
         activityType: w.activityType,
         distance: w.distance,
-        duration: w.duration || 0,
+        movingTime: w.movingTime || 0,
         calories: w.calories || 0,
       })),
       preferredTone: 'Motivational',
@@ -217,21 +217,21 @@ export class AIService {
         date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
         activityType: 'Run',
         distance: 5.2,
-        duration: 1680,
+        movingTime: 1680,
         calories: 420,
       },
       {
         date: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
         activityType: 'Ride',
         distance: 24.8,
-        duration: 4500,
+        movingTime: 4500,
         calories: 890,
       },
       {
         date: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
         activityType: 'Run',
         distance: 3.1,
-        duration: 1080,
+        movingTime: 1080,
         calories: 245,
       },
     ];

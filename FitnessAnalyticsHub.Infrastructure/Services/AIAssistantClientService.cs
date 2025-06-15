@@ -126,7 +126,8 @@ public class AIAssistantClientService : IAIAssistantClientService
             var json = JsonSerializer.Serialize(aiRequest);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/huggingface", content, cancellationToken);
+            //var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/huggingface", content, cancellationToken);
+            var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/googlegemini", content, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {

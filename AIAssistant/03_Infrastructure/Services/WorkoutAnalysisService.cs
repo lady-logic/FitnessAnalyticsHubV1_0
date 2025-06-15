@@ -100,7 +100,7 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
         }
 
         var workoutsData = string.Join("\n", request.RecentWorkouts.Select(w =>
-            $"Date: {w.Date:yyyy-MM-dd}, Type: {w.ActivityType}, Distance: {w.Distance}km, " +
+            $"Date: {w.Date:yyyy-MM-dd}, Type: {w.ActivityType}, Distance: {w.Distance}m, " +
             $"Duration: {TimeSpan.FromSeconds(w.Duration):hh\\:mm\\:ss}, Calories: {w.Calories}"
         ));
 

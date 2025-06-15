@@ -24,30 +24,61 @@
         <!-- Verstecktes Feld für die ID -->
         <input type="hidden" formControlName="id" />
 
-        <div class="mb-3">
-          <label for="name" class="form-label">Name *</label>
-          <input
-            type="text"
-            class="form-control"
-            id="name"
-            formControlName="name"
-            [ngClass]="{
-              'is-invalid':
-                athleteForm.get('name')?.invalid &&
-                athleteForm.get('name')?.touched
-            }"
-          />
-          <div
-            class="invalid-feedback"
-            *ngIf="athleteForm.get('name')?.errors?.['required']"
-          >
-            Name ist erforderlich.
+        <div class="row mb-3">
+          <!-- Vorname -->
+          <div class="col-md-6">
+            <label for="firstName" class="form-label">Vorname *</label>
+            <input
+              type="text"
+              class="form-control"
+              id="firstName"
+              formControlName="firstName"
+              [ngClass]="{
+                'is-invalid':
+                  athleteForm.get('firstName')?.invalid &&
+                  athleteForm.get('firstName')?.touched
+              }"
+            />
+            <div
+              class="invalid-feedback"
+              *ngIf="athleteForm.get('firstName')?.errors?.['required']"
+            >
+              Vorname ist erforderlich.
+            </div>
+            <div
+              class="invalid-feedback"
+              *ngIf="athleteForm.get('firstName')?.errors?.['maxlength']"
+            >
+              Vorname darf maximal 50 Zeichen lang sein.
+            </div>
           </div>
-          <div
-            class="invalid-feedback"
-            *ngIf="athleteForm.get('name')?.errors?.['maxlength']"
-          >
-            Name darf maximal 100 Zeichen lang sein.
+
+          <!-- Nachname -->
+          <div class="col-md-6">
+            <label for="lastName" class="form-label">Nachname *</label>
+            <input
+              type="text"
+              class="form-control"
+              id="lastName"
+              formControlName="lastName"
+              [ngClass]="{
+                'is-invalid':
+                  athleteForm.get('lastName')?.invalid &&
+                  athleteForm.get('lastName')?.touched
+              }"
+            />
+            <div
+              class="invalid-feedback"
+              *ngIf="athleteForm.get('lastName')?.errors?.['required']"
+            >
+              Nachname ist erforderlich.
+            </div>
+            <div
+              class="invalid-feedback"
+              *ngIf="athleteForm.get('lastName')?.errors?.['maxlength']"
+            >
+              Nachname darf maximal 50 Zeichen lang sein.
+            </div>
           </div>
         </div>
 
