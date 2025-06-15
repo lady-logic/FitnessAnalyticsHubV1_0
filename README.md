@@ -45,7 +45,14 @@ Dieses Projekt ist eine persönliche Spielwiese für moderne Softwareentwicklung
 - 🐳 Dockerisierung & Bereitstellung
 - 🤖 Automatisierung durch GitHub Actions
 - 🔄 Datenintegration mit externen Services (Strava API)
-- 🧠 **KI-Integration** mit HuggingFace für intelligente Trainingsanalyse
+- 🧠 **KI-Integration** mit HuggingFace / Google Gemini für intelligente Trainingsanalyse
+
+---
+
+## 🎯 Dashboard Overview
+
+![Fitness Analytics Dashboard](./docs/images/Dashboard.png)
+![Activity Distribution](./docs/images/ActivityDistribution.png)
 
 ---
 
