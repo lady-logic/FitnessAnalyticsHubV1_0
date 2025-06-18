@@ -12,13 +12,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Applica
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Infrastructure", "FitnessAnalyticsHub.Infrastructure\FitnessAnalyticsHub.Infrastructure.csproj", "{FB03840E-E8F7-4122-8B8C-F14DFA774B30}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01_Core", "01_Core", "{7D32FD1A-D648-43C8-818C-05FE96D59C2E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{7D32FD1A-D648-43C8-818C-05FE96D59C2E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "02_Application", "02_Application", "{9C4ED65D-AF7F-4ABF-809D-2B3A98E4325E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Application", "Application", "{9C4ED65D-AF7F-4ABF-809D-2B3A98E4325E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "03_Infrastructure", "03_Infrastructure", "{688E83DB-755F-419A-A003-ACA8A0D09ECA}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{688E83DB-755F-419A-A003-ACA8A0D09ECA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "04_UI", "04_UI", "{CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{CD4304B9-E70D-4ECC-B46C-DC0C47EF4C16}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{141702F5-159C-4EB8-BC2C-DD4FF6172279}"
 	ProjectSection(SolutionItems) = preProject
@@ -29,11 +29,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.WebApi", "FitnessAnalyticsHub.WebApi\FitnessAnalyticsHub.WebApi.csproj", "{E28867E1-68C3-4669-8488-59463A3DD51D}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "05_Tests", "05_Tests", "{DD273DC4-89AA-4BA7-8DE4-1C1BD738538D}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DD273DC4-89AA-4BA7-8DE4-1C1BD738538D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.Tests", "FitnessAnalyticsHub.Tests\FitnessAnalyticsHub.Tests.csproj", "{2AB5FCB2-AE2C-4F05-97BB-388AA94ED2B1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "06_AIAssistant", "06_AIAssistant", "{0594D60F-AF37-45EC-8501-F7CE1ECEC117}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AIAssistant", "AIAssistant", "{0594D60F-AF37-45EC-8501-F7CE1ECEC117}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FitnessAnalyticsHub.AIAssistant", "AIAssistant\FitnessAnalyticsHub.AIAssistant.csproj", "{CF8D100F-2A70-41BD-ADCF-33F3C46084C8}"
 EndProject
