@@ -1,9 +1,9 @@
-﻿using FitnessAnalyticsHub.Domain.Exceptions.Activities;
+﻿using System.Net;
+using System.Text.Json;
+using FitnessAnalyticsHub.Domain.Exceptions.Activities;
 using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 using FitnessAnalyticsHub.Infrastructure.Exceptions;
 using FitnessAnalyticsHub.WebApi.Middleware.Models;
-using System.Net;
-using System.Text.Json;
 
 namespace FitnessAnalyticsHub.WebApi.Middleware
 {
@@ -52,6 +52,15 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.NotFound,
                     Details = $"AthleteId: {ex.AthleteId}"
+                },
+
+                // AI Assistant Exceptions
+                AIAssistantApiException ex => new ErrorResponse
+                {
+                    Type = "AIAssistantApiError",
+                    Message = ex.Message,
+                    StatusCode = (int)HttpStatusCode.BadGateway,
+                    Details = $"AI Assistant API returned status code: {ex.StatusCode}"
                 },
 
                 // Strava Konfigurationsfehler

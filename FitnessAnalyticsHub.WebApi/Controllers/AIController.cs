@@ -24,22 +24,14 @@ public class AIController : ControllerBase
         AIMotivationRequestDto request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            _logger.LogInformation("AI motivation request for athlete: {AthleteName}",
-                request.AthleteProfile?.Name ?? "Unknown");
+        _logger.LogInformation("AI motivation request for athlete: {AthleteName}",
+            request.AthleteProfile?.Name ?? "Unknown");
 
-            var result = await _aiAssistant.GetMotivationAsync(request, cancellationToken);
+        var result = await _aiAssistant.GetMotivationAsync(request, cancellationToken);
 
-            _logger.LogInformation("AI motivation response generated from source: {Source}", result.Source);
+        _logger.LogInformation("AI motivation response generated from source: {Source}", result.Source);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing AI motivation request");
-            return StatusCode(500, "An error occurred while generating motivation");
-        }
+        return Ok(result);
     }
 
     [HttpPost("analysis")]
@@ -47,50 +39,27 @@ public class AIController : ControllerBase
         AIWorkoutAnalysisRequestDto request,
         CancellationToken cancellationToken)
     {
-        try
-        {
-            _logger.LogInformation("AI workout analysis request for {WorkoutCount} workouts, type: {AnalysisType}",
-                request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
+        _logger.LogInformation("AI workout analysis request for {WorkoutCount} workouts, type: {AnalysisType}",
+            request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
-            var result = await _aiAssistant.GetWorkoutAnalysisAsync(request, cancellationToken);
+        var result = await _aiAssistant.GetWorkoutAnalysisAsync(request, cancellationToken);
 
-            _logger.LogInformation("AI analysis response generated from source: {Source}", result.Source);
+        _logger.LogInformation("AI analysis response generated from source: {Source}", result.Source);
 
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing AI workout analysis request");
-            return StatusCode(500, "An error occurred while generating workout analysis");
-        }
+        return Ok(result);
     }
 
     [HttpGet("health")]
     public async Task<ActionResult<object>> GetAIHealth(CancellationToken cancellationToken)
     {
-        try
-        {
-            var isHealthy = await _aiAssistant.IsHealthyAsync(cancellationToken);
+        var isHealthy = await _aiAssistant.IsHealthyAsync(cancellationToken);
 
-            return Ok(new
-            {
-                isHealthy = isHealthy,
-                service = "AIAssistant",
-                timestamp = DateTime.UtcNow,
-                status = isHealthy ? "Available" : "Unavailable"
-            });
-        }
-        catch (Exception ex)
+        return Ok(new
         {
-            _logger.LogWarning(ex, "AI health check failed");
-            return Ok(new
-            {
-                isHealthy = false,
-                service = "AIAssistant",
-                timestamp = DateTime.UtcNow,
-                status = "Unavailable",
-                error = ex.Message
-            });
-        }
+            isHealthy = isHealthy,
+            service = "AIAssistant",
+            timestamp = DateTime.UtcNow,
+            status = isHealthy ? "Available" : "Unavailable"
+        });
     }
 }

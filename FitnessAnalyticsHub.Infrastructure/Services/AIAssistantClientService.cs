@@ -32,136 +32,120 @@ public class AIAssistantClientService : IAIAssistantClientService
 
     public async Task<AIMotivationResponseDto> GetMotivationAsync(AIMotivationRequestDto request, CancellationToken cancellationToken = default)
     {
-        try
+        _logger.LogInformation("Requesting motivation for athlete: {AthleteName}",
+            request.AthleteProfile?.Name ?? "Unknown");
+
+        // Konvertiere zu AIAssistant DTO Format
+        var aiRequest = new AIAssistantMotivationRequest
         {
-            _logger.LogInformation("Requesting motivation for athlete: {AthleteName}",
-                request.AthleteProfile?.Name ?? "Unknown");
-
-            // Konvertiere zu AIAssistant DTO Format
-            var aiRequest = new AIAssistantMotivationRequest
+            AthleteProfile = new AIAssistantAthleteProfile
             {
-                AthleteProfile = new AIAssistantAthleteProfile
-                {
-                    Name = request.AthleteProfile?.Name ?? "Champion",
-                    FitnessLevel = request.AthleteProfile?.FitnessLevel ?? "Intermediate",
-                    PrimaryGoal = request.AthleteProfile?.PrimaryGoal ?? "General Fitness"
-                },
-                RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistantWorkout
-                {
-                    Date = w.Date,
-                    ActivityType = w.ActivityType,
-                    Distance = w.Distance,
-                    Duration = w.Duration,
-                    Calories = w.Calories
-                }).ToList() ?? new List<AIAssistantWorkout>(),
-                PreferredTone = request.PreferredTone ?? "Encouraging",
-                ContextualInfo = request.ContextualInfo ?? ""
-            };
-
-            var json = JsonSerializer.Serialize(aiRequest);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            var response = await _httpClient.PostAsync("/api/MotivationCoach/motivate/huggingface", content, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
+                Name = request.AthleteProfile?.Name ?? "Champion",
+                FitnessLevel = request.AthleteProfile?.FitnessLevel ?? "Intermediate",
+                PrimaryGoal = request.AthleteProfile?.PrimaryGoal ?? "General Fitness"
+            },
+            RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistantWorkout
             {
-                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError("AIAssistant motivation request failed: {StatusCode} - {Error}",
-                    response.StatusCode, errorContent);
+                Date = w.Date,
+                ActivityType = w.ActivityType,
+                Distance = w.Distance,
+                Duration = w.Duration,
+                Calories = w.Calories
+            }).ToList() ?? new List<AIAssistantWorkout>(),
+            PreferredTone = request.PreferredTone ?? "Encouraging",
+            ContextualInfo = request.ContextualInfo ?? ""
+        };
 
-                return GetFallbackMotivation(request);
-            }
+        var json = JsonSerializer.Serialize(aiRequest);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            var aiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+        var response = await _httpClient.PostAsync("/api/MotivationCoach/motivate/huggingface", content, cancellationToken);
 
-            return new AIMotivationResponseDto
-            {
-                MotivationalMessage = aiResponse.GetProperty("motivationalMessage").GetString() ??
-                                    "Keep pushing forward! You're doing great!",
-                Quote = aiResponse.TryGetProperty("quote", out var quote) ? quote.GetString() : null,
-                ActionableTips = aiResponse.TryGetProperty("actionableTips", out var tips) &&
-                               tips.ValueKind == JsonValueKind.Array ?
-                               tips.EnumerateArray().Select(t => t.GetString()).Where(s => s != null).Cast<string>().ToList() :
-                               null,
-                GeneratedAt = DateTime.UtcNow,
-                Source = "AIAssistant-HuggingFace"
-            };
-        }
-        catch (Exception ex)
+        if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError(ex, "Error calling AIAssistant motivation API");
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError("AIAssistant motivation request failed: {StatusCode} - {Error}",
+                response.StatusCode, errorContent);
+
             return GetFallbackMotivation(request);
         }
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        var aiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+        return new AIMotivationResponseDto
+        {
+            MotivationalMessage = aiResponse.GetProperty("motivationalMessage").GetString() ??
+                                "Keep pushing forward! You're doing great!",
+            Quote = aiResponse.TryGetProperty("quote", out var quote) ? quote.GetString() : null,
+            ActionableTips = aiResponse.TryGetProperty("actionableTips", out var tips) &&
+                           tips.ValueKind == JsonValueKind.Array ?
+                           tips.EnumerateArray().Select(t => t.GetString()).Where(s => s != null).Cast<string>().ToList() :
+                           null,
+            GeneratedAt = DateTime.UtcNow,
+            Source = "AIAssistant-HuggingFace"
+        };
     }
 
     public async Task<AIWorkoutAnalysisResponseDto> GetWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken = default)
     {
-        try
+        _logger.LogInformation("Requesting workout analysis for {WorkoutCount} workouts, type: {AnalysisType}",
+            request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
+
+        // Konvertiere zu AIAssistant DTO Format
+        var aiRequest = new AIAssistantWorkoutAnalysisRequest
         {
-            _logger.LogInformation("Requesting workout analysis for {WorkoutCount} workouts, type: {AnalysisType}",
-                request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
-
-            // Konvertiere zu AIAssistant DTO Format
-            var aiRequest = new AIAssistantWorkoutAnalysisRequest
+            AthleteProfile = request.AthleteProfile != null ? new AIAssistantAthleteProfile
             {
-                AthleteProfile = request.AthleteProfile != null ? new AIAssistantAthleteProfile
-                {
-                    Name = request.AthleteProfile.Name,
-                    FitnessLevel = request.AthleteProfile.FitnessLevel,
-                    PrimaryGoal = request.AthleteProfile.PrimaryGoal
-                } : null,
-                RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistantWorkout
-                {
-                    Date = w.Date,
-                    ActivityType = w.ActivityType,
-                    Distance = w.Distance,
-                    Duration = w.Duration,
-                    Calories = w.Calories
-                }).ToList() ?? new List<AIAssistantWorkout>(),
-                AnalysisType = request.AnalysisType ?? "Performance",
-                FocusAreas = request.FocusAreas ?? new List<string>()
-            };
-
-            var json = JsonSerializer.Serialize(aiRequest);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-            //var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/huggingface", content, cancellationToken);
-            var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/googlegemini", content, cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
+                Name = request.AthleteProfile.Name,
+                FitnessLevel = request.AthleteProfile.FitnessLevel,
+                PrimaryGoal = request.AthleteProfile.PrimaryGoal
+            } : null,
+            RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistantWorkout
             {
-                var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError("AIAssistant workout analysis request failed: {StatusCode} - {Error}",
-                    response.StatusCode, errorContent);
+                Date = w.Date,
+                ActivityType = w.ActivityType,
+                Distance = w.Distance,
+                Duration = w.Duration,
+                Calories = w.Calories
+            }).ToList() ?? new List<AIAssistantWorkout>(),
+            AnalysisType = request.AnalysisType ?? "Performance",
+            FocusAreas = request.FocusAreas ?? new List<string>()
+        };
 
-                return GetFallbackAnalysis(request);
-            }
+        var json = JsonSerializer.Serialize(aiRequest);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            var aiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+        //var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/huggingface", content, cancellationToken);
+        var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/googlegemini", content, cancellationToken);
 
-            return new AIWorkoutAnalysisResponseDto
-            {
-                Analysis = aiResponse.GetProperty("analysis").GetString() ??
-                          "Your workouts show consistent progress. Keep up the great work!",
-                KeyInsights = aiResponse.TryGetProperty("keyInsights", out var insights) &&
-                            insights.ValueKind == JsonValueKind.Array ?
-                            insights.EnumerateArray().Select(i => i.GetString()).Where(s => s != null).Cast<string>().ToList() :
-                            new List<string>(),
-                Recommendations = aiResponse.TryGetProperty("recommendations", out var recs) &&
-                                recs.ValueKind == JsonValueKind.Array ?
-                                recs.EnumerateArray().Select(r => r.GetString()).Where(s => s != null).Cast<string>().ToList() :
-                                new List<string>(),
-                GeneratedAt = DateTime.UtcNow,
-                Source = "AIAssistant-HuggingFace"
-            };
-        }
-        catch (Exception ex)
+        if (!response.IsSuccessStatusCode)
         {
-            _logger.LogError(ex, "Error calling AIAssistant workout analysis API");
+            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            _logger.LogError("AIAssistant workout analysis request failed: {StatusCode} - {Error}",
+                response.StatusCode, errorContent);
+
             return GetFallbackAnalysis(request);
         }
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        var aiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+        return new AIWorkoutAnalysisResponseDto
+        {
+            Analysis = aiResponse.GetProperty("analysis").GetString() ??
+                      "Your workouts show consistent progress. Keep up the great work!",
+            KeyInsights = aiResponse.TryGetProperty("keyInsights", out var insights) &&
+                        insights.ValueKind == JsonValueKind.Array ?
+                        insights.EnumerateArray().Select(i => i.GetString()).Where(s => s != null).Cast<string>().ToList() :
+                        new List<string>(),
+            Recommendations = aiResponse.TryGetProperty("recommendations", out var recs) &&
+                            recs.ValueKind == JsonValueKind.Array ?
+                            recs.EnumerateArray().Select(r => r.GetString()).Where(s => s != null).Cast<string>().ToList() :
+                            new List<string>(),
+            GeneratedAt = DateTime.UtcNow,
+            Source = "AIAssistant-HuggingFace"
+        };
     }
 
     public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default)
