@@ -7,6 +7,9 @@ EXPOSE 8080
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
+# Zentrale Build-Konfiguration kopieren
+COPY ["Directory.Build.props", "Directory.Packages.props", "./"]
+
 # Projekt-Dateien kopieren (angepasst an Ihre Struktur)
 COPY ["FitnessAnalyticsHub.WebApi/FitnessAnalyticsHub.WebApi.csproj", "FitnessAnalyticsHub.WebApi/"]
 COPY ["FitnessAnalyticsHub.Application/FitnessAnalyticsHub.Application.csproj", "FitnessAnalyticsHub.Application/"]
