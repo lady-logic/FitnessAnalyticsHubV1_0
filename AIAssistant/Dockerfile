@@ -12,6 +12,10 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+# Zentrale Build-Konfiguration kopieren
+COPY ["Directory.Build.props", "Directory.Packages.props", "./"]
+
 COPY ["AIAssistant/FitnessAnalyticsHub.AIAssistant.csproj", "AIAssistant/"]
 RUN dotnet restore "./AIAssistant/FitnessAnalyticsHub.AIAssistant.csproj"
 COPY ["AIAssistant/", "AIAssistant/"]
