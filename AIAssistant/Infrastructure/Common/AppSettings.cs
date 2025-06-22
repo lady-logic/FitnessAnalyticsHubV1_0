@@ -1,4 +1,4 @@
-﻿namespace FitnessAnalyticsHub.AIAssistant._03_Infrastructure.Common;
+﻿namespace FitnessAnalyticsHub.AIAssistant.Infrastructure.Common;
 
 public class AppSettings
 {

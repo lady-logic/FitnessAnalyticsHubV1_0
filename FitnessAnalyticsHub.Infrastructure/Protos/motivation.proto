@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "Protos/common.proto";
+
+package fitnessanalyticshub;
+
+service MotivationService {
+  rpc GetMotivation(MotivationRequest) returns (MotivationResponse);
+}
+
+// Request
+message MotivationRequest {
+  AthleteProfile athlete_profile = 1;     // Import aus common.proto
+  repeated Workout recent_workouts = 2;   // Liste von Workouts
+  string preferred_tone = 3;              // "Encouraging", etc.
+  string contextual_info = 4;             // Zusätzliche Infos
+}
+
+// Response
+message MotivationResponse {
+  string motivational_message = 1;        // Hauptnachricht
+  string quote = 2;                       // Optionales Zitat
+  repeated string actionable_tips = 3;    // Liste von Tipps
+  string generated_at = 4;                // Timestamp als string
+  string source = 5;                      // "AIAssistant-HuggingFace"
+}

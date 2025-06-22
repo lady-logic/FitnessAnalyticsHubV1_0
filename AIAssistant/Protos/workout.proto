@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package fitnessanalyticshub;
+
+service WorkoutService {
+  rpc GetWorkoutAnalysis(WorkoutAnalysisRequest) returns (WorkoutAnalysisResponse);
+  rpc AnalyzeGoogleGeminiWorkouts(WorkoutAnalysisRequest) returns (WorkoutAnalysisResponse);  
+  rpc GetPerformanceTrends(PerformanceTrendsRequest) returns (WorkoutAnalysisResponse);
+  rpc GetTrainingRecommendations(TrainingRecommendationsRequest) returns (WorkoutAnalysisResponse);  
+  rpc AnalyzeHealthMetrics(HealthAnalysisRequest) returns (WorkoutAnalysisResponse); 
+  rpc CheckHealth(HealthCheckRequest) returns (HealthCheckResponse);
+}
+
+/// Request Messages
+message WorkoutAnalysisRequest {
+  string analysis_type = 1;
+  repeated Workout recent_workouts = 2;
+  AthleteProfile athlete_profile = 3;
+  string preferred_ai_provider = 4; // "huggingface" oder "googlegemini"
+}
+
+message PerformanceTrendsRequest {
+  int32 athlete_id = 1;
+  string time_frame = 2; // "week", "month", etc.
+}
+
+message HealthCheckRequest {
+  // Leer für jetzt
+}
+
+message TrainingRecommendationsRequest {
+  int32 athlete_id = 1;
+}
+
+message HealthAnalysisRequest {
+  int32 athlete_id = 1;
+  repeated Workout recent_workouts = 2;
+}
+
+// Response Messages
+message WorkoutAnalysisResponse {
+  string analysis = 1;
+  repeated string key_insights = 2;
+  repeated string recommendations = 3;
+  string generated_at = 4;
+  string source = 5;
+  string analysis_type = 6;
+}
+
+message HealthCheckResponse {
+  bool is_healthy = 1;
+  string message = 2;
+  string timestamp = 3;
+}

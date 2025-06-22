@@ -1,4 +1,4 @@
-﻿namespace AIAssistant._02_Application.Interfaces;
+﻿namespace AIAssistant.Application.Interfaces;
 
 public interface IAIPromptService
 {

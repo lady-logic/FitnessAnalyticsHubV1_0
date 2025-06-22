@@ -16,9 +16,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.AspNetCore" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="Protos\common.proto" GrpcServices="None" ProtoRoot="Protos" />
+		<Protobuf Include="Protos\motivation.proto" GrpcServices="Server" ProtoRoot="Protos" />
+		<Protobuf Include="Protos\workout.proto" GrpcServices="Server" ProtoRoot="Protos" />
+	</ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-﻿namespace AIAssistant._02_Application.DTOs;
+﻿namespace AIAssistant.Applications.DTOs;
 
 public class MotivationRequestDto
 {

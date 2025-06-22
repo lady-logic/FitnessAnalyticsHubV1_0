@@ -67,7 +67,10 @@ builder.Services.Configure<StravaConfiguration>(
 
 // HttpClient
 builder.Services.AddHttpClient("StravaApi");
-builder.Services.AddHttpClient<IAIAssistantClientService, AIAssistantClientService>();
+//builder.Services.AddHttpClient<IAIAssistantClientService, AIAssistantClientService>();
+
+// gRPC-Version registrieren
+builder.Services.AddScoped<IAIAssistantClientService, GrpcAIAssistantClientService>();
 
 // Service
 builder.Services.AddScoped<IStravaService, StravaService>();

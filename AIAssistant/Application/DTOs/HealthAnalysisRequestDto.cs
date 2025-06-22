@@ -1,4 +1,4 @@
-﻿namespace AIAssistant._02_Application.DTOs;
+﻿namespace AIAssistant.Application.DTOs;
 
 public class HealthAnalysisRequestDto
 {

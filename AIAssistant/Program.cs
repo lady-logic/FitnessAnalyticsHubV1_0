@@ -1,6 +1,8 @@
-﻿using AIAssistant._02_Application.Interfaces;
-using AIAssistant._03_Infrastructure.Services;
-using FitnessAnalyticsHub.AIAssistant._03_Infrastructure.Services;
+﻿using AIAssistant._04_UI.API.Services;
+using AIAssistant.Application.Interfaces;
+using AIAssistant.Infrastructure.Services;
+using FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
+using FitnessAnalyticsHub.AIAssistant.UI.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddHttpClient<HuggingFaceService>();
 builder.Services.AddHttpClient<GoogleGeminiService>();
 
+// gRPC Services hinzufügen
+builder.Services.AddGrpc();
+
 builder.Services.AddScoped<IAIPromptService>(provider =>
 {
     var defaultProvider = builder.Configuration["AI:DefaultProvider"] ?? "GoogleGemini";
@@ -64,6 +69,12 @@ builder.Services.AddLogging(logging =>
 
 var app = builder.Build();
 
+// gRPC Services registrieren
+app.MapGrpcService<MotivationGrpcService>();
+app.MapGrpcService<WorkoutAnalysisGrpcService>();
+// gRPC-Reflection für Debugging 
+app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -71,7 +82,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "AI Assistant API v1");
-        c.RoutePrefix = string.Empty; // Swagger UI at root
     });
 }
 
