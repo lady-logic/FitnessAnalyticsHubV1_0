@@ -45,7 +45,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => (string)null)); // Explizit null setzen
 
         // Training plan mappings
-        CreateMap<TrainingPlan, TrainingPlanDto>();
+        CreateMap<TrainingPlan, TrainingPlanDto>()
+            .ForMember(dest => dest.AthleteName, opt => opt.MapFrom(src => src.Athlete != null ? $"{src.Athlete.FirstName} {src.Athlete.LastName}" : string.Empty));
         CreateMap<CreateTrainingPlanDto, TrainingPlan>();
         CreateMap<UpdateTrainingPlanDto, TrainingPlan>();
 
