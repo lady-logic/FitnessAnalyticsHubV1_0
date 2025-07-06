@@ -1,6 +1,7 @@
 ﻿using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
+using System.Text.RegularExpressions;
 
 namespace AIAssistant.Infrastructure.Services;
 
@@ -157,7 +158,8 @@ Response:";
             return null;
 
         // Suche nach Zitaten in Anführungszeichen
-        var quoteMatches = System.Text.RegularExpressions.Regex.Matches(aiResponse, @"""([^""]{10,})""");
+        var quoteMatches = System.Text.RegularExpressions.Regex.Matches(
+            aiResponse, @"""([^""]){10,}""", RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
         foreach (System.Text.RegularExpressions.Match match in quoteMatches)
         {
@@ -245,7 +247,10 @@ Response:";
             $"Amazing work, {athleteName}! Your commitment to {primaryGoal} is paying off. Stay strong and keep moving forward!"
         };
 
-        var random = new Random();
-        return motivations[random.Next(motivations.Length)];
+        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        var randomBytes = new byte[4];
+        rng.GetBytes(randomBytes);
+        var randomIndex = Math.Abs(BitConverter.ToInt32(randomBytes, 0)) % motivations.Length;
+        return motivations[randomIndex];
     }
 }

@@ -527,7 +527,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         .replace(/\*\*(.*?)\*\*/g, '<strong class="analysis-bold">$1</strong>')
 
         // Numbered lists: 1. Text → <ol><li>Text</li></ol>
-        .replace(/(\d+\.\s+.*?)(?=\n\d+\.|\n\n|$)/gs, (match) => {
+        .replace(/(\d+\.\s*[^\n]*?)(=\n\d+\)|\n\n)$/gs, (match) => {
           const items = match.split(/\n(?=\d+\.)/);
           const listItems = items
             .map((item) =>
@@ -540,7 +540,7 @@ export class FitnessDashboardComponent implements OnInit, OnDestroy {
         })
 
         // Bullet Points: • Text oder - Text → <ul><li>Text</li></ul>
-        .replace(/((?:•|-)\s+.*?)(?=\n(?:•|-)|$)/gs, (match) => {
+        .replace(/((?:\s|-)+)([^=\n]*?)((?:=|n(?:\s|-)+|-))$/gm, (match) => {
           const items = match.split(/\n(?=•|-)/);
           const listItems = items
             .map((item) =>
