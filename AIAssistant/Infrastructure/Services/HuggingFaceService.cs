@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using System.Text.Json;
-using AIAssistant._02_Application.Interfaces;
-using AIAssistant._03_Infrastructure.OpenAI.Models;
+using AIAssistant.Application.Interfaces;
+using AIAssistant.Infrastructure.OpenAI.Models;
 
-namespace FitnessAnalyticsHub.AIAssistant._03_Infrastructure.Services;
+namespace FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
 
 public class HuggingFaceService : IAIPromptService
 {

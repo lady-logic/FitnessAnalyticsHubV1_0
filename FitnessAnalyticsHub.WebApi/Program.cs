@@ -67,10 +67,37 @@ builder.Services.Configure<StravaConfiguration>(
 
 // HttpClient
 builder.Services.AddHttpClient("StravaApi");
-builder.Services.AddHttpClient<IAIAssistantClientService, AIAssistantClientService>();
+
+// ==========================================
+// AIAssistant Client Services Registrierung
+// ==========================================
+
+// Alle drei Client-Implementierungen registrieren
+builder.Services.AddHttpClient<AIAssistantClientService>();
+builder.Services.AddScoped<GrpcAIAssistantClientService>();
+builder.Services.AddHttpClient<GrpcJsonClientService>();
+
+// Konfigurierbare Service-Auswahl basierend auf appsettings.json
+builder.Services.AddScoped<IAIAssistantClientService>(provider =>
+{
+    var configuration = provider.GetRequiredService<IConfiguration>();
+    var clientType = configuration["AIAssistant:ClientType"] ?? "Http";
+
+    var logger = provider.GetRequiredService<ILogger<Program>>();
+    logger.LogInformation("Using AIAssistant ClientType: {ClientType}", clientType);
+
+    return clientType.ToLower() switch
+    {
+        "http" => provider.GetRequiredService<AIAssistantClientService>(),
+        "grpc" => provider.GetRequiredService<GrpcAIAssistantClientService>(),
+        "grpcjson" => provider.GetRequiredService<GrpcJsonClientService>(),
+        _ => throw new InvalidOperationException($"Unknown AIAssistant ClientType: {clientType}. Valid values: Http, Grpc, GrpcJson")
+    };
+});
 
 // Service
 builder.Services.AddScoped<IStravaService, StravaService>();
+
 var app = builder.Build();
 
 // Exception Handling
@@ -110,5 +137,11 @@ app.MapHealthChecksUI(options =>
 });
 
 app.MapControllers();
+
+// Zeige beim Start an, welcher AIAssistant Client verwendet wird
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+var config = app.Services.GetRequiredService<IConfiguration>();
+var clientType = config["AIAssistant:ClientType"] ?? "Http";
+logger.LogInformation("AIAssistant Client Type: {ClientType}", clientType);
 
 app.Run();

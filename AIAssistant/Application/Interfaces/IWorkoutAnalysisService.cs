@@ -1,7 +1,6 @@
-﻿using AIAssistant._02_Application.DTOs;
-using AIAssistant.Application.DTOs;
+﻿using AIAssistant.Application.DTOs;
 
-namespace AIAssistant._02_Application.Interfaces;
+namespace AIAssistant.Application.Interfaces;
 
 public interface IWorkoutAnalysisService
 {

@@ -1,5 +1,6 @@
-﻿using AIAssistant._02_Application.DTOs;
-using AIAssistant._02_Application.Interfaces;
+﻿using AIAssistant.Application.DTOs;
+using AIAssistant.Application.Interfaces;
+using AIAssistant.Applications.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AIAssistant._04_UI.API.Controllers;

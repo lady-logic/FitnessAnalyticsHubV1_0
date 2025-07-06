@@ -4,6 +4,13 @@
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" />
     <PackageReference Include="AspNetCore.HealthChecks.UI" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Grpc.Net.ClientFactory" />
+    <PackageReference Include="Grpc.Tools">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
@@ -20,8 +27,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AIAssistant\FitnessAnalyticsHub.AIAssistant.csproj" />
     <ProjectReference Include="..\FitnessAnalyticsHub.Application\FitnessAnalyticsHub.Application.csproj" />
     <ProjectReference Include="..\FitnessAnalyticsHub.Domain\FitnessAnalyticsHub.Domain.csproj" />
   </ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="Protos\motivation.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\common.proto" GrpcServices="None" />
+		<Protobuf Include="Protos\workout.proto" GrpcServices="Client" />
+	</ItemGroup>
 
 </Project>

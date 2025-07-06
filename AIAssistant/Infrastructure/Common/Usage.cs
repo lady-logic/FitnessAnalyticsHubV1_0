@@ -1,4 +1,4 @@
-﻿namespace AIAssistant._03_Infrastructure.OpenAI.Models;
+﻿namespace AIAssistant.Infrastructure.OpenAI.Models;
 
 public class Usage
 {

@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package fitnessanalyticshub;
+
+message AthleteProfile {
+  string name = 1;
+  string fitness_level = 2;
+  string primary_goal = 3;
+}
+
+message Workout {
+  string date = 1;              // DateTime als string
+  string activity_type = 2;     // "Running", "Cycling", etc.
+  double distance = 3;          // Kilometer
+  int32 duration = 4;           // Minuten
+  int32 calories = 5;           // Verbrannte Kalorien
+}

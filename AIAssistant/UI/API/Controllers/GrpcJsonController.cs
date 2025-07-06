@@ -1,0 +1,376 @@
+﻿using AIAssistant.Application.DTOs;
+using AIAssistant.Application.Interfaces;
+using AIAssistant.Applications.DTOs;
+using AIAssistant.Extensions;
+using Fitnessanalyticshub;
+using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
+using Microsoft.AspNetCore.Mvc;
+
+namespace AIAssistant._04_UI.API.Controllers;
+
+[ApiController]
+[Route("grpc-json")]
+public class GrpcJsonController : ControllerBase
+{
+    private readonly IMotivationCoachService _motivationCoachService;
+    private readonly IWorkoutAnalysisService _workoutAnalysisService;
+    private readonly ILogger<GrpcJsonController> _logger;
+
+    public GrpcJsonController(
+        IMotivationCoachService motivationCoachService,
+        IWorkoutAnalysisService workoutAnalysisService,
+        ILogger<GrpcJsonController> logger)
+    {
+        _motivationCoachService = motivationCoachService;
+        _workoutAnalysisService = workoutAnalysisService;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// gRPC-JSON Bridge für MotivationService.GetMotivation
+    /// </summary>
+    [HttpPost("MotivationService/GetMotivation")]
+    public async Task<ActionResult> GetMotivation([FromBody] GrpcJsonMotivationRequestDto request)
+    {
+        try
+        {
+            _logger.LogInformation("gRPC-JSON: Received motivation request for athlete: {Name}",
+                request.AthleteProfile?.Name ?? "Unknown");
+
+            // Konvertiere JSON zu Application DTO (wie im REST Controller)
+            var motivationRequest = new MotivationRequestDto
+            {
+                AthleteProfile = new Domain.Models.AthleteProfile
+                {
+                    Id = Guid.NewGuid().ToString(), // Generiere eine ID
+                    Name = request.AthleteProfile?.Name ?? "",
+                    FitnessLevel = request.AthleteProfile?.FitnessLevel ?? "",
+                    PrimaryGoal = request.AthleteProfile?.PrimaryGoal ?? ""
+                },
+                IsStruggling = false, // Default value
+                UpcomingWorkoutType = null, // Optional
+                LastWorkout = null // Optional
+            };
+
+            // Rufe den gleichen Service auf wie der gRPC Service
+            var response = await _motivationCoachService.GetHuggingFaceMotivationalMessageAsync(motivationRequest);
+
+            // Konvertiere Response zu gRPC-JSON Format
+            var grpcJsonResponse = new
+            {
+                motivationalMessage = response.MotivationalMessage ?? "",
+                quote = response.Quote ?? "",
+                actionableTips = response.ActionableTips ?? new List<string>(),
+                generatedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                source = "gRPC-JSON-HuggingFace" // Hardcoded, da nicht in DTO vorhanden
+            };
+
+            _logger.LogInformation("gRPC-JSON: Successfully generated motivation response");
+            return Ok(grpcJsonResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "gRPC-JSON: Error generating motivation");
+            return StatusCode(500, new
+            {
+                error = "Internal server error",
+                message = $"Failed to generate motivation: {ex.Message}",
+                timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            });
+        }
+    }
+
+    /// <summary>
+    /// Health Check für gRPC-JSON Bridge
+    /// </summary>
+    [HttpGet("health")]
+    public ActionResult HealthCheck()
+    {
+        return Ok(new
+        {
+            status = "healthy",
+            service = "gRPC-JSON Bridge",
+            timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            availableEndpoints = new[]
+            {
+                "POST /grpc-json/MotivationService/GetMotivation",
+                "POST /grpc-json/WorkoutService/GetWorkoutAnalysis",
+                "POST /grpc-json/WorkoutService/AnalyzeGoogleGeminiWorkouts",
+                "POST /grpc-json/WorkoutService/GetPerformanceTrends",
+                "POST /grpc-json/WorkoutService/GetTrainingRecommendations",
+                "POST /grpc-json/WorkoutService/AnalyzeHealthMetrics",
+                "GET /grpc-json/health"
+            }
+        });
+    }
+
+    /// <summary>
+    /// gRPC-JSON Bridge für WorkoutService.GetWorkoutAnalysis
+    /// </summary>
+    [HttpPost("WorkoutService/GetWorkoutAnalysis")]
+    public async Task<ActionResult> GetWorkoutAnalysis([FromBody] GrpcJsonWorkoutAnalysisRequestDto request)
+    {
+        try
+        {
+            _logger.LogInformation("gRPC-JSON: Received workout analysis request for {WorkoutCount} workouts",
+                request.RecentWorkouts?.Length ?? 0);
+
+            // Konvertiere JSON zu Application DTO
+            var workoutAnalysisRequest = new WorkoutAnalysisRequestDto
+            {
+                AthleteProfile = request.AthleteProfile != null ? new AIAssistant.Domain.Models.AthleteProfile
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = request.AthleteProfile.Name ?? "",
+                    FitnessLevel = request.AthleteProfile.FitnessLevel ?? "",
+                    PrimaryGoal = request.AthleteProfile.PrimaryGoal ?? ""
+                } : null,
+                RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistant.Domain.Models.WorkoutData
+                {
+                    Date = DateTime.TryParse(w.Date, out var date) ? date : DateTime.UtcNow,
+                    ActivityType = w.ActivityType ?? "",
+                    Distance = w.Distance,
+                    Duration = w.Duration,
+                    Calories = w.Calories
+                }).ToList() ?? new List<AIAssistant.Domain.Models.WorkoutData>(),
+                AnalysisType = request.AnalysisType ?? "Performance"
+            };
+
+            // Rufe den Service auf (verwende GoogleGemini als Standard)
+            var response = await _workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(workoutAnalysisRequest);
+
+            // Konvertiere Response zu gRPC-JSON Format
+            var grpcJsonResponse = new
+            {
+                analysis = response.Analysis ?? "",
+                keyInsights = response.KeyInsights ?? new List<string>(),
+                recommendations = response.Recommendations ?? new List<string>(),
+                generatedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                source = "gRPC-JSON-GoogleGemini"
+            };
+
+            _logger.LogInformation("gRPC-JSON: Successfully generated workout analysis response");
+            return Ok(grpcJsonResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "gRPC-JSON: Error generating workout analysis");
+            return StatusCode(500, new
+            {
+                error = "Internal server error",
+                message = $"Failed to generate workout analysis: {ex.Message}",
+                timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            });
+        }
+    }
+
+    /// <summary>
+    /// gRPC-JSON Bridge für WorkoutService.AnalyzeGoogleGeminiWorkouts
+    /// </summary>
+    [HttpPost("WorkoutService/AnalyzeGoogleGeminiWorkouts")]
+    public async Task<ActionResult> AnalyzeGoogleGeminiWorkouts([FromBody] GrpcJsonWorkoutAnalysisRequestDto request)
+    {
+        try
+        {
+            _logger.LogInformation("gRPC-JSON: Received GoogleGemini workout analysis request for {WorkoutCount} workouts",
+                request.RecentWorkouts?.Length ?? 0);
+
+            // Konvertiere JSON zu Application DTO
+            var workoutAnalysisRequest = new WorkoutAnalysisRequestDto
+            {
+                AthleteProfile = request.AthleteProfile != null ? new AIAssistant.Domain.Models.AthleteProfile
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Name = request.AthleteProfile.Name ?? "",
+                    FitnessLevel = request.AthleteProfile.FitnessLevel ?? "",
+                    PrimaryGoal = request.AthleteProfile.PrimaryGoal ?? ""
+                } : null,
+                RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistant.Domain.Models.WorkoutData
+                {
+                    Date = DateTime.TryParse(w.Date, out var date) ? date : DateTime.UtcNow,
+                    ActivityType = w.ActivityType ?? "",
+                    Distance = w.Distance,
+                    Duration = w.Duration,
+                    Calories = w.Calories
+                }).ToList() ?? new List<AIAssistant.Domain.Models.WorkoutData>(),
+                AnalysisType = request.AnalysisType ?? "Performance"
+            };
+
+            // Verwende explizit GoogleGemini
+            var response = await _workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(workoutAnalysisRequest);
+
+            // Konvertiere Response zu gRPC-JSON Format
+            var grpcJsonResponse = new
+            {
+                analysis = response.Analysis ?? "",
+                keyInsights = response.KeyInsights ?? new List<string>(),
+                recommendations = response.Recommendations ?? new List<string>(),
+                generatedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                source = "gRPC-JSON-GoogleGemini"
+            };
+
+            _logger.LogInformation("gRPC-JSON: Successfully generated GoogleGemini workout analysis response");
+            return Ok(grpcJsonResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "gRPC-JSON: Error generating GoogleGemini workout analysis");
+            return StatusCode(500, new
+            {
+                error = "Internal server error",
+                message = $"Failed to generate GoogleGemini workout analysis: {ex.Message}",
+                timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            });
+        }
+    }
+
+    /// <summary>
+    /// gRPC-JSON Bridge für WorkoutService.GetPerformanceTrends
+    /// Placeholder - könnte erweitert werden wenn Service verfügbar
+    /// </summary>
+    [HttpPost("WorkoutService/GetPerformanceTrends")]
+    public ActionResult GetPerformanceTrends([FromBody] GrpcJsonPerformanceTrendsRequestDto request)
+    {
+        try
+        {
+            _logger.LogInformation("gRPC-JSON: Received performance trends request for athlete: {AthleteId}",
+                request.AthleteId);
+
+            // Da kein entsprechender Service verfügbar ist, geben wir einen Mock zurück
+            var grpcJsonResponse = new
+            {
+                analysis = $"Performance trends analysis for athlete {request.AthleteId} over the past {request.TimeFrame} " +
+                          "shows consistent training patterns and steady improvement across key metrics.",
+                keyInsights = new[]
+                {
+                    "Consistent training frequency maintained",
+                    "Progressive overload patterns observed",
+                    "Recovery metrics within healthy ranges",
+                    "Performance trending upward"
+                },
+                recommendations = new[]
+                {
+                    "Maintain current training consistency",
+                    "Focus on progressive intensity increases",
+                    "Monitor recovery indicators",
+                    "Consider periodization strategies"
+                },
+                generatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                source = "gRPC-JSON-MockPerformanceTrends"
+            };
+
+            return Ok(grpcJsonResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "gRPC-JSON: Error getting performance trends");
+            return StatusCode(500, new
+            {
+                error = "Internal server error",
+                message = $"Failed to get performance trends: {ex.Message}",
+                timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            });
+        }
+    }
+
+    /// <summary>
+    /// gRPC-JSON Bridge für WorkoutService.GetTrainingRecommendations
+    /// Placeholder - könnte erweitert werden wenn Service verfügbar
+    /// </summary>
+    [HttpPost("WorkoutService/GetTrainingRecommendations")]
+    public ActionResult GetTrainingRecommendations([FromBody] GrpcJsonTrainingRecommendationsRequestDto request)
+    {
+        try
+        {
+            _logger.LogInformation("gRPC-JSON: Received training recommendations request for athlete: {AthleteId}",
+                request.AthleteId);
+
+            // Da kein entsprechender Service verfügbar ist, geben wir einen Mock zurück
+            var grpcJsonResponse = new
+            {
+                analysis = $"Training recommendations for athlete {request.AthleteId} based on current fitness profile " +
+                          "and training history suggest focusing on balanced progression and recovery.",
+                keyInsights = new[]
+                {
+                    "Current training load is appropriate",
+                    "Room for intensity optimization",
+                    "Recovery patterns are sustainable",
+                    "Skill development opportunities identified"
+                },
+                recommendations = new[]
+                {
+                    "Incorporate 2-3 high-intensity sessions per week",
+                    "Add cross-training activities for variety",
+                    "Focus on technique refinement",
+                    "Ensure adequate sleep and nutrition"
+                },
+                generatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                source = "gRPC-JSON-MockTrainingRecommendations"
+            };
+
+            return Ok(grpcJsonResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "gRPC-JSON: Error getting training recommendations");
+            return StatusCode(500, new
+            {
+                error = "Internal server error",
+                message = $"Failed to get training recommendations: {ex.Message}",
+                timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            });
+        }
+    }
+
+    /// <summary>
+    /// gRPC-JSON Bridge für WorkoutService.AnalyzeHealthMetrics
+    /// Placeholder - könnte erweitert werden wenn Service verfügbar
+    /// </summary>
+    [HttpPost("WorkoutService/AnalyzeHealthMetrics")]
+    public ActionResult AnalyzeHealthMetrics([FromBody] GrpcJsonHealthMetricsRequestDto request)
+    {
+        try
+        {
+            _logger.LogInformation("gRPC-JSON: Received health metrics analysis request for athlete: {AthleteId} with {WorkoutCount} workouts",
+                request.AthleteId, request.RecentWorkouts?.Length ?? 0);
+
+            var workoutCount = request.RecentWorkouts?.Length ?? 0;
+            var avgCalories = request.RecentWorkouts?.Any() == true ? request.RecentWorkouts.Average(w => w.Calories) : 0;
+
+            // Da kein entsprechender Service verfügbar ist, geben wir einen Mock zurück
+            var grpcJsonResponse = new
+            {
+                analysis = $"Health metrics analysis for athlete {request.AthleteId} based on {workoutCount} recent workouts " +
+                          $"shows healthy activity levels with an average of {avgCalories:F0} calories per session.",
+                keyInsights = new[]
+                {
+                    $"Average caloric expenditure of {avgCalories:F0} calories per workout",
+                    "Activity frequency supports cardiovascular health",
+                    "Workout duration patterns are sustainable",
+                    "Energy expenditure aligns with fitness goals"
+                },
+                recommendations = new[]
+                {
+                    "Continue current activity levels",
+                    "Monitor heart rate during workouts",
+                    "Track sleep quality and recovery",
+                    "Maintain consistent hydration"
+                },
+                generatedAt = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+                source = "gRPC-JSON-MockHealthMetrics"
+            };
+
+            return Ok(grpcJsonResponse);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "gRPC-JSON: Error analyzing health metrics");
+            return StatusCode(500, new
+            {
+                error = "Internal server error",
+                message = $"Failed to analyze health metrics: {ex.Message}",
+                timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+            });
+        }
+    }
+}

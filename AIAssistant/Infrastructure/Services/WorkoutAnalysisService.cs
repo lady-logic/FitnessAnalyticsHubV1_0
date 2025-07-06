@@ -1,9 +1,8 @@
-﻿using AIAssistant._02_Application.DTOs;
-using AIAssistant._02_Application.Interfaces;
-using AIAssistant.Application.DTOs;
-using FitnessAnalyticsHub.AIAssistant._03_Infrastructure.Services;
+﻿using AIAssistant.Application.DTOs;
+using AIAssistant.Application.Interfaces;
+using FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
 
-namespace AIAssistant._03_Infrastructure.Services;
+namespace AIAssistant.Infrastructure.Services;
 
 public class WorkoutAnalysisService : IWorkoutAnalysisService
 {
