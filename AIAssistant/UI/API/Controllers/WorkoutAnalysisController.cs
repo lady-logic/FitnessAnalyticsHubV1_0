@@ -1,6 +1,7 @@
 ﻿using AIAssistant.Application.DTOs;
-using AIAssistant.Application.Interfaces;
 using AIAssistant.Application.DTOs;
+using AIAssistant.Application.Interfaces;
+using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AIAssistant._04_UI.API.Controllers;
@@ -165,9 +166,9 @@ public class WorkoutAnalysisController : ControllerBase
             var testRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Health Check",
-                RecentWorkouts = new List<Domain.Models.WorkoutData>
+                RecentWorkouts = new List<WorkoutDataDto>
                 {
-                    new Domain.Models.WorkoutData
+                    new WorkoutDataDto
                     {
                         Date = DateTime.Now.AddDays(-1),
                         ActivityType = "Run",
@@ -176,7 +177,7 @@ public class WorkoutAnalysisController : ControllerBase
                         Calories = 350
                     }
                 },
-                AthleteProfile = new Domain.Models.AthleteProfile
+                AthleteProfile = new AthleteProfileDto
                 {
                     Name = "Test User",
                     FitnessLevel = "Intermediate",
@@ -206,12 +207,11 @@ public class WorkoutAnalysisController : ControllerBase
         }
     }
 
-    // Demo-Daten Helper (später durch echte Daten von deiner WebAPI ersetzen)
-    private List<Domain.Models.WorkoutData> GetDemoWorkouts(int athleteId, string timeFrame)
+    private List<WorkoutDataDto> GetDemoWorkouts(int athleteId, string timeFrame)
     {
-        return new List<Domain.Models.WorkoutData>
+        return new List<WorkoutDataDto>
         {
-            new Domain.Models.WorkoutData
+            new WorkoutDataDto
             {
                 Date = DateTime.Now.AddDays(-1),
                 ActivityType = "Run",
@@ -220,7 +220,7 @@ public class WorkoutAnalysisController : ControllerBase
                 Calories = 350,
                 MetricsData = new Dictionary<string, double> { { "heartRate", 145 } }
             },
-            new Domain.Models.WorkoutData
+            new WorkoutDataDto
             {
                 Date = DateTime.Now.AddDays(-3),
                 ActivityType = "Ride",
@@ -229,7 +229,7 @@ public class WorkoutAnalysisController : ControllerBase
                 Calories = 890,
                 MetricsData = new Dictionary<string, double> { { "heartRate", 132 } }
             },
-            new Domain.Models.WorkoutData
+            new WorkoutDataDto
             {
                 Date = DateTime.Now.AddDays(-5),
                 ActivityType = "Run",
@@ -241,9 +241,9 @@ public class WorkoutAnalysisController : ControllerBase
         };
     }
 
-    private Domain.Models.AthleteProfile GetDemoAthleteProfile(int athleteId)
+    private AthleteProfileDto GetDemoAthleteProfile(int athleteId)
     {
-        return new Domain.Models.AthleteProfile
+        return new AthleteProfileDto
         {
             Id = athleteId.ToString(),
             Name = "Demo User",

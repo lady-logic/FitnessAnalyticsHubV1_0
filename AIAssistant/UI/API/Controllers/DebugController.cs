@@ -1,6 +1,7 @@
 ﻿using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
+using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AIAssistant.UI.API.Controllers;
@@ -132,7 +133,7 @@ public class DebugController : ControllerBase
 
             var testRequest = new MotivationRequestDto
             {
-                AthleteProfile = new Domain.Models.AthleteProfile
+                AthleteProfile = new AthleteProfileDto
                 {
                     Name = "TestUser",
                     FitnessLevel = "Intermediate",

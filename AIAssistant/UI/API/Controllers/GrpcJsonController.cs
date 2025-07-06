@@ -4,6 +4,7 @@ using AIAssistant.Applications.DTOs;
 using AIAssistant.Extensions;
 using Fitnessanalyticshub;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
+using FitnessAnalyticsHub.AIAssistant.Extensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AIAssistant._04_UI.API.Controllers;
@@ -40,7 +41,7 @@ public class GrpcJsonController : ControllerBase
             // Konvertiere JSON zu Application DTO (wie im REST Controller)
             var motivationRequest = new MotivationRequestDto
             {
-                AthleteProfile = new Domain.Models.AthleteProfile
+                AthleteProfile = new AthleteProfileDto
                 {
                     Id = Guid.NewGuid().ToString(), // Generiere eine ID
                     Name = request.AthleteProfile?.Name ?? "",
@@ -116,25 +117,7 @@ public class GrpcJsonController : ControllerBase
                 request.RecentWorkouts?.Length ?? 0);
 
             // Konvertiere JSON zu Application DTO
-            var workoutAnalysisRequest = new WorkoutAnalysisRequestDto
-            {
-                AthleteProfile = request.AthleteProfile != null ? new AIAssistant.Domain.Models.AthleteProfile
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = request.AthleteProfile.Name ?? "",
-                    FitnessLevel = request.AthleteProfile.FitnessLevel ?? "",
-                    PrimaryGoal = request.AthleteProfile.PrimaryGoal ?? ""
-                } : null,
-                RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistant.Domain.Models.WorkoutData
-                {
-                    Date = DateTime.TryParse(w.Date, out var date) ? date : DateTime.UtcNow,
-                    ActivityType = w.ActivityType ?? "",
-                    Distance = w.Distance,
-                    Duration = w.Duration,
-                    Calories = w.Calories
-                }).ToList() ?? new List<AIAssistant.Domain.Models.WorkoutData>(),
-                AnalysisType = request.AnalysisType ?? "Performance"
-            };
+            var workoutAnalysisRequest = request.ToWorkoutAnalysisRequestDto();
 
             // Rufe den Service auf (verwende GoogleGemini als Standard)
             var response = await _workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(workoutAnalysisRequest);
@@ -178,21 +161,9 @@ public class GrpcJsonController : ControllerBase
             // Konvertiere JSON zu Application DTO
             var workoutAnalysisRequest = new WorkoutAnalysisRequestDto
             {
-                AthleteProfile = request.AthleteProfile != null ? new AIAssistant.Domain.Models.AthleteProfile
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = request.AthleteProfile.Name ?? "",
-                    FitnessLevel = request.AthleteProfile.FitnessLevel ?? "",
-                    PrimaryGoal = request.AthleteProfile.PrimaryGoal ?? ""
-                } : null,
-                RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistant.Domain.Models.WorkoutData
-                {
-                    Date = DateTime.TryParse(w.Date, out var date) ? date : DateTime.UtcNow,
-                    ActivityType = w.ActivityType ?? "",
-                    Distance = w.Distance,
-                    Duration = w.Duration,
-                    Calories = w.Calories
-                }).ToList() ?? new List<AIAssistant.Domain.Models.WorkoutData>(),
+                AthleteProfile = request.AthleteProfile?.ToAthleteProfileDto(),
+                RecentWorkouts = request.RecentWorkouts?.Select(w => w.ToWorkoutDataDto()).ToList()
+                     ?? new List<WorkoutDataDto>(),
                 AnalysisType = request.AnalysisType ?? "Performance"
             };
 

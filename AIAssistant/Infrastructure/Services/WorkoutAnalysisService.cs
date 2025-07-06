@@ -249,66 +249,112 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
     private string ExtractAnalysisSection(string aiResponse)
     {
         if (string.IsNullOrWhiteSpace(aiResponse))
-            return "Unable to generate analysis at this time. Please try again later.";
+            return GetDefaultAnalysis();
 
-        // Suche nach verschiedenen Analysis-Section Headers (deutsch und englisch)
-        var analysisHeaders = new[] {
-            "ANALYSE:", "GESUNDHEITSANALYSE:", "LEISTUNGSANALYSE:", "TRENDANALYSE:",
-            "ANALYSIS:", "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:"
-        };
+        // Versuche erst strukturierte Extraktion
+        var structuredAnalysis = TryExtractStructuredAnalysis(aiResponse);
+        if (!string.IsNullOrEmpty(structuredAnalysis))
+            return LimitAnalysisLength(structuredAnalysis);
+
+        // Fallback: Freie Text-Extraktion
+        var fallbackAnalysis = ExtractFallbackAnalysis(aiResponse);
+        return LimitAnalysisLength(fallbackAnalysis);
+    }
+
+    private string TryExtractStructuredAnalysis(string aiResponse)
+    {
+        var analysisHeaders = GetAnalysisHeaders();
 
         foreach (var header in analysisHeaders)
         {
-            if (aiResponse.Contains(header, StringComparison.OrdinalIgnoreCase))
-            {
-                var analysisParts = aiResponse.Split(header, StringSplitOptions.RemoveEmptyEntries);
-                if (analysisParts.Length > 1)
-                {
-                    var analysisSection = analysisParts[1].Split(new[] {
-                        "WICHTIGE ERKENNTNISSE:", "EMPFEHLUNGEN:",
-                        "KEY INSIGHTS:", "RECOMMENDATIONS:"
-                    }, StringSplitOptions.RemoveEmptyEntries)[0];
+            if (!aiResponse.Contains(header, StringComparison.OrdinalIgnoreCase))
+                continue;
 
-                    var cleanAnalysis = analysisSection.Trim();
-                    if (!string.IsNullOrWhiteSpace(cleanAnalysis) && cleanAnalysis.Length > 20)
-                        return cleanAnalysis;
-                }
-            }
+            var analysisSection = ExtractSectionContent(aiResponse, header);
+            if (IsValidAnalysis(analysisSection))
+                return analysisSection;
         }
 
-        // Fallback: Nimm den ersten bedeutsamen Teil der Response
+        return string.Empty;
+    }
+
+    private string ExtractSectionContent(string aiResponse, string header)
+    {
+        var analysisParts = aiResponse.Split(header, StringSplitOptions.RemoveEmptyEntries);
+        if (analysisParts.Length <= 1)
+            return string.Empty;
+
+        var stopMarkers = GetStopMarkers();
+        var analysisSection = analysisParts[1].Split(stopMarkers, StringSplitOptions.RemoveEmptyEntries)[0];
+
+        return analysisSection.Trim();
+    }
+
+    private string ExtractFallbackAnalysis(string aiResponse)
+    {
         var lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         var analysisLines = new List<string>();
+        var stopMarkers = GetStopMarkers();
 
         foreach (var line in lines)
         {
             var cleanLine = line.Trim();
-            if (string.IsNullOrWhiteSpace(cleanLine)) continue;
+            if (string.IsNullOrWhiteSpace(cleanLine))
+                continue;
 
-            // Stoppe bei strukturierten Abschnitten (deutsch und englisch)
-            if (cleanLine.StartsWith("WICHTIGE ERKENNTNISSE", StringComparison.OrdinalIgnoreCase) ||
-                cleanLine.StartsWith("EMPFEHLUNGEN", StringComparison.OrdinalIgnoreCase) ||
-                cleanLine.StartsWith("KEY INSIGHTS", StringComparison.OrdinalIgnoreCase) ||
-                cleanLine.StartsWith("RECOMMENDATIONS", StringComparison.OrdinalIgnoreCase))
+            if (ShouldStopAtLine(cleanLine, stopMarkers))
                 break;
 
             analysisLines.Add(cleanLine);
 
-            // Begrenze auf sinnvolle Länge
-            if (analysisLines.Count >= 5) break;
+            if (analysisLines.Count >= 5)
+                break;
         }
 
-        var result = analysisLines.Any() ? string.Join(" ", analysisLines) :
-                    "Your workout data shows consistent training patterns. Continue with your current approach while focusing on gradual progression.";
+        return analysisLines.Any()
+            ? string.Join(" ", analysisLines)
+            : GetDefaultAnalysis();
+    }
 
-        // Begrenze die Länge
-        if (result.Length > 400)
-        {
-            var sentences = result.Split('.', StringSplitOptions.RemoveEmptyEntries);
-            result = string.Join(". ", sentences.Take(4)) + ".";
-        }
+    private string LimitAnalysisLength(string analysis)
+    {
+        if (analysis.Length <= 400)
+            return analysis;
 
-        return result;
+        var sentences = analysis.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        return string.Join(". ", sentences.Take(4)) + ".";
+    }
+
+    private bool IsValidAnalysis(string analysis)
+    {
+        return !string.IsNullOrWhiteSpace(analysis) && analysis.Length > 20;
+    }
+
+    private bool ShouldStopAtLine(string line, string[] stopMarkers)
+    {
+        return stopMarkers.Any(marker =>
+            line.StartsWith(marker, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private string GetDefaultAnalysis()
+    {
+        return "Unable to generate analysis at this time. Please try again later.";
+    }
+
+    private string[] GetAnalysisHeaders()
+    {
+        return new[] {
+        "ANALYSE:", "GESUNDHEITSANALYSE:", "LEISTUNGSANALYSE:", "TRENDANALYSE:",
+        "ANALYSIS:", "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:"
+    };
+    }
+
+    private string[] GetStopMarkers()
+    {
+        return new[] {
+        "WICHTIGE ERKENNTNISSE:", "EMPFEHLUNGEN:",
+        "KEY INSIGHTS:", "RECOMMENDATIONS:"
+    };
     }
 
     private List<string>? ExtractKeyInsights(string aiResponse)
@@ -326,52 +372,101 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
         if (string.IsNullOrWhiteSpace(aiResponse))
             return null;
 
-        var items = new List<string>();
-
         foreach (var header in sectionHeaders)
         {
-            if (aiResponse.Contains(header, StringComparison.OrdinalIgnoreCase))
+            var extractedItems = TryExtractFromHeader(aiResponse, header);
+            if (extractedItems?.Any() == true)
+                return extractedItems;
+        }
+
+        return null;
+    }
+
+    private List<string>? TryExtractFromHeader(string aiResponse, string header)
+    {
+        if (!aiResponse.Contains(header, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var sectionContent = ExtractSectionUntilNextHeader(aiResponse, header);
+        if (string.IsNullOrEmpty(sectionContent))
+            return null;
+
+        return ParseItemsFromSection(sectionContent);
+    }
+
+    private string ExtractSectionUntilNextHeader(string aiResponse, string currentHeader)
+    {
+        var headerIndex = aiResponse.IndexOf(currentHeader, StringComparison.OrdinalIgnoreCase);
+        var section = aiResponse.Substring(headerIndex + currentHeader.Length);
+
+        var nextHeaderIndex = FindNextHeaderIndex(section, currentHeader);
+        if (nextHeaderIndex > 0)
+            section = section.Substring(0, nextHeaderIndex);
+
+        return section;
+    }
+
+    private int FindNextHeaderIndex(string section, string currentHeader)
+    {
+        var allHeaders = GetAllSectionHeaders();
+
+        foreach (var nextHeader in allHeaders)
+        {
+            if (nextHeader == currentHeader)
+                continue;
+
+            if (section.Contains(nextHeader, StringComparison.OrdinalIgnoreCase))
             {
-                var headerIndex = aiResponse.IndexOf(header, StringComparison.OrdinalIgnoreCase);
-                var section = aiResponse.Substring(headerIndex + header.Length);
-
-                // Stoppe bei nächstem Header (deutsch und englisch)
-                var nextHeaders = new[] {
-                    "ANALYSE:", "WICHTIGE ERKENNTNISSE:", "EMPFEHLUNGEN:", "RATSCHLÄGE:",
-                    "GESUNDHEITSANALYSE:", "LEISTUNGSANALYSE:", "TRENDANALYSE:",
-                    "ANALYSIS:", "KEY INSIGHTS:", "RECOMMENDATIONS:", "ADVICE:",
-                    "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:"
-                };
-                foreach (var nextHeader in nextHeaders)
-                {
-                    if (nextHeader != header && section.Contains(nextHeader, StringComparison.OrdinalIgnoreCase))
-                    {
-                        var nextHeaderIndex = section.IndexOf(nextHeader, StringComparison.OrdinalIgnoreCase);
-                        section = section.Substring(0, nextHeaderIndex);
-                        break;
-                    }
-                }
-
-                var lines = section.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                foreach (var line in lines)
-                {
-                    var cleanLine = line.Trim()
-                        .TrimStart('-', '*', '•', '1', '2', '3', '4', '5', '.', ' ')
-                        .Trim();
-
-                    if (!string.IsNullOrWhiteSpace(cleanLine) &&
-                        cleanLine.Length > 15 &&
-                        cleanLine.Length < 200)
-                    {
-                        items.Add(cleanLine);
-                        if (items.Count >= 5) break; // Maximal 5 Items
-                    }
-                }
-                break;
+                return section.IndexOf(nextHeader, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        return items.Any() ? items : null;
+        return -1;
+    }
+
+    private List<string> ParseItemsFromSection(string sectionContent)
+    {
+        var items = new List<string>();
+        var lines = sectionContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var line in lines)
+        {
+            var cleanedItem = CleanLineItem(line);
+
+            if (IsValidListItem(cleanedItem))
+            {
+                items.Add(cleanedItem);
+
+                if (items.Count >= 5) // Maximal 5 Items
+                    break;
+            }
+        }
+
+        return items;
+    }
+
+    private string CleanLineItem(string line)
+    {
+        return line.Trim()
+            .TrimStart('-', '*', '•', '1', '2', '3', '4', '5', '.', ' ')
+            .Trim();
+    }
+
+    private bool IsValidListItem(string item)
+    {
+        return !string.IsNullOrWhiteSpace(item) &&
+               item.Length > 15 &&
+               item.Length < 200;
+    }
+
+    private string[] GetAllSectionHeaders()
+    {
+        return new[] {
+        "ANALYSE:", "WICHTIGE ERKENNTNISSE:", "EMPFEHLUNGEN:", "RATSCHLÄGE:",
+        "GESUNDHEITSANALYSE:", "LEISTUNGSANALYSE:", "TRENDANALYSE:",
+        "ANALYSIS:", "KEY INSIGHTS:", "RECOMMENDATIONS:", "ADVICE:",
+        "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:"
+    };
     }
 
     private WorkoutAnalysisResponseDto GetFallbackAnalysis(WorkoutAnalysisRequestDto request, string provider = "Unknown")

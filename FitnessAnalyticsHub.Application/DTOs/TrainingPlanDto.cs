@@ -1,10 +1,12 @@
 ﻿using FitnessAnalyticsHub.Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace FitnessAnalyticsHub.Application.DTOs;
 
 public class TrainingPlanDto
 {
     public int Id { get; set; }
+    [Required]
     public int AthleteId { get; set; }
     public string AthleteName { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;

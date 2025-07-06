@@ -1,6 +1,8 @@
 ﻿using AIAssistant.Application.DTOs;
 using AIAssistant.Applications.DTOs;
 using AIAssistant.Domain.Models;
+using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
+using FitnessAnalyticsHub.AIAssistant.Extensions;
 
 namespace AIAssistant.Extensions;
 
@@ -24,7 +26,7 @@ public static class GrpcMappingExtensions
     {
         return new MotivationRequestDto
         {
-            AthleteProfile = grpcRequest.AthleteProfile.ToAIAssistantAthleteProfile(),
+            AthleteProfile = grpcRequest.AthleteProfile.ToAthleteProfileDto(),
             LastWorkout = null, // Erstmal null - wird nicht über gRPC übertragen
             UpcomingWorkoutType = null, // Erstmal null
             IsStruggling = false // Default
@@ -38,9 +40,9 @@ public static class GrpcMappingExtensions
         {
             AnalysisType = grpcRequest.AnalysisType ?? "General",
             RecentWorkouts = grpcRequest.RecentWorkouts
-                .Select(w => w.ToAIAssistantWorkoutData())
+                .Select(w => w.ToWorkoutDataDto())
                 .ToList(),
-            AthleteProfile = grpcRequest.AthleteProfile?.ToAIAssistantAthleteProfile() ?? new Domain.Models.AthleteProfile(),
+            AthleteProfile = grpcRequest.AthleteProfile?.ToAthleteProfileDto() ?? new AthleteProfileDto(),
             AdditionalContext = new Dictionary<string, object>()
         };
     }

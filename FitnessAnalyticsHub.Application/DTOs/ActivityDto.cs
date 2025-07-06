@@ -1,9 +1,12 @@
-﻿namespace FitnessAnalyticsHub.Application.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace FitnessAnalyticsHub.Application.DTOs;
 
 public class ActivityDto
 {
     public int Id { get; set; }
     public string? StravaId { get; set; }
+    [Required]
     public int AthleteId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }

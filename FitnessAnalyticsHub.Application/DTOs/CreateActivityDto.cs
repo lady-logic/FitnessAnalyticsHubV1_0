@@ -1,10 +1,12 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace FitnessAnalyticsHub.Application.DTOs;
 
 public class CreateActivityDto
 {
     public string? StravaId { get; set; }
+    [Required]
     public int AthleteId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }

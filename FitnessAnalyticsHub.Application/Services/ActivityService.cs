@@ -13,18 +13,15 @@ public class ActivityService : IActivityService
 {
     private readonly IApplicationDbContext _context;
     private readonly IStravaService _stravaService;
-    private readonly IAIAssistantClientService _aiClient;
     private readonly IMapper _mapper;
 
     public ActivityService(
     IApplicationDbContext context,
     IStravaService stravaService,
-    IAIAssistantClientService aiClient,
     IMapper mapper)
     {
         _context = context;
         _stravaService = stravaService;
-        _aiClient = aiClient;
         _mapper = mapper;
     }
 

@@ -6,6 +6,6 @@ public class WorkoutData
     public string ActivityType { get; set; } = string.Empty;
     public double Distance { get; set; }
     public int Duration { get; set; } // in seconds
-    public int Calories { get; set; }
+    public int? Calories { get; set; }
     public Dictionary<string, double>? MetricsData { get; set; } // Heart rate, pace, etc.
 }

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace FitnessAnalyticsHub.Infrastructure.Services;
 
-public class GrpcAIAssistantClientService : IAIAssistantClientService
+public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposable
 {
     private readonly GrpcChannel _channel;
     private readonly ILogger<GrpcAIAssistantClientService> _logger;
@@ -381,5 +381,6 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService
     public void Dispose()
     {
         _channel?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

@@ -43,7 +43,6 @@ public class ActivityServiceTests
         _activityService = new ActivityService(
             _context,
             _mockStravaService.Object,
-            _mockAiAssistantClient.Object,
             _mapper);
     }
 

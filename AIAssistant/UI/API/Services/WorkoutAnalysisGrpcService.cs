@@ -1,8 +1,10 @@
-﻿using AIAssistant.Application.Interfaces;
-using AIAssistant.Application.DTOs;
+﻿using AIAssistant.Application.DTOs;
+using AIAssistant.Application.Interfaces;
 using AIAssistant.Extensions;
-using Grpc.Core;
 using Fitnessanalyticshub;
+using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
+using FitnessAnalyticsHub.AIAssistant.Extensions;
+using Grpc.Core;
 
 namespace AIAssistant._04_UI.API.Services;
 
@@ -188,7 +190,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
             {
                 AnalysisType = "Health",
                 RecentWorkouts = request.RecentWorkouts
-                    .Select(w => w.ToAIAssistantWorkoutData())
+                    .Select(w => w.ToWorkoutDataDto())
                     .ToList(),
                 AthleteProfile = GetDemoAthleteProfile(request.AthleteId),
                 AdditionalContext = new Dictionary<string, object>
@@ -273,9 +275,9 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
             var testRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Health Check",
-                RecentWorkouts = new List<Domain.Models.WorkoutData>
+                RecentWorkouts = new List<WorkoutDataDto>
                 {
-                    new Domain.Models.WorkoutData
+                    new WorkoutDataDto
                     {
                         Date = DateTime.Now.AddDays(-1),
                         ActivityType = "Run",
@@ -284,7 +286,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                         Calories = 350
                     }
                 },
-                AthleteProfile = new Domain.Models.AthleteProfile
+                AthleteProfile = new AthleteProfileDto
                 {
                     Name = "Test User",
                     FitnessLevel = "Intermediate",
@@ -313,12 +315,11 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
         }
     }
 
-    // Demo-Daten Helper (später durch echte Daten ersetzen)
-    private List<Domain.Models.WorkoutData> GetDemoWorkouts(int athleteId, string timeFrame)
+    private List<WorkoutDataDto> GetDemoWorkouts(int athleteId, string timeFrame)
     {
-        return new List<Domain.Models.WorkoutData>
+        return new List<WorkoutDataDto>
         {
-            new Domain.Models.WorkoutData
+            new WorkoutDataDto
             {
                 Date = DateTime.Now.AddDays(-1),
                 ActivityType = "Run",
@@ -327,7 +328,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 Calories = 350,
                 MetricsData = new Dictionary<string, double> { { "heartRate", 145 } }
             },
-            new Domain.Models.WorkoutData
+            new WorkoutDataDto
             {
                 Date = DateTime.Now.AddDays(-3),
                 ActivityType = "Ride",
@@ -336,7 +337,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 Calories = 890,
                 MetricsData = new Dictionary<string, double> { { "heartRate", 132 } }
             },
-            new Domain.Models.WorkoutData
+            new WorkoutDataDto
             {
                 Date = DateTime.Now.AddDays(-5),
                 ActivityType = "Run",
@@ -348,9 +349,9 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
         };
     }
 
-    private Domain.Models.AthleteProfile GetDemoAthleteProfile(int athleteId)
+    private AthleteProfileDto GetDemoAthleteProfile(int athleteId)
     {
-        return new Domain.Models.AthleteProfile
+        return new AthleteProfileDto
         {
             Id = athleteId.ToString(),
             Name = "Demo User",

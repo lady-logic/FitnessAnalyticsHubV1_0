@@ -1,9 +1,13 @@
-﻿namespace AIAssistant.Application.DTOs;
+﻿using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
+using System.ComponentModel.DataAnnotations;
+
+namespace AIAssistant.Application.DTOs;
 
 public class HealthAnalysisRequestDto
 {
+    [Required]
     public int AthleteId { get; set; }
-    public List<Domain.Models.WorkoutData> RecentWorkouts { get; set; } = new();
+    public List<WorkoutDataDto> RecentWorkouts { get; set; } = new();
 
     /// <summary>
     /// Zusätzliche Gesundheitsmetriken (optional)
