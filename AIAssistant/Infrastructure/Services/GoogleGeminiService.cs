@@ -118,7 +118,7 @@ public class GoogleGeminiService : IAIPromptService
                     _logger.LogError("BAD REQUEST: Check your request format or API key");
                 }
 
-                return GetFallbackResponse(modelType, response.StatusCode.ToString());
+                return GetFallbackResponse(modelType, ((int)response.StatusCode).ToString());
             }
 
             // Parse Google Gemini Response
@@ -145,6 +145,11 @@ public class GoogleGeminiService : IAIPromptService
             _logger.LogWarning("Unexpected response format from Google Gemini API");
             _logger.LogDebug("Full response: {Response}", responseContent);
             return GetFallbackResponse(modelType, "unexpected_format");
+        }
+        catch (JsonException ex)
+        {
+            _logger.LogWarning("Invalid JSON response from Google Gemini API: {Error}", ex.Message);
+            return GetFallbackResponse(modelType, "invalid_json");
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {

@@ -83,8 +83,8 @@ public class HuggingFaceServiceTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Contains("KI-Analyse vorübergehend nicht verfügbar", result);
-        Assert.Contains("unauthorized", result.ToLower());
+        Assert.Contains("temporarily unavailable", result); // Englischer Text
+        Assert.Contains("Unauthorized", result); // HTTP Status als String
     }
 
     [Fact]
@@ -104,8 +104,8 @@ public class HuggingFaceServiceTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Contains("KI-Analyse vorübergehend nicht verfügbar", result);
-        Assert.Contains("timeout", result.ToLower());
+        Assert.Contains("temporarily unavailable", result); // Englischer Text
+        Assert.Contains("timeout", result); // Der errorType wird als "timeout" übergeben
     }
 
     #endregion
@@ -154,8 +154,9 @@ public class HuggingFaceServiceTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Contains("Bleib dran", result);
+        Assert.Contains("Keep pushing forward", result); // Englischer Text
         Assert.Contains("💪", result);
+        Assert.Contains("You've got this", result);
     }
 
     #endregion
@@ -211,7 +212,8 @@ public class HuggingFaceServiceTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Contains("KI-Analyse vorübergehend nicht verfügbar", result);
+        Assert.Contains("temporarily unavailable", result); // Englischer Text
+        Assert.Contains("workout data", result); // Teil des fitness fallback
     }
 
     [Fact]
@@ -220,12 +222,10 @@ public class HuggingFaceServiceTests : IDisposable
         // Arrange
         var prompt = "Test prompt";
         var malformedResponse = "{ invalid json";
-
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(malformedResponse, Encoding.UTF8, "application/json")
         };
-
         _mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
@@ -238,7 +238,8 @@ public class HuggingFaceServiceTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Contains("KI-Analyse vorübergehend nicht verfügbar", result);
+        Assert.Contains("temporarily unavailable", result); // Englischer Text
+        Assert.Contains("workout data", result); // Teil des fitness fallback
     }
 
     #endregion
