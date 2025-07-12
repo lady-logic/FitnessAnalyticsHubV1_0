@@ -60,7 +60,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         SetupMockConfiguration(null);
 
         // Act
-        var result = _controller.ConfigCheck();
+        var result = await _controller.ConfigCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -251,31 +251,19 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     }
 
     [Fact]
-    public async Task HealthCheck_WhenExceptionOccurs_ReturnsUnhealthyStatus()
+    public async Task HealthCheck_WhenExceptionOccurs_ThrowsException()
     {
         // Arrange
         var mockConfigThrowsException = new Mock<IConfiguration>();
         mockConfigThrowsException.Setup(c => c["HuggingFace:ApiKey"])
                                  .Throws(new Exception("Configuration error"));
-
         var controllerWithFailingConfig = new DebugController(
             mockConfigThrowsException.Object,
             _mockLogger.Object);
 
-        // Act
-        var result = await controllerWithFailingConfig.HealthCheck();
-
-        // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(result);
-        Assert.Equal(500, statusCodeResult.StatusCode);
-
-        var response = statusCodeResult.Value;
-        var responseType = response!.GetType();
-        var statusProperty = responseType.GetProperty("status");
-        var errorProperty = responseType.GetProperty("error");
-
-        Assert.Equal("unhealthy", statusProperty!.GetValue(response));
-        Assert.Contains("Configuration error", errorProperty!.GetValue(response)!.ToString());
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<Exception>(() => controllerWithFailingConfig.HealthCheck());
+        Assert.Equal("Configuration error", exception.Message);
     }
 
     #endregion
@@ -295,7 +283,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         _mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
 
         // Act
-        var result = _controller.ConfigCheck();
+        var result = await _controller.ConfigCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
