@@ -159,7 +159,7 @@ Response:";
 
         // Suche nach Zitaten in Anführungszeichen
         var quoteMatches = System.Text.RegularExpressions.Regex.Matches(
-            aiResponse, @"""([^""]){10,}""", RegexOptions.None, TimeSpan.FromMilliseconds(100));
+            aiResponse, @"""([^""]{10,})""", RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
         foreach (System.Text.RegularExpressions.Match match in quoteMatches)
         {
@@ -168,13 +168,13 @@ Response:";
             if (quote.Length >= 15 && quote.Length <= 150 &&
                 (quote.Contains("success") || quote.Contains("achieve") || quote.Contains("goal") ||
                  quote.Contains("dream") || quote.Contains("believe") || quote.Contains("strong") ||
-                 quote.Contains("push") || quote.Contains("better")))
+                 quote.Contains("push") || quote.Contains("better") || quote.Contains("begin") ||
+                 quote.Contains("real")))
             {
                 return quote;
             }
         }
 
-        // Suche nach "Quote:" Label
         if (aiResponse.Contains("Quote:", StringComparison.OrdinalIgnoreCase))
         {
             var quoteParts = aiResponse.Split("Quote:", StringSplitOptions.RemoveEmptyEntries);
@@ -182,7 +182,7 @@ Response:";
             {
                 var quoteLine = quoteParts[1].Split('\n')[0].Trim().Trim('"', '-', '*').Trim();
                 if (!string.IsNullOrWhiteSpace(quoteLine) && quoteLine.Length >= 15)
-                    return quoteLine;
+                    return quoteLine; // ← Keine Keyword-Prüfung mehr
             }
         }
 

@@ -85,6 +85,8 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+app.UseExceptionHandler("/error");
+
 app.UseHttpsRedirection();
 
 // CORS aktivieren

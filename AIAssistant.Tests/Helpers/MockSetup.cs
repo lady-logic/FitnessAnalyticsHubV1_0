@@ -1,11 +1,14 @@
-﻿using System.Net;
-using System.Text;
-using System.Text.Json;
+﻿using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
+using AIAssistant.Applications.DTOs;
+using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
+using System.Net;
+using System.Text;
+using System.Text.Json;
 
 namespace AIAssistant.Tests.Helpers;
 
@@ -161,17 +164,36 @@ public static class MockSetup
     }
 
     /// <summary>
-    /// Creates a mock IWorkoutAnalysisService with default successful responses.
+    /// Creates a mock WorkoutAnalysisService with default setup
     /// </summary>
     public static Mock<IWorkoutAnalysisService> CreateMockWorkoutAnalysisService()
     {
         var mock = new Mock<IWorkoutAnalysisService>();
 
-        mock.Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<AIAssistant.Application.DTOs.WorkoutAnalysisRequestDto>()))
-            .ReturnsAsync(TestDataBuilder.WorkoutAnalysisResponse().WithProvider("HuggingFace").Build());
+        // Setup default successful responses
+        var defaultResponse = new WorkoutAnalysisResponseDto
+        {
+            Analysis = "Default analysis response",
+            KeyInsights = new List<string> { "Default insight 1", "Default insight 2" },
+            Recommendations = new List<string> { "Default recommendation 1", "Default recommendation 2" },
+            GeneratedAt = DateTime.UtcNow,
+            Provider = "Mock",
+            RequestId = Guid.NewGuid().ToString()
+        };
 
-        mock.Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<AIAssistant.Application.DTOs.WorkoutAnalysisRequestDto>()))
-            .ReturnsAsync(TestDataBuilder.WorkoutAnalysisResponse().WithProvider("GoogleGemini").Build());
+        mock.Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
+            .ReturnsAsync(defaultResponse);
+
+        mock.Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
+            .ReturnsAsync(new WorkoutAnalysisResponseDto
+            {
+                Analysis = "GoogleGemini analysis response",
+                KeyInsights = new List<string> { "GoogleGemini insight 1", "GoogleGemini insight 2" },
+                Recommendations = new List<string> { "GoogleGemini recommendation 1" },
+                GeneratedAt = DateTime.UtcNow,
+                Provider = "GoogleGemini",
+                RequestId = Guid.NewGuid().ToString()
+            });
 
         return mock;
     }
@@ -311,6 +333,285 @@ public static class MockSetup
             response.Contains("temporarily unavailable") ||
             response.Contains("vorübergehend nicht verfügbar"),
             "Response should not be a fallback message");
+    }
+
+    #endregion
+
+    #region Service Mocks Extensions
+
+    
+
+    /// <summary>
+    /// Creates a mock WorkoutAnalysisService that throws exceptions
+    /// </summary>
+    public static Mock<IWorkoutAnalysisService> CreateFailingMockWorkoutAnalysisService()
+    {
+        var mock = new Mock<IWorkoutAnalysisService>();
+
+        mock.Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
+            .ThrowsAsync(new Exception("HuggingFace service error"));
+
+        mock.Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
+            .ThrowsAsync(new Exception("GoogleGemini service error"));
+
+        return mock;
+    }
+
+    #endregion
+
+    #region Additional Service Mocks
+
+    /// <summary>
+    /// Creates a mock MotivationCoachService with enhanced setup
+    /// </summary>
+    public static Mock<IMotivationCoachService> CreateEnhancedMockMotivationCoachService()
+    {
+        var mock = new Mock<IMotivationCoachService>();
+
+        var defaultResponse = new MotivationResponseDto
+        {
+            MotivationalMessage = "You're doing great! Keep pushing forward!",
+            Quote = "Success is the sum of small efforts repeated day in and day out.",
+            ActionableTips = new List<string>
+            {
+                "Set small achievable goals",
+                "Focus on consistency",
+                "Celebrate small wins"
+            },
+            GeneratedAt = DateTime.UtcNow
+        };
+
+        mock.Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .ReturnsAsync(defaultResponse);
+
+        return mock;
+    }
+
+    #endregion
+
+    #region Configuration Mocks Extensions
+
+    /// <summary>
+    /// Creates enhanced mock configuration with all necessary AI service settings
+    /// </summary>
+    public static Mock<IConfiguration> CreateEnhancedMockConfiguration()
+    {
+        var mockConfig = CreateMockConfiguration(); // Use existing method as base
+
+        // Environment Configuration
+        mockConfig.Setup(c => c["ASPNETCORE_ENVIRONMENT"]).Returns("Development");
+
+        // Mock HuggingFace section
+        var mockHuggingFaceSection = new Mock<IConfigurationSection>();
+        var mockHuggingFaceChildren = new List<IConfigurationSection>();
+        mockHuggingFaceSection.Setup(s => s.GetChildren()).Returns(mockHuggingFaceChildren);
+        mockConfig.Setup(c => c.GetSection("HuggingFace")).Returns(mockHuggingFaceSection.Object);
+
+        return mockConfig;
+    }
+
+    #endregion
+
+    #region Test Data Builders
+
+    /// <summary>
+    /// Creates test workout data for various scenarios
+    /// </summary>
+    public static List<WorkoutDataDto> CreateTestWorkoutData(int count = 3)
+    {
+        var workouts = new List<WorkoutDataDto>();
+
+        for (int i = 0; i < count; i++)
+        {
+            workouts.Add(new WorkoutDataDto
+            {
+                Date = DateTime.Now.AddDays(-(i + 1)),
+                ActivityType = i % 2 == 0 ? "Run" : "Bike",
+                Distance = 5.0 + i,
+                Duration = 1800 + (i * 300),
+                Calories = 350 + (i * 50),
+                MetricsData = new Dictionary<string, double>
+                {
+                    { "heartRate", 140 + i },
+                    { "pace", 5.0 - (i * 0.1) }
+                }
+            });
+        }
+
+        return workouts;
+    }
+
+    /// <summary>
+    /// Creates test athlete profile data
+    /// </summary>
+    public static AthleteProfileDto CreateTestAthleteProfile(string name = "Test User", int id = 123)
+    {
+        return new AthleteProfileDto
+        {
+            Id = id.ToString(),
+            Name = name,
+            FitnessLevel = "Intermediate",
+            PrimaryGoal = "Endurance Improvement",
+            Preferences = new Dictionary<string, object>
+            {
+                { "preferredActivities", new[] { "Run", "Bike" } },
+                { "trainingDays", 4 },
+                { "intensityPreference", "moderate" }
+            }
+        };
+    }
+
+    /// <summary>
+    /// Creates test health analysis request
+    /// </summary>
+    public static HealthAnalysisRequestDto CreateTestHealthAnalysisRequest(int athleteId = 123)
+    {
+        return new HealthAnalysisRequestDto
+        {
+            AthleteId = athleteId,
+            RecentWorkouts = CreateTestWorkoutData(),
+            HealthMetrics = new Dictionary<string, object>
+            {
+                { "restingHeartRate", 60 },
+                { "weight", 70.5 },
+                { "sleepHours", 7.5 }
+            },
+            FocusAreas = new List<string> { "injury_prevention", "recovery" },
+            KnownIssues = new List<string> { "previous_knee_injury" }
+        };
+    }
+
+    /// <summary>
+    /// Creates test motivation request
+    /// </summary>
+    public static MotivationRequestDto CreateTestMotivationRequest(string athleteName = "Test User")
+    {
+        return new MotivationRequestDto
+        {
+            AthleteProfile = CreateTestAthleteProfile(athleteName),
+            LastWorkout = CreateTestWorkoutData(1).First(),
+            UpcomingWorkoutType = "Run",
+            IsStruggling = false
+        };
+    }
+
+    /// <summary>
+    /// Creates test workout analysis request with various options
+    /// </summary>
+    public static WorkoutAnalysisRequestDto CreateTestWorkoutAnalysisRequest(
+        string analysisType = "Performance",
+        int workoutCount = 3,
+        string athleteName = "Test User")
+    {
+        return new WorkoutAnalysisRequestDto
+        {
+            AnalysisType = analysisType,
+            RecentWorkouts = CreateTestWorkoutData(workoutCount),
+            AthleteProfile = CreateTestAthleteProfile(athleteName),
+            AdditionalContext = new Dictionary<string, object>
+            {
+                { "testContext", "unit_test" },
+                { "analysisType", analysisType },
+                { "timestamp", DateTime.UtcNow }
+            }
+        };
+    }
+
+    #endregion
+
+    #region Logger Verification Helpers
+
+    /// <summary>
+    /// Verifies that a logger was called with specific log level and message content
+    /// </summary>
+    public static void VerifyLoggerCalled<T>(
+        Mock<ILogger<T>> mockLogger,
+        LogLevel logLevel,
+        string expectedMessageContent,
+        Times times)
+    {
+        mockLogger.Verify(
+            x => x.Log(
+                logLevel,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(expectedMessageContent)),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+            times);
+    }
+
+    /// <summary>
+    /// Verifies that a logger was called with an error
+    /// </summary>
+    public static void VerifyLoggerCalledWithError<T>(
+        Mock<ILogger<T>> mockLogger,
+        string expectedMessageContent,
+        Times times)
+    {
+        VerifyLoggerCalled(mockLogger, LogLevel.Error, expectedMessageContent, times);
+    }
+
+    /// <summary>
+    /// Verifies that a logger was called with information
+    /// </summary>
+    public static void VerifyLoggerCalledWithInformation<T>(
+        Mock<ILogger<T>> mockLogger,
+        string expectedMessageContent,
+        Times times)
+    {
+        VerifyLoggerCalled(mockLogger, LogLevel.Information, expectedMessageContent, times);
+    }
+
+    #endregion
+
+    #region Enhanced Assertion Helpers
+
+    /// <summary>
+    /// Asserts that a WorkoutAnalysisResponse contains valid data
+    /// </summary>
+    public static void AssertValidWorkoutAnalysisResponse(WorkoutAnalysisResponseDto response, string expectedProvider = null)
+    {
+        Assert.NotNull(response);
+        Assert.False(string.IsNullOrWhiteSpace(response.Analysis));
+        Assert.NotNull(response.KeyInsights);
+        Assert.NotNull(response.Recommendations);
+        Assert.True(response.GeneratedAt > DateTime.MinValue);
+
+        if (!string.IsNullOrEmpty(expectedProvider))
+        {
+            Assert.Equal(expectedProvider, response.Provider);
+        }
+    }
+
+    /// <summary>
+    /// Asserts that a MotivationResponse contains valid data
+    /// </summary>
+    public static void AssertValidMotivationResponse(MotivationResponseDto response)
+    {
+        Assert.NotNull(response);
+        Assert.False(string.IsNullOrWhiteSpace(response.MotivationalMessage));
+        Assert.True(response.GeneratedAt > DateTime.MinValue);
+        // Quote and ActionableTips can be null, but if present should not be empty
+        if (response.Quote != null)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(response.Quote));
+        }
+        if (response.ActionableTips != null)
+        {
+            Assert.All(response.ActionableTips, tip => Assert.False(string.IsNullOrWhiteSpace(tip)));
+        }
+    }
+
+    /// <summary>
+    /// Asserts that a response indicates a successful operation (not an error or fallback)
+    /// </summary>
+    public static void AssertSuccessfulResponse(string responseContent)
+    {
+        Assert.NotNull(responseContent);
+        Assert.False(string.IsNullOrWhiteSpace(responseContent));
+        Assert.DoesNotContain("error", responseContent.ToLower());
+        Assert.DoesNotContain("failed", responseContent.ToLower());
+        AssertIsAIGeneratedResponse(responseContent);
     }
 
     #endregion

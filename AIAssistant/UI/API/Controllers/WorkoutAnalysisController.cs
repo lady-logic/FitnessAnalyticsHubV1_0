@@ -1,10 +1,9 @@
 ﻿using AIAssistant.Application.DTOs;
-using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AIAssistant._04_UI.API.Controllers;
+namespace AIAssistant.UI.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
