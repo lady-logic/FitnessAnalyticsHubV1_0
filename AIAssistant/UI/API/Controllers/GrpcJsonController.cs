@@ -85,7 +85,7 @@ public class GrpcJsonController : ControllerBase
     /// Health Check für gRPC-JSON Bridge
     /// </summary>
     [HttpGet("health")]
-    public ActionResult HealthCheck()
+    public async Task<ActionResult> HealthCheck()
     {
         return Ok(new
         {
@@ -200,7 +200,7 @@ public class GrpcJsonController : ControllerBase
     /// Placeholder - könnte erweitert werden wenn Service verfügbar
     /// </summary>
     [HttpPost("WorkoutService/GetPerformanceTrends")]
-    public ActionResult GetPerformanceTrends([FromBody] GrpcJsonPerformanceTrendsRequestDto request)
+    public async Task<ActionResult> GetPerformanceTrends([FromBody] GrpcJsonPerformanceTrendsRequestDto request)
     {
         try
         {
@@ -249,7 +249,7 @@ public class GrpcJsonController : ControllerBase
     /// Placeholder - könnte erweitert werden wenn Service verfügbar
     /// </summary>
     [HttpPost("WorkoutService/GetTrainingRecommendations")]
-    public ActionResult GetTrainingRecommendations([FromBody] GrpcJsonTrainingRecommendationsRequestDto request)
+    public async Task<ActionResult> GetTrainingRecommendations([FromBody] GrpcJsonTrainingRecommendationsRequestDto request)
     {
         try
         {
@@ -298,7 +298,7 @@ public class GrpcJsonController : ControllerBase
     /// Placeholder - könnte erweitert werden wenn Service verfügbar
     /// </summary>
     [HttpPost("WorkoutService/AnalyzeHealthMetrics")]
-    public ActionResult AnalyzeHealthMetrics([FromBody] GrpcJsonHealthMetricsRequestDto request)
+    public async Task<ActionResult> AnalyzeHealthMetrics([FromBody] GrpcJsonHealthMetricsRequestDto request)
     {
         try
         {

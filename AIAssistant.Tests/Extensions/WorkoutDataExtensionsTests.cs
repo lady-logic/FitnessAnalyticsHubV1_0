@@ -193,24 +193,21 @@ public class WorkoutDataExtensionsTests
     }
 
     [Fact]
-    public void ToWorkoutDataDto_WithNullActivityType_HandlesGracefully()
+    public void ToWorkoutDataDto_WithDefaultValues_HandlesGracefully()
     {
         // Arrange
-        var grpcWorkout = new global::Fitnessanalyticshub.Workout
-        {
-            Date = "2024-01-15",
-            ActivityType = null,
-            Distance = 5000,
-            Duration = 1800,
-            Calories = 350
-        };
+        var grpcWorkout = new global::Fitnessanalyticshub.Workout();
+        // Alle Properties haben gRPC default values
 
         // Act
         var dto = grpcWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
-        Assert.Equal("", dto.ActivityType); // Should convert null to empty string
+        Assert.Equal("", dto.ActivityType); // gRPC default für string
+        Assert.Equal(0, dto.Distance);      // gRPC default für int/double
+        Assert.Equal(0, dto.Duration);
+        Assert.Equal(0, dto.Calories);
     }
 
     [Theory]

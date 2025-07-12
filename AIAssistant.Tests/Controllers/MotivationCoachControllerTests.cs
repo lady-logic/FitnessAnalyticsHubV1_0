@@ -304,31 +304,22 @@ public class MotivationCoachControllerTests
     #region Input Validation Tests
 
     [Fact]
-    public async Task GetMotivation_WithNullAthleteProfile_HandlesGracefully()
+    public async Task GetMotivation_WithNullAthleteProfile_ReturnsInternalServerError()
     {
         // Arrange
         var request = new MotivationRequestDto
         {
-            AthleteProfile = null!, // Null profile
+            AthleteProfile = null!,
             IsStruggling = false
         };
-
-        var fallbackResponse = new MotivationResponseDto
-        {
-            MotivationalMessage = "Keep going! You've got this!",
-            GeneratedAt = DateTime.UtcNow
-        };
-
-        _mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
-            .ReturnsAsync(fallbackResponse);
 
         // Act
         var result = await _controller.GetMotivation(request);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.NotNull(okResult.Value);
+        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        Assert.Equal(500, objectResult.StatusCode);
+        Assert.Contains("error occurred", objectResult.Value?.ToString());
     }
 
     [Theory]

@@ -20,10 +20,9 @@ public class DebugController : ControllerBase
     }
 
     [HttpGet("config-check")]
-    public ActionResult ConfigCheck()
+    public async Task<ActionResult> ConfigCheck()
     {
         var apiKey = _configuration["HuggingFace:ApiKey"];
-
         return Ok(new
         {
             hasApiKey = !string.IsNullOrEmpty(apiKey),
@@ -275,40 +274,28 @@ public class DebugController : ControllerBase
     }
 
     [HttpGet("health")]
-    public ActionResult HealthCheck()
+    public async Task<ActionResult> HealthCheck()
     {
-        try
+        var config = new
         {
-            var config = new
-            {
-                hasHuggingFaceKey = !string.IsNullOrEmpty(_configuration["HuggingFace:ApiKey"]),
-                environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-                timestamp = DateTime.UtcNow
-            };
+            hasHuggingFaceKey = !string.IsNullOrEmpty(_configuration["HuggingFace:ApiKey"]),
+            environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+            timestamp = DateTime.UtcNow
+        };
 
-            return Ok(new
-            {
-                status = "healthy",
-                message = "Debug controller is responding",
-                configuration = config,
-                availableTests = new[]
-                {
-                    "GET /api/Debug/config-check",
-                    "GET /api/Debug/test-modern-huggingface",
-                    "GET /api/Debug/test-huggingface-service",
-                    "GET /api/Debug/direct-huggingface-test",
-                    "GET /api/Debug/test-no-auth"
-                }
-            });
-        }
-        catch (Exception ex)
+        return Ok(new
         {
-            return StatusCode(500, new
+            status = "healthy",
+            message = "Debug controller is responding",
+            configuration = config,
+            availableTests = new[]
             {
-                status = "unhealthy",
-                error = ex.Message,
-                timestamp = DateTime.UtcNow
-            });
+            "GET /api/Debug/config-check",
+            "GET /api/Debug/test-modern-huggingface",
+            "GET /api/Debug/test-huggingface-service",
+            "GET /api/Debug/direct-huggingface-test",
+            "GET /api/Debug/test-no-auth"
         }
+        });
     }
 }

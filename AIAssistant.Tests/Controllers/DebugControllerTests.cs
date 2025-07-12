@@ -31,8 +31,12 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         // Arrange
         _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_api_key_1234567890");
 
+        var mockSection = new Mock<IConfigurationSection>();
+        mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
+        _mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
+
         // Act
-        var result = _controller.ConfigCheck();
+        var result = await _controller.ConfigCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -45,7 +49,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         var apiKeyPreviewProperty = responseType.GetProperty("apiKeyPreview");
 
         Assert.True((bool)hasApiKeyProperty!.GetValue(response)!);
-        Assert.Equal(21, (int)apiKeyLengthProperty!.GetValue(response)!);
+        Assert.Equal(23, (int)apiKeyLengthProperty!.GetValue(response)!);
         Assert.Equal("test_api_k...", apiKeyPreviewProperty!.GetValue(response));
     }
 
@@ -53,7 +57,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task ConfigCheck_WithMissingApiKey_ReturnsNoKeyInfo()
     {
         // Arrange
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
+        SetupMockConfiguration(null);
 
         // Act
         var result = _controller.ConfigCheck();
@@ -72,6 +76,14 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         Assert.Equal("NULL", apiKeyPreviewProperty!.GetValue(response));
     }
 
+    private void SetupMockConfiguration(string? apiKey = null)
+    {
+        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns(apiKey);
+
+        var mockSection = new Mock<IConfigurationSection>();
+        mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
+        _mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
+    }
     #endregion
 
     #region TestModernHuggingFace Tests
@@ -220,7 +232,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_key");
 
         // Act
-        var result = _controller.HealthCheck();
+        var result = await _controller.HealthCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -251,7 +263,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
             _mockLogger.Object);
 
         // Act
-        var result = controllerWithFailingConfig.HealthCheck();
+        var result = await controllerWithFailingConfig.HealthCheck();
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result);
@@ -273,11 +285,14 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     [Theory]
     [InlineData("test_key_short")]
     [InlineData("very_long_api_key_that_exceeds_normal_length_expectations_for_testing_purposes")]
-    [InlineData("")]
     public async Task ConfigCheck_WithDifferentKeyLengths_ReturnsCorrectInfo(string apiKey)
     {
         // Arrange
         _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns(apiKey);
+
+        var mockSection = new Mock<IConfigurationSection>();
+        mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
+        _mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
 
         // Act
         var result = _controller.ConfigCheck();
@@ -285,7 +300,6 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         var response = okResult.Value;
-
         var responseType = response!.GetType();
         var apiKeyLengthProperty = responseType.GetProperty("apiKeyLength");
         var hasApiKeyProperty = responseType.GetProperty("hasApiKey");

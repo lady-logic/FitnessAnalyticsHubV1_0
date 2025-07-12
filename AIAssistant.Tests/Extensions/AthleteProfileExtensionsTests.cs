@@ -186,15 +186,11 @@ public class AthleteProfileExtensionsTests
     }
 
     [Fact]
-    public void ToAthleteProfileDto_WithNullGrpcFields_HandlesGracefully()
+    public void ToAthleteProfileDto_WithDefaultGrpcFields_HandlesGracefully()
     {
         // Arrange
-        var grpcProfile = new global::Fitnessanalyticshub.AthleteProfile
-        {
-            Name = null,
-            FitnessLevel = null,
-            PrimaryGoal = null
-        };
+        var grpcProfile = new global::Fitnessanalyticshub.AthleteProfile();
+        // gRPC Properties haben automatisch default values (leere Strings)
 
         // Act
         var dto = grpcProfile.ToAthleteProfileDto();
@@ -204,6 +200,8 @@ public class AthleteProfileExtensionsTests
         Assert.Equal("", dto.Name);
         Assert.Equal("", dto.FitnessLevel);
         Assert.Equal("", dto.PrimaryGoal);
+        Assert.NotNull(dto.Id); // ID wird generiert
+        Assert.NotEqual(Guid.Empty.ToString(), dto.Id);
     }
 
     #endregion
