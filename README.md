@@ -24,29 +24,49 @@
 
 ---
 
-## ✨ Features
-
-- 🏃‍♂️ **Strava Integration** - Automatic activity import and synchronization
-- 📊 **Interactive Dashboard** - Comprehensive analytics and visualizations for fitness data
-- 📈 **Activity Tracking** - Support for running, cycling, strength training, and more
-- 🎯 **Performance Metrics** - Detailed statistics including pace, heart rate, power analysis
-- 📱 **Modern Web UI** - Responsive Angular frontend with intuitive navigation
-- 🛡️ **Enterprise Error Handling** - Comprehensive exception management with consistent API responses
-- 🏥 **Health Monitoring** - Built-in health checks and observability dashboard
-
----
-
-## 🚀 Projektziele
+## 🎯 Projektziele & Roadmap
 
 Dieses Projekt ist eine persönliche Spielwiese für moderne Softwareentwicklung mit Fokus auf:
 
-- 🧱 Clean Architecture mit Domain, Application, Infrastructure
-- 🖥️ Moderne UI mit Angular
-- 🧪 Architekturtests mit NetArchTest
-- 🐳 Dockerisierung & Bereitstellung
-- 🤖 Automatisierung durch GitHub Actions
-- 🔄 Datenintegration mit externen Services (Strava API)
-- 🧠 **KI-Integration** mit HuggingFace / Google Gemini für intelligente Trainingsanalyse
+### 🏗️ Architektur & Design
+- **Clean Architecture** mit Domain, Application, Infrastructure Layering
+- **Domain-Driven Design** Prinzipien für fachliche Modellierung
+- **Microservices-Architektur** mit Multi-Protocol Communication
+- **Event-Driven Architecture** mit RabbitMQ für lose gekoppelte Services
+
+### 🔄 Multi-Protocol Communication
+- **HTTP/REST** für Standard-API-Integration
+- **Native gRPC** für High-Performance Service-to-Service Communication  
+- **gRPC-JSON Bridge** als Best-of-Both-Worlds Lösung
+- **Message Queuing** mit RabbitMQ für asynchrone Verarbeitung
+
+### 🤖 KI & Moderne Technologien
+- **AI-Integration** mit HuggingFace und Google Gemini für intelligente Trainingsanalyse
+- **Angular Frontend** mit modernen UI-Patterns
+- **Real-time Health Monitoring** mit umfassendem Dashboard
+
+### 🧪 Code Quality & Testing
+- **Architecture Tests** mit NetArchTest für Clean Architecture Compliance
+- **Modularity Maturity Index** Berechnung für nachhaltige Codequalität
+- **Continuous Code Quality** mit SonarCloud Integration
+- **Comprehensive Testing** mit Unit-, Integration- und Architecture Tests
+
+### 📋 Roadmap
+
+**✅ Aktuell umgesetzt:**
+- Clean Architecture mit strikter Dependency Inversion
+- Multi-Protocol Communication (HTTP, gRPC, gRPC-JSON)
+- AI-Integration mit HuggingFace + Google Gemini
+- Strava API Integration mit automatischem Activity Import
+- Health Monitoring Dashboard mit Auto-Refresh
+- Comprehensive Error Handling mit custom Exception Hierarchy
+- Docker Multi-Service Setup
+
+**📋 Geplant:**
+- Event-Driven Architecture mit RabbitMQ
+- CQRS-Pattern für bessere Read/Write-Trennung
+- Modularity Maturity Index Integration
+- Erweiterte Microservices mit Domain Events
 
 ---
 
@@ -71,316 +91,182 @@ Dieses Projekt verwendet **SonarCloud** für kontinuierliche Code-Qualitätsübe
 [**→ Live SonarCloud Dashboard ansehen**](https://sonarcloud.io/project/overview?id=lady-logic_FitnessAnalyticsHubV1_0)
 
 ---
+## 🏗️ Architektur
 
-## 🤖 AI-Powered Fitness Analytics
+### Clean Architecture mit Microservices
 
-### **🧠 HuggingFace und Google Gemini Integration**
-Das Projekt integriert moderne KI-Technologien für intelligente Trainingsanalyse:
-
-- **🔥 Meta-Llama-3.1-8B-Instruct** - Hochmodernes Sprachmodell für Fitnessanalyse
-- **📊 Intelligente Workout-Analyse** - KI-basierte Trend- und Leistungsanalyse
-- **💪 AI Motivation Coach** - Personalisierte, kontextbezogene Trainingsmotivation
-- **🎯 Smarte Empfehlungen** - Datengestützte Trainingsoptimierung
-- **🛡️ Fallback-System** - Robuste Fehlerbehandlung bei API-Limits
-
-### **🔄 Microservice-Architektur**
-```bash
-# AI-Service verfügbar auf:
-http://localhost:5169/api/WorkoutAnalysis/analyze/huggingface
-
-# Health Check:
-http://localhost:5169/api/WorkoutAnalysis/health
-
-# Swagger UI:
-http://localhost:5169/swagger
+```text
+🌐 WebAPI (Port 5000)          🤖 AIAssistant (Port 7276)
+├── Controllers                 ├── gRPC Services
+├── Application Services        ├── HuggingFace Integration
+├── Domain Logic               ├── Google Gemini Integration
+└── Infrastructure             └── Multi-Protocol Endpoints
+    ├── Strava API                 ├── HTTP/REST
+    ├── Database (SQLite)          ├── Native gRPC
+    └── Health Monitoring          └── gRPC-JSON Bridge
 ```
 
-### **📈 AI Features im Detail**
-- **Trend-Analyse**: Erkennung von Trainingsmustern über Zeit
-- **Performance-Insights**: Intelligente Leistungsbewertung
-- **Gesundheitsmetriken**: KI-gestützte Verletzungsprävention
+### Multi-Protocol Communication
+```text
+Frontend → WebAPI → AIAssistant
+              ↓ (konfigurierbar)
+              ├── HTTP/JSON ────→ REST API
+              ├── gRPC ─────────→ Native gRPC
+              └── gRPC-JSON ────→ JSON Bridge
+```
+
+### Geplante Erweiterungen
+- **Event-Driven Architecture** mit RabbitMQ
+- **Domain Events** für lose gekoppelte Services
+- **CQRS Pattern** für Read/Write-Trennung
 
 ---
+## ✨ Features
 
-## 🚀 Multi-Protocol Communication Architecture
+- 🏃‍♂️ **Strava Integration** - Automatischer Activity Import und Performance-Tracking
+- 🤖 **AI-Powered Analytics** - HuggingFace + Google Gemini für intelligente Trainingsanalyse  
+- 🔄 **Multi-Protocol API** - HTTP/REST, gRPC und gRPC-JSON Bridge
+- 📊 **Training Plans** - Strukturierte Planung mit Fortschrittstracking
+- 🏥 **Health Monitoring** - Live-Dashboard mit automatischem Service-Monitoring
+- 🛡️ **Enterprise Error Handling** - Konsistente Exception-Management
+- 🧪 **Architecture Testing** - Automatische Clean Architecture Compliance
+---
+## 🔄 Multi-Protocol Communication
 
-### **🔄 Drei Kommunikationsarten für moderne Microservices**
-Das Projekt demonstriert verschiedene Kommunikationsprotokolle zwischen Services:
+Drei Kommunikationsprotokolle für flexible Microservice-Integration:
 
 ```bash
-# 1. HTTP/REST (Traditional)
-POST http://localhost:7276/api/MotivationCoach/motivate/huggingface
+# HTTP/REST - Standard & Browser-kompatibel
+POST http://localhost:7276/api/MotivationCoach/motivate
 
-# 2. Native gRPC (High Performance)  
+# Native gRPC - High Performance
 grpc://localhost:7276/MotivationService/GetMotivation
 
-# 3. gRPC-JSON Bridge (Best of Both)
+# gRPC-JSON Bridge - Best of Both Worlds  
 POST http://localhost:7276/grpc-json/MotivationService/GetMotivation
 ```
 
-### **⚙️ Konfigurierbare Client-Auswahl**
+### Konfiguration
 ```json
 {
   "AIAssistant": {
     "ClientType": "GrpcJson",    // "Http" | "Grpc" | "GrpcJson"
-    "BaseUrl": "https://localhost:7276",
-    "GrpcUrl": "https://localhost:7276"
+    "BaseUrl": "https://localhost:7276"
   }
 }
 ```
 
-### **📊 Protokoll-Vergleich**
+| Protokoll | Performance | Browser Support | Use Case |
+|-----------|-------------|-----------------|----------|
+| **HTTP/REST** | Standard | ✅ Vollständig | Frontend, API-Tools |
+| **gRPC** | ⚡ Sehr schnell | ❌ Eingeschränkt | Service-to-Service |
+| **gRPC-JSON** | Standard | ✅ Vollständig | Hybrid-Integration |
+---
+## 🤖 AI-Powered Analytics
 
-| Feature | HTTP/REST | Native gRPC | gRPC-JSON Bridge |
-|---------|-----------|-------------|------------------|
-| **Performance** | Standard | ⚡ Sehr schnell | Standard |
-| **Browser Support** | ✅ Vollständig | ❌ Eingeschränkt | ✅ Vollständig |
-| **Typsicherheit** | Mittel | 🛡️ Hoch | Mittel |
-| **API-Tools** | 🔧 Standard REST | gRPC-Tools | 🔧 Standard REST |
-| **Streaming** | Nein | ✅ Bi-direktional | Nein |
+### KI-Integration für intelligente Trainingsanalyse
 
-### **🌉 gRPC-JSON Bridge Innovation**
-Die gRPC-JSON Bridge kombiniert die **Vorteile beider Welten**:
-- **HTTP/JSON Interface** für einfache Integration und Debugging
-- **gRPC-strukturierte Daten** für konsistente API-Schemas  
-- **Automatische Protokoll-Konvertierung** zwischen HTTP ↔ gRPC
-- **Zero-Code-Change** beim Wechseln zwischen Protokollen
+- **Meta-Llama-3.1-8B-Instruct** via HuggingFace für Fitnessanalyse
+- **Google Gemini** für zusätzliche AI-Perspektiven
+- **Personalisierte Motivation** - Kontextbezogene Trainingstipps
+- **Workout-Trends** - KI-basierte Leistungsentwicklung
+- **Robuste Fallbacks** - Zuverlässige Funktion bei API-Limits
 
-**Use Cases:**
-- 🌐 **Web-Frontends** benötigen HTTP/JSON
-- ⚡ **Service-to-Service** nutzt nativen gRPC für Performance
-- 🔄 **API-Gateways** übersetzen zwischen Protokollen
-- 🧪 **Prototyping** mit Standard HTTP-Tools (Postman, curl)
+### Verfügbare Endpunkte
+```bash
+# Workout-Analyse
+POST /api/WorkoutAnalysis/analyze/huggingface
+POST /api/WorkoutAnalysis/analyze/googlegemini
+
+# Motivation & Coaching
+POST /api/MotivationCoach/motivate
+
+# Multi-Protocol via gRPC-JSON Bridge
+POST /grpc-json/MotivationService/GetMotivation
+POST /grpc-json/WorkoutService/GetWorkoutAnalysis
+```
+---
+## 🏥 Health Monitoring
+
+Live-Überwachung aller Services mit automatischem Refresh:
+
+- **`/health-ui`** - Visual Dashboard mit Verlauf  
+- **`/health`** - JSON API für alle Services
+- **Tag-based Grouping** - Services vs Infrastructure  
+- **Auto-Refresh** - Alle 60 Sekunden
+
+```bash
+# Health Dashboard öffnen
+open http://localhost:8080/health-ui
+
+# Health Status prüfen  
+curl http://localhost:8080/health
+```
+---
+## 🛠️ Tech Stack
+
+**Backend:** .NET 8, Entity Framework Core, Clean Architecture  
+**AI:** HuggingFace (Meta-Llama-3.1-8B), Google Gemini  
+**Communication:** HTTP/REST, gRPC, gRPC-JSON Bridge  
+**Database:** SQLite (Development), SQL Server (Production)  
+**Quality:** xUnit, NetArchTest, SonarCloud, FluentAssertions  
+**DevOps:** Docker, GitHub Actions, Health Monitoring  
+**Integration:** Strava API, Swagger/OpenAPI
+
+**Geplant:** RabbitMQ (Event-Driven)
 
 ---
+## 🚀 Getting Started
 
+### Docker (Empfohlen)
+```bash
+git clone https://github.com/lady-logic/FitnessAnalyticsHubV1_0.git
+cd FitnessAnalyticsHubV1_0
+docker-compose up
+```
+
+### Lokale Entwicklung
+```bash
+# API starten
+cd FitnessAnalyticsHub.WebApi && dotnet run
+
+# AI-Service starten  
+cd AIAssistant && dotnet run
+```
+
+**Zugriff:**
+- Haupt-API: `https://localhost:5001`
+- AI-Service: `https://localhost:7276`  
+- Swagger UI: `/swagger`
+---
 ## 🛡️ Error Handling
 
-This application implements a comprehensive error handling strategy using Clean Architecture principles.
+Konsistente Exception-Behandlung durch Clean Architecture und Global Middleware.
 
-### Exception Hierarchy
+### Exception-Hierarchie
+```text
+Domain Exceptions
+├── ActivityNotFoundException (404)
+├── AthleteNotFoundException (404)
+└── ValidationException (400)
 
-```
-Exception
-├── DomainException (Base for all domain exceptions)
-│   ├── NotFoundException
-│   │   ├── ActivityNotFoundException
-│   │   └── AthleteNotFoundException
-│   ├── ValidationException
-│   └── BusinessRuleException
-└── StravaServiceException (Infrastructure exceptions)
-    ├── InvalidStravaTokenException
-    ├── StravaApiException
-    ├── StravaConfigurationException
-    └── StravaAuthorizationException
+Infrastructure Exceptions  
+├── StravaApiException (502)
+├── InvalidStravaTokenException (401)
+└── AIAssistantApiException (502)
 ```
 
-### Error Response Format
-
-All API errors return a consistent JSON structure:
-
+### API Response Format
 ```json
 {
   "type": "ActivityNotFound",
   "message": "Activity with ID 123 not found",
   "statusCode": 404,
-  "details": "ActivityId: 123",
   "timestamp": "2024-01-15T10:30:00Z"
 }
 ```
 
-### HTTP Status Code Mapping
-
-| Exception Type | HTTP Status | Description |
-|----------------|-------------|-------------|
-| `ActivityNotFoundException` | 404 | Activity not found |
-| `AthleteNotFoundException` | 404 | Athlete not found |
-| `InvalidStravaTokenException` | 401 | Invalid or expired token |
-| `StravaConfigurationException` | 500 | Server configuration error |
-| `StravaApiException` | 400/502 | External API error |
-| Generic exceptions | 500 | Internal server error |
-
-### For Developers
-
-**Controllers are exception-free:**
-```csharp
-[HttpGet("{id}")]
-public async Task<ActionResult<ActivityDto>> GetById(int id)
-{
-    var activity = await _activityService.GetActivityByIdAsync(id);
-    return Ok(activity); // Exceptions handled by middleware
-}
-```
-
-**Services throw specific exceptions:**
-```csharp
-public async Task<ActivityDto> GetActivityByIdAsync(int id)
-{
-    var activity = await _repository.GetByIdAsync(id);
-    if (activity == null)
-        throw new ActivityNotFoundException(id);
-    return _mapper.Map<ActivityDto>(activity);
-}
-```
-
----
-
-## 🏥 Health Monitoring & Observability
-
-### **📊 Health Monitoring Features**
-```csharp
-// Umfassendes Health Monitoring System
-services.AddHealthChecks()
-    .AddCheck("api", () => HealthCheckResult.Healthy())
-    .AddSqlServer(connectionString, tags: new[] { "database" })
-    .AddRedis(redisConnection, tags: new[] { "cache" });
-
-// Health Dashboard mit 60s Auto-Refresh
-services.AddHealthChecksUI(setup => {
-    setup.SetEvaluationTimeInSeconds(60);
-    setup.MaximumHistoryEntriesPerEndpoint(50);
-});
-```
-
-### **🌐 Health Endpoints & Dashboard**
-Nach dem Starten des Systems sind folgende Monitoring-Endpoints verfügbar:
-
-| Endpoint | Beschreibung | Beispiel |
-|----------|--------------|----------|
-| **`/health-ui`** | 📊 **Visual Dashboard** mit Verlauf | `http://localhost:8080/health-ui` |
-| **`/health`** | 🔍 **JSON API** für alle Services | `http://localhost:8080/health` |
-| **`/health/infrastructure`** | 🏗️ **Gruppierte Checks** (DB, Cache) | `http://localhost:8080/health/infrastructure` |
-
-### **✨ Enterprise Health Features**
-- **🏷️ Tag-based Grouping** - Services vs Infrastructure
-- **📈 Historical Tracking** - 50 Health Check Einträge Verlauf
-- **⏱️ Auto-Refresh** - Alle 60 Sekunden automatische Prüfung  
-- **🎯 Production Ready** - Geeignet für Load Balancer Integration
-- **🔄 Container Health** - Docker HEALTHCHECK Integration
-
-```bash
-# Health Status prüfen
-curl http://localhost:8080/health | jq
-
-# Health Dashboard öffnen  
-open http://localhost:8080/health-ui
-```
-
----
-
-## 🧱 Architekturüberblick
-
-```text
-📦 FitnessAnalyticsHub
-├── 01_Core
-│   └── 🧠 FitnessAnalyticsHub.Domain            // Entitäten, Value Objects, Interfaces
-│
-├── 02_Application
-│   └── 🧰 FitnessAnalyticsHub.Application       // Services, DTOs, CQRS Commands/Queries
-│
-├── 03_Infrastructure
-│   └── 🏗️ FitnessAnalyticsHub.Infrastructure    // Repositories, Strava API, Entity Framework
-│
-├── 04_UI
-│   ├── 🌐 FitnessAnalyticsHub.WebApi            // RESTful API mit Swagger/OpenAPI
-│   └── 🌐 UI.Angular                            // Interactive Dashboard & Web-Frontend
-│
-├── 05_Tests
-│   └── 🧪 FitnessAnalyticsHub.Tests             // Unit Tests, Integration Tests, Architecture Tests
-│
-└── 06_AIAssistant
-    └── 🤖 FitnessAnalyticsHub.AIAssistant       // KI-Integration mit HuggingFace
-```
-
-### Key Architecture Features
-- **Clean Architecture** mit strikter Dependency Inversion
-- **Domain-Driven Design** Prinzipien
-- **Entity Framework Core** mit automatischen Migrations
-- **Comprehensive Error Handling** mit custom exception hierarchy
-
-### ✅ AI Integration with HuggingFace
-- **New**: Complete AI microservice architecture for workout analysis
-- **Features**: Intelligent trend analysis, motivation coaching, health insights
-- **Technology**: Meta-Llama-3.1-8B-Instruct model via HuggingFace Inference API
-- **Benefit**: Personalized, data-driven fitness recommendations and motivation
-
----
-
-## 🧪 Test Status
-
-- ✅ **Unit Tests**: Controller und Service Layer mit umfassenden Tests
-- 🏛️ **Architecture Tests**: Clean Architecture Compliance mit NetArchTest
-- 📊 **Code Coverage**: Automatisch gesammelt und in SonarCloud visualisiert
-- 🔄 **Automatische Ausführung**: Bei jedem Commit via GitHub Actions
-
----
-
-## 🛠️ Technologie Stack & DevOps
-
-**Backend & Framework:**
-- 🧠 [.NET 8](https://dotnet.microsoft.com/) (Latest LTS)
-- 🔄 [Entity Framework Core](https://docs.microsoft.com/ef/core/) mit SQLite
-- 🧱 Clean Architecture Pattern 
-
-**AI & Machine Learning:**
-- 🤖 [HuggingFace Inference API](https://huggingface.co/inference-api) für KI-Integration
-- 🧠 **Meta-Llama-3.1-8B-Instruct** für natürliche Sprachverarbeitung
-- 🔄 **Microservice-Architektur** für AI-Services
-- 🛡️ **Fallback-Mechanismen** für robuste AI-Integration
-
-**Frontend & UI:**
-- 🌐 [Angular](https://angular.io/) mit TypeScript
-- 📊 Interactive Charts und Data Visualizations
-- 📱 Responsive Design für Desktop und Mobile
-
-**Code Quality & Testing:**
-- 🧪 [xUnit](https://xunit.net/) + [FluentAssertions](https://fluentassertions.com/)
-- 🏛️ [NetArchTest](https://github.com/BenMorris/NetArchTest) für Architecture Compliance
-- 🔬 **SonarCloud Integration** für kontinuierliche Code-Qualität
-- 📊 Automated Code Coverage mit detailliertem Reporting
-
-**DevOps & CI/CD:**
-- 🤖 **GitHub Actions** - Vollautomatisierte CI/CD Pipeline
-- 🛡️ **Branch Protection** mit enforced Code Reviews
-- 🐳 **Docker Multi-Stage Builds** für Production Deployments
-- 📦 **Health Monitoring** mit `/health-ui` Dashboard
-
-**Integration & APIs:**
-- 🔗 [Strava API](https://developers.strava.com/) für Fitness-Datenintegration
-- 🤖 **AI Assistant Integration** mit HuggingFace
-
-**Observability:** Structured logging, performance metrics und automatic health status tracking.
-
----
-
-## 📋 Getting Started
-
-### Voraussetzungen
-- .NET 8.0 SDK
-- Node.js (für Angular Frontend)
-
-### Quick Start
-```bash
-git clone https://github.com/lady-logic/FitnessAnalyticsHubV1_0.git
-cd FitnessAnalyticsHubV1_0
-dotnet restore && dotnet build
-
-# API starten
-cd FitnessAnalyticsHub.WebApi && dotnet run
-
-### API starten
-```bash
-# Haupt-API
-cd FitnessAnalyticsHub.WebApi
-dotnet run
-
-# AI-Microservice
-cd FitnessAnalyticsHub.AIAssistant
-dotnet run
-```
-
-Die Haupt-API ist verfügbar unter: `https://localhost:7001`
-Der AI-Service ist verfügbar unter: `http://localhost:5169`
+**Prinzip:** Controller sind exception-frei - Global Middleware behandelt alle Fehler zentral.
 
 ---
 
@@ -391,53 +277,6 @@ Die Integration mit der Strava API ermöglicht den Zugriff auf:
 - Leistungsmetriken
 - Strecken und Routen
 - Benutzerprofildaten
-
----
-
-## 🤖 AIAssistant-Modul
-
-Das FitnessAnalyticsHub.AIAssistant-Modul ist **vollständig integriert** und bietet:
-- **🔥 Trainingsanalyse**: KI-basierte Auswertung von Leistungsdaten mit Meta-Llama-3.1-8B
-- **📈 Intelligente Prognosen**: Trend-Analyse und Leistungsentwicklung
-- **💪 Motivationscoaching**: Personalisierte, kontextbezogene Trainingstipps
-- **🎯 Smarte Empfehlungen**: Datengestützte Trainingsoptimierung
-- **🛡️ Robuste Integration**: Fallback-Mechanismen für zuverlässige Funktion
-
-### **Verfügbare AI-Endpoints:**
-```bash
-# Workout-Analyse mit KI
-POST http://localhost:5169/api/WorkoutAnalysis/analyze/huggingface
-
-# Performance-Trends
-GET http://localhost:5169/api/WorkoutAnalysis/performance-trends/{athleteId}
-
-# Training-Empfehlungen  
-GET http://localhost:5169/api/WorkoutAnalysis/recommendations/{athleteId}
-
-# Gesundheitsanalyse
-POST http://localhost:5169/api/WorkoutAnalysis/health-analysis
-
-# Service Health Check
-GET http://localhost:5169/api/WorkoutAnalysis/health
-```
-
----
-
-## 🎯 Roadmap
-
-**Current Sprint:**
-- ✅ Interactive Dashboard Implementation
-- ✅ Strava API Integration & Activity Import
-- ✅ GitHub CI/CD Workflows
-- ✅ Code Quality Monitoring mit SonarCloud
-- ✅ Tests + Testabdeckung ausbauen
-- ✅ **KI-Integration mit HuggingFace für intelligente Trainingsanalyse**
-- 🚧 Trainingsdaten via Strava API laden
-- 📝 Dockerisieren für lokale + Cloud-Deployments
-- 📝 CQRS-Pattern implementieren für bessere Trennung von Lese- und Schreiboperationen
-- 📝 Fehlende Oberflächen in Angular ergänzen
-- 📝 AI-Features in Frontend integrieren...uvm 😅
-
 ---
 
 ## 📄 License
