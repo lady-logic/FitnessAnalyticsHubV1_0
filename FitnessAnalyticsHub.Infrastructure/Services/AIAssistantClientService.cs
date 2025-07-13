@@ -1,9 +1,10 @@
-﻿using System.Text;
-using System.Text.Json;
-using FitnessAnalyticsHub.Application.DTOs;
+﻿using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
+using System.Text;
+using System.Text.Json;
 
 namespace FitnessAnalyticsHub.Infrastructure.Services;
 
@@ -75,8 +76,8 @@ public class AIAssistantClientService : IAIAssistantClientService
 
         return new AIMotivationResponseDto
         {
-            MotivationalMessage = aiResponse.GetProperty("motivationalMessage").GetString() ??
-                                "Keep pushing forward! You're doing great!",
+            MotivationalMessage = aiResponse.TryGetProperty("motivationalMessage", out var msgElement)
+            ? msgElement.GetString() : "Keep pushing forward! You're doing great!",
             Quote = aiResponse.TryGetProperty("quote", out var quote) ? quote.GetString() : null,
             ActionableTips = aiResponse.TryGetProperty("actionableTips", out var tips) &&
                            tips.ValueKind == JsonValueKind.Array ?
@@ -133,7 +134,7 @@ public class AIAssistantClientService : IAIAssistantClientService
 
         return new AIWorkoutAnalysisResponseDto
         {
-            Analysis = aiResponse.GetProperty("analysis").GetString() ??
+            Analysis = aiResponse.TryGetProperty("analysis", out var analysis) ? analysis.GetString() :
                       "Your workouts show consistent progress. Keep up the great work!",
             KeyInsights = aiResponse.TryGetProperty("keyInsights", out var insights) &&
                         insights.ValueKind == JsonValueKind.Array ?
@@ -188,22 +189,22 @@ public class AIAssistantClientService : IAIAssistantClientService
 
         return new AIWorkoutAnalysisResponseDto
         {
-            Analysis = $"Based on your {workoutCount} recent workouts covering {totalDistance:F1}km, " +
+            Analysis = $"Based on your {workoutCount} recent workouts covering {totalDistance.ToString("F1", CultureInfo.InvariantCulture)}km, " +
                       "your training shows good consistency and steady progress toward your fitness goals.",
             KeyInsights = new List<string>
-            {
-                $"Completed {workoutCount} workouts with strong consistency",
-                $"Total distance of {totalDistance:F1}km demonstrates good endurance",
-                "Training patterns indicate balanced workout approach",
-                "Performance metrics show steady improvement"
-            },
+        {
+            $"Completed {workoutCount} workouts with strong consistency",
+            $"Total distance of {totalDistance.ToString("F1", CultureInfo.InvariantCulture)}km demonstrates good endurance",
+            "Training patterns indicate balanced workout approach",
+            "Performance metrics show steady improvement"
+        },
             Recommendations = new List<string>
-            {
-                "Continue current training schedule",
-                "Gradually increase intensity by 5-10%",
-                "Ensure adequate recovery between sessions",
-                "Consider adding workout variety"
-            },
+        {
+            "Continue current training schedule",
+            "Gradually increase intensity by 5-10%",
+            "Ensure adequate recovery between sessions",
+            "Consider adding workout variety"
+        },
             GeneratedAt = DateTime.UtcNow,
             Source = "Fallback"
         };

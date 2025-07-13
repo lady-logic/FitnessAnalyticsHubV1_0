@@ -69,15 +69,17 @@ public class GrpcJsonClientService : IAIAssistantClientService
         // Konvertiere gRPC-JSON Response zurück zu DTO
         return new AIMotivationResponseDto
         {
-            MotivationalMessage = grpcJsonResponse.GetProperty("motivationalMessage").GetString() ??
-                                "Keep pushing forward! You're doing great!",
+            MotivationalMessage = grpcJsonResponse.TryGetProperty("motivationalMessage", out var msgProp)
+                     ? msgProp.GetString() ?? "Keep pushing forward! You're doing great!"
+                     : "Keep pushing forward! You're doing great!",
             Quote = grpcJsonResponse.TryGetProperty("quote", out var quote) ? quote.GetString() : null,
             ActionableTips = grpcJsonResponse.TryGetProperty("actionableTips", out var tips) &&
                            tips.ValueKind == JsonValueKind.Array ?
                            tips.EnumerateArray().Select(t => t.GetString()).Where(s => s != null).Cast<string>().ToList() :
                            null,
-            GeneratedAt = DateTime.TryParse(grpcJsonResponse.GetProperty("generatedAt").GetString(), out var parsedDate)
-                        ? parsedDate : DateTime.UtcNow,
+            GeneratedAt = grpcJsonResponse.TryGetProperty("generatedAt", out var dateProp) &&
+              DateTime.TryParse(dateProp.GetString(), out var parsedDate)
+              ? parsedDate : DateTime.UtcNow,
             Source = "gRPC-JSON"
         };
     }
