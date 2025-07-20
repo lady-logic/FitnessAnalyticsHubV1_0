@@ -1,0 +1,266 @@
+﻿using AIAssistant.Application.DTOs;
+using AIAssistant.Application.Interfaces;
+using AIAssistant.Applications.DTOs;
+using FitnessAnalyticsHub.AIAssistant.UI.API.Services;
+using Grpc.Core;
+using Microsoft.Extensions.Logging;
+using Moq;
+
+namespace AIAssistant.Tests.UI.API.Services
+{
+    public class MotivationGrpcServiceTests
+    {
+        private readonly Mock<IMotivationCoachService> _mockMotivationService;
+        private readonly Mock<ILogger<MotivationGrpcService>> _mockLogger;
+        private readonly MotivationGrpcService _service;
+
+        public MotivationGrpcServiceTests()
+        {
+            _mockMotivationService = new Mock<IMotivationCoachService>();
+            _mockLogger = new Mock<ILogger<MotivationGrpcService>>();
+            _service = new MotivationGrpcService(_mockMotivationService.Object, _mockLogger.Object);
+        }
+
+        #region GetMotivation Tests
+
+        [Fact]
+        public async Task GetMotivation_WithValidRequest_ReturnsCorrectResponse()
+        {
+            // Arrange
+            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            {
+                AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
+                {
+                    Name = "Test Athlete",
+                    FitnessLevel = "Intermediate",
+                    PrimaryGoal = "Weight Loss"
+                }
+            };
+
+            var serviceResponse = new MotivationResponseDto
+            {
+                MotivationalMessage = "You're doing amazing! Keep pushing forward!",
+                Quote = "Success is the sum of small efforts repeated day in and day out.",
+                ActionableTips = new List<string>
+            {
+                "Set realistic daily goals",
+                "Track your progress weekly",
+                "Celebrate small victories"
+            },
+                GeneratedAt = DateTime.UtcNow
+            };
+
+            _mockMotivationService
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .ReturnsAsync(serviceResponse);
+
+            var context = new Mock<ServerCallContext>().Object;
+
+            // Act
+            var result = await _service.GetMotivation(grpcRequest, context);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("You're doing amazing! Keep pushing forward!", result.MotivationalMessage);
+            Assert.Equal("Success is the sum of small efforts repeated day in and day out.", result.Quote);
+            Assert.Equal(3, result.ActionableTips.Count);
+            Assert.Contains("Set realistic daily goals", result.ActionableTips);
+            Assert.Contains("Track your progress weekly", result.ActionableTips);
+            Assert.Contains("Celebrate small victories", result.ActionableTips);
+            Assert.False(string.IsNullOrEmpty(result.GeneratedAt));
+        }
+
+        [Fact]
+        public async Task GetMotivation_WithNullAthleteProfile_ThrowsRpcException()
+        {
+            // Arrange
+            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            {
+                AthleteProfile = null // Dies wird eine NullReferenceException in der Extension verursachen
+            };
+
+            var context = new Mock<ServerCallContext>().Object;
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<RpcException>(() =>
+                _service.GetMotivation(grpcRequest, context));
+
+            // Das erwartete Verhalten: RpcException mit Internal Status
+            Assert.Equal(StatusCode.Internal, exception.StatusCode);
+            Assert.Contains("Failed to generate motivation", exception.Status.Detail);
+            Assert.Contains("Object reference not set to an instance of an object", exception.Status.Detail);
+
+            // Verify error was logged
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error generating motivation")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetMotivation_WithEmptyResponseFields_HandlesNullValues()
+        {
+            // Arrange
+            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            {
+                AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
+                {
+                    Name = "Test User"
+                }
+            };
+
+            var serviceResponse = new MotivationResponseDto
+            {
+                MotivationalMessage = null, // Null value test
+                Quote = null,
+                ActionableTips = null,
+                GeneratedAt = DateTime.UtcNow
+            };
+
+            _mockMotivationService
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .ReturnsAsync(serviceResponse);
+
+            var context = new Mock<ServerCallContext>().Object;
+
+            // Act
+            var result = await _service.GetMotivation(grpcRequest, context);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("", result.MotivationalMessage); // Should be empty string, not null
+            Assert.Equal("", result.Quote);
+            Assert.Equal(0, result.ActionableTips.Count); // Should be empty collection
+        }
+
+        [Fact]
+        public async Task GetMotivation_CallsServiceWithCorrectMapping()
+        {
+            // Arrange
+            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            {
+                AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
+                {
+                    Name = "Mapping Test User",
+                    FitnessLevel = "Advanced",
+                    PrimaryGoal = "Marathon Training"
+                }
+            };
+
+            var serviceResponse = new MotivationResponseDto
+            {
+                MotivationalMessage = "Test message",
+                GeneratedAt = DateTime.UtcNow
+            };
+
+            _mockMotivationService
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .ReturnsAsync(serviceResponse);
+
+            var context = new Mock<ServerCallContext>().Object;
+
+            // Act
+            await _service.GetMotivation(grpcRequest, context);
+
+            // Assert - Verify the service was called with correct mapped data
+            _mockMotivationService.Verify(
+                s => s.GetHuggingFaceMotivationalMessageAsync(
+                    It.Is<MotivationRequestDto>(req =>
+                        req.AthleteProfile.Name == "Mapping Test User" &&
+                        req.AthleteProfile.FitnessLevel == "Advanced" &&
+                        req.AthleteProfile.PrimaryGoal == "Marathon Training")),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetMotivation_WhenServiceThrowsException_ThrowsRpcException()
+        {
+            // Arrange
+            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            {
+                AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
+                {
+                    Name = "Error Test User"
+                }
+            };
+
+            _mockMotivationService
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .ThrowsAsync(new InvalidOperationException("Service is down"));
+
+            var context = new Mock<ServerCallContext>().Object;
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<RpcException>(() =>
+                _service.GetMotivation(grpcRequest, context));
+
+            Assert.Equal(StatusCode.Internal, exception.StatusCode);
+            Assert.Contains("Failed to generate motivation", exception.Status.Detail);
+            Assert.Contains("Service is down", exception.Status.Detail);
+
+            // Verify error was logged
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Error,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Error generating motivation")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetMotivation_LogsRequestAndResponse()
+        {
+            // Arrange
+            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            {
+                AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
+                {
+                    Name = "Logging Test User"
+                }
+            };
+
+            var serviceResponse = new MotivationResponseDto
+            {
+                MotivationalMessage = "Test message",
+                GeneratedAt = DateTime.UtcNow
+            };
+
+            _mockMotivationService
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .ReturnsAsync(serviceResponse);
+
+            var context = new Mock<ServerCallContext>().Object;
+
+            // Act
+            await _service.GetMotivation(grpcRequest, context);
+
+            // Assert - Verify request logging
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Received motivation request for athlete: Logging Test User")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+
+            // Verify success logging
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully generated motivation response")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+
+        #endregion
+    }
+}

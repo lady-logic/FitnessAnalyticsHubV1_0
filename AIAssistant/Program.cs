@@ -1,4 +1,4 @@
-﻿using AIAssistant._04_UI.API.Services;
+﻿using AIAssistant.UI.API.Services;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Infrastructure.Services;
 using FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;

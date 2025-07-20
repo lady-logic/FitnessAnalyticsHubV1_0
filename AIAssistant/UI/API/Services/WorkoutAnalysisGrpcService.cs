@@ -6,7 +6,7 @@ using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Extensions;
 using Grpc.Core;
 
-namespace AIAssistant._04_UI.API.Services;
+namespace AIAssistant.UI.API.Services;
 
 public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
 {
