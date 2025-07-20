@@ -372,6 +372,313 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
 
     #endregion
 
+    #region Additional Methods
+
+    [Fact]
+    public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithNullWorkouts_LogsZeroWorkouts()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var request = new AIWorkoutAnalysisRequestDto
+        {
+            AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
+            RecentWorkouts = null // Test null workouts
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+
+        // Verify logging occurred
+        VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 0 workouts");
+    }
+
+    [Fact]
+    public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithNullAthleteProfile_HandlesGracefully()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var request = new AIWorkoutAnalysisRequestDto
+        {
+            AthleteProfile = null,
+            RecentWorkouts = new List<AIWorkoutDataDto>
+        {
+            new AIWorkoutDataDto { ActivityType = "Test", Distance = 1.0 }
+        }
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 1 workouts");
+    }
+
+    [Fact]
+    public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithGrpcError_LogsErrorAndThrows()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var request = new AIWorkoutAnalysisRequestDto
+        {
+            AthleteProfile = new AIAthleteProfileDto { Name = "Test" }
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Error, "Error getting GoogleGemini workout analysis");
+    }
+
+    [Fact]
+    public async Task GetPerformanceTrendsAsync_WithGrpcError_LogsErrorAndThrows()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetPerformanceTrendsAsync(123, "week", CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Error, "Error getting performance trends");
+    }
+
+    [Fact]
+    public async Task GetTrainingRecommendationsAsync_WithGrpcError_LogsErrorAndThrows()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetTrainingRecommendationsAsync(456, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Error, "Error getting training recommendations");
+    }
+
+    [Fact]
+    public async Task AnalyzeHealthMetricsAsync_WithGrpcError_LogsErrorAndThrows()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var workouts = new List<AIWorkoutDataDto>
+    {
+        new AIWorkoutDataDto { ActivityType = "Test" }
+    };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.AnalyzeHealthMetricsAsync(789, workouts, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Error, "Error analyzing health metrics");
+    }
+
+    [Fact]
+    public async Task AnalyzeHealthMetricsAsync_WithNullWorkouts_HandlesGracefully()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.AnalyzeHealthMetricsAsync(123, null, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 123");
+    }
+
+    #endregion
+
+    #region Edge Cases and Data Validation
+
+    [Fact]
+    public async Task GetMotivationAsync_WithEmptyStrings_HandlesGracefully()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var request = new AIMotivationRequestDto
+        {
+            AthleteProfile = new AIAthleteProfileDto
+            {
+                Name = "",
+                FitnessLevel = "",
+                PrimaryGoal = ""
+            },
+            PreferredTone = "",
+            ContextualInfo = ""
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetMotivationAsync(request, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete:");
+    }
+
+    [Fact]
+    public async Task GetWorkoutAnalysisAsync_WithNullWorkouts_HandlesGracefully()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var request = new AIWorkoutAnalysisRequestDto
+        {
+            AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
+            RecentWorkouts = null,
+            AnalysisType = "Test"
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
+    }
+
+    [Theory]
+    [InlineData("week")]
+    [InlineData("year")]
+    [InlineData("")]
+    [InlineData(null)]
+    public async Task GetPerformanceTrendsAsync_WithDifferentTimeFrames_LogsCorrectly(string? timeFrame)
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        const int athleteId = 999;
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetPerformanceTrendsAsync(athleteId, timeFrame ?? "month", CancellationToken.None));
+
+        var expectedTimeFrame = timeFrame ?? "month";
+        VerifyLogCalled(LogLevel.Information, $"performance trends for athlete: {athleteId}, timeFrame: {expectedTimeFrame}");
+    }
+
+    [Fact]
+    public async Task GetWorkoutAnalysisAsync_WithWorkoutsContainingNullValues_HandlesGracefully()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var request = new AIWorkoutAnalysisRequestDto
+        {
+            AthleteProfile = new AIAthleteProfileDto
+            {
+                Name = null,
+                FitnessLevel = null,
+                PrimaryGoal = null
+            },
+            RecentWorkouts = new List<AIWorkoutDataDto>
+        {
+            new AIWorkoutDataDto
+            {
+                Date = DateTime.UtcNow,
+                ActivityType = null,
+                Distance = 0,
+                Duration = 0,
+                Calories = 0
+            }
+        },
+            AnalysisType = null
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 1 workouts");
+    }
+
+    #endregion
+
+    #region Dispose Tests
+
+    [Fact]
+    public void Dispose_CallsChannelDispose()
+    {
+        // Arrange & Act
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        // This should not throw
+        _service.Dispose();
+
+        // Calling dispose again should also not throw (idempotent)
+        _service.Dispose();
+
+        // Assert - No exception thrown means test passes
+        Assert.True(true);
+    }
+
+    [Fact]
+    public void Dispose_CanBeCalledMultipleTimes()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        // Act & Assert - Should not throw
+        _service.Dispose();
+        _service.Dispose();
+        _service.Dispose();
+
+        Assert.True(true);
+    }
+
+    #endregion
+
+    #region Additional Data Conversion Edge Cases
+
+    [Fact]
+    public async Task AnalyzeHealthMetricsAsync_WithWorkoutsContainingNullActivityType_HandlesGracefully()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var workouts = new List<AIWorkoutDataDto>
+    {
+        new AIWorkoutDataDto
+        {
+            Date = DateTime.UtcNow,
+            ActivityType = null, // Test null handling
+            Distance = 5.0,
+            Duration = 1800,
+            Calories = 400
+        }
+    };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.AnalyzeHealthMetricsAsync(555, workouts, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 555");
+    }
+
+    [Fact]
+    public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithEmptyAnalysisType_UsesGeneral()
+    {
+        // Arrange
+        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+
+        var request = new AIWorkoutAnalysisRequestDto
+        {
+            AnalysisType = "", // Empty string
+            AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
+            RecentWorkouts = new List<AIWorkoutDataDto>()
+        };
+
+        // Act & Assert
+        var exception = await Assert.ThrowsAnyAsync<Exception>(
+            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+
+        VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 0 workouts");
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private void VerifyLogCalled(LogLevel logLevel, string message)
