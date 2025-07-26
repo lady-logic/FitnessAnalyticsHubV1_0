@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿namespace FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 
-namespace FitnessAnalyticsHub.AIAssistant.Application.DTOs;
+using System.ComponentModel.DataAnnotations;
 
 /// <summary>
 /// Request DTO für Performance Trends

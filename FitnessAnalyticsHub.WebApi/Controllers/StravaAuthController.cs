@@ -3,16 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FitnessAnalyticsHub.WebApi.Controllers;
 
-
 [ApiController]
 [Route("api/[controller]")]
 public class StravaAuthController : ControllerBase
 {
-    private readonly IStravaService _stravaService;
+    private readonly IStravaService stravaService;
 
     public StravaAuthController(IStravaService stravaService)
     {
-        _stravaService = stravaService;
+        this.stravaService = stravaService;
     }
 
     /// <summary>
@@ -23,15 +22,15 @@ public class StravaAuthController : ControllerBase
     {
         try
         {
-            var authUrl = await _stravaService.GetAuthorizationUrlAsync();
+            var authUrl = await this.stravaService.GetAuthorizationUrlAsync();
             Console.WriteLine($"Redirecting to: {authUrl}");
 
             // Redirect zu Strava
-            return Redirect(authUrl);
+            return this.Redirect(authUrl);
         }
         catch (Exception ex)
         {
-            return BadRequest($"Error generating auth URL: {ex.Message}");
+            return this.BadRequest($"Error generating auth URL: {ex.Message}");
         }
     }
 
@@ -45,19 +44,19 @@ public class StravaAuthController : ControllerBase
         {
             if (!string.IsNullOrEmpty(error))
             {
-                return BadRequest($"Authorization failed: {error}");
+                return this.BadRequest($"Authorization failed: {error}");
             }
 
             if (string.IsNullOrEmpty(code))
             {
-                return BadRequest("No authorization code received");
+                return this.BadRequest("No authorization code received");
             }
 
             Console.WriteLine($"Received code: {code}");
             Console.WriteLine($"Received scope: {scope}");  // <-- WICHTIG: Was bekommst du hier?
 
             // Tausche Code gegen Token
-            var tokenInfo = await _stravaService.ExchangeCodeForTokenAsync(code);
+            var tokenInfo = await this.stravaService.ExchangeCodeForTokenAsync(code);
 
             Console.WriteLine($"Token received: {tokenInfo.AccessToken?.Substring(0, 10)}...");
             Console.WriteLine($"Token expires at: {DateTimeOffset.FromUnixTimeSeconds(tokenInfo.ExpiresAt)}");
@@ -66,20 +65,20 @@ public class StravaAuthController : ControllerBase
             Console.WriteLine($"Token scopes: {scope}");
 
             // Teste sofort das Token mit Athletendaten
-            var athlete = await _stravaService.GetAthleteProfileAsync(tokenInfo.AccessToken);
+            var athlete = await this.stravaService.GetAthleteProfileAsync(tokenInfo.AccessToken);
             Console.WriteLine($"Athlete: {athlete.FirstName} {athlete.LastName}");
 
             // BEVOR du Activities abrufst, prüfe den Scope:
             if (!scope.Contains("read_all"))
             {
-                return BadRequest($"Missing required scope. Got: {scope}, but need 'read_all' for activities");
+                return this.BadRequest($"Missing required scope. Got: {scope}, but need 'read_all' for activities");
             }
 
             // Jetzt erst Activities testen:
-            var activities = await _stravaService.GetActivitiesAsync(tokenInfo.AccessToken, 1, 5);
+            var activities = await this.stravaService.GetActivitiesAsync(tokenInfo.AccessToken, 1, 5);
             Console.WriteLine($"Found {activities.Count()} activities");
 
-            return Ok(new
+            return this.Ok(new
             {
                 message = "Authorization successful!",
                 athlete = new { athlete.FirstName, athlete.LastName, athlete.Username },
@@ -88,15 +87,15 @@ public class StravaAuthController : ControllerBase
                     accessToken = tokenInfo.AccessToken,
                     expiresAt = DateTimeOffset.FromUnixTimeSeconds(tokenInfo.ExpiresAt),
                     refreshToken = tokenInfo.RefreshToken,
-                    receivedScopes = scope  // Zeige die wirklich erhaltenen Scopes
+                    receivedScopes = scope,  // Zeige die wirklich erhaltenen Scopes
                 },
-                activitiesCount = activities.Count()
+                activitiesCount = activities.Count(),
             });
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Callback error: {ex.Message}");
-            return BadRequest($"Error during authorization: {ex.Message}");
+            return this.BadRequest($"Error during authorization: {ex.Message}");
         }
     }
 
@@ -110,12 +109,12 @@ public class StravaAuthController : ControllerBase
         {
             if (string.IsNullOrEmpty(accessToken))
             {
-                return BadRequest("Access token required");
+                return this.BadRequest("Access token required");
             }
 
-            var activities = await _stravaService.GetActivitiesAsync(accessToken, 1, 10);
+            var activities = await this.stravaService.GetActivitiesAsync(accessToken, 1, 10);
 
-            return Ok(new
+            return this.Ok(new
             {
                 message = "Activities retrieved successfully!",
                 count = activities.Count(),
@@ -125,13 +124,13 @@ public class StravaAuthController : ControllerBase
                     a.SportType,
                     a.Distance,
                     a.StartDate,
-                    MovingTimeMinutes = a.MovingTime / 60
-                })
+                    MovingTimeMinutes = a.MovingTime / 60,
+                }),
             });
         }
         catch (Exception ex)
         {
-            return BadRequest($"Error getting activities: {ex.Message}");
+            return this.BadRequest($"Error getting activities: {ex.Message}");
         }
     }
 }

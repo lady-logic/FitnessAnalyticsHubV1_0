@@ -15,7 +15,7 @@ public static class WorkoutDataExtensions
             Distance = dto.Distance,
             Duration = dto.Duration,
             Calories = dto.Calories,
-            MetricsData = dto.MetricsData
+            MetricsData = dto.MetricsData,
         };
     }
 
@@ -28,7 +28,7 @@ public static class WorkoutDataExtensions
             Distance = domain.Distance,
             Duration = domain.Duration,
             Calories = domain.Calories,
-            MetricsData = domain.MetricsData
+            MetricsData = domain.MetricsData,
         };
     }
 
@@ -37,11 +37,11 @@ public static class WorkoutDataExtensions
         return new WorkoutDataDto
         {
             Date = DateTime.TryParse(grpcWorkout.Date, out var date) ? date : DateTime.UtcNow,
-            ActivityType = grpcWorkout.ActivityType ?? "",
+            ActivityType = grpcWorkout.ActivityType ?? string.Empty,
             Distance = grpcWorkout.Distance,
             Duration = grpcWorkout.Duration,
             Calories = grpcWorkout.Calories,
-            MetricsData = null
+            MetricsData = null,
         };
     }
 
@@ -50,10 +50,10 @@ public static class WorkoutDataExtensions
         return new WorkoutDataDto
         {
             Date = DateTime.TryParse(grpcWorkout.Date, out var date) ? date : DateTime.UtcNow,
-            ActivityType = grpcWorkout.ActivityType ?? "",
+            ActivityType = grpcWorkout.ActivityType ?? string.Empty,
             Distance = grpcWorkout.Distance,
             Duration = grpcWorkout.Duration,
-            Calories = grpcWorkout.Calories
+            Calories = grpcWorkout.Calories,
         };
     }
 
@@ -65,7 +65,7 @@ public static class WorkoutDataExtensions
             AthleteProfile = grpcJsonRequest.AthleteProfile?.ToAthleteProfileDto(),
             RecentWorkouts = grpcJsonRequest.RecentWorkouts?.Select(w => w.ToWorkoutDataDto()).ToList()
                             ?? new List<WorkoutDataDto>(),
-            AnalysisType = grpcJsonRequest.AnalysisType ?? "Performance"
+            AnalysisType = grpcJsonRequest.AnalysisType ?? "Performance",
         };
     }
 }

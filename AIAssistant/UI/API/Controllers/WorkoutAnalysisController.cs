@@ -1,23 +1,23 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.UI.API.Controllers;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
-
-namespace AIAssistant.UI.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class WorkoutAnalysisController : ControllerBase
 {
-    private readonly IWorkoutAnalysisService _workoutAnalysisService;
-    private readonly ILogger<WorkoutAnalysisController> _logger;
+    private readonly IWorkoutAnalysisService workoutAnalysisService;
+    private readonly ILogger<WorkoutAnalysisController> logger;
 
     public WorkoutAnalysisController(
         IWorkoutAnalysisService workoutAnalysisService,
         ILogger<WorkoutAnalysisController> logger)
     {
-        _workoutAnalysisService = workoutAnalysisService;
-        _logger = logger;
+        this.workoutAnalysisService = workoutAnalysisService;
+        this.logger = logger;
     }
 
     [HttpPost("analyze/huggingface")]
@@ -26,16 +26,17 @@ public class WorkoutAnalysisController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Analyzing workouts with HuggingFace for analysis type: {AnalysisType}",
+            this.logger.LogInformation(
+                "Analyzing workouts with HuggingFace for analysis type: {AnalysisType}",
                 request.AnalysisType);
 
-            var result = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
-            return Ok(result);
+            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
+            return this.Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error analyzing workouts with HuggingFace");
-            return StatusCode(500, "An error occurred while analyzing workouts");
+            this.logger.LogError(ex, "Error analyzing workouts with HuggingFace");
+            return this.StatusCode(500, "An error occurred while analyzing workouts");
         }
     }
 
@@ -45,16 +46,17 @@ public class WorkoutAnalysisController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Analyzing workouts with GoogleGemini for analysis type: {AnalysisType}",
+            this.logger.LogInformation(
+                "Analyzing workouts with GoogleGemini for analysis type: {AnalysisType}",
                 request.AnalysisType);
 
-            var result = await _workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(request);
-            return Ok(result);
+            var result = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(request);
+            return this.Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error analyzing workouts with GoogleGemini");
-            return StatusCode(500, "An error occurred while analyzing workouts");
+            this.logger.LogError(ex, "Error analyzing workouts with GoogleGemini");
+            return this.StatusCode(500, "An error occurred while analyzing workouts");
         }
     }
 
@@ -66,60 +68,61 @@ public class WorkoutAnalysisController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Analyzing performance trends for athlete: {AthleteId}, timeFrame: {TimeFrame}",
+            this.logger.LogInformation(
+                "Analyzing performance trends for athlete: {AthleteId}, timeFrame: {TimeFrame}",
                 athleteId, timeFrame);
 
             // Erstelle Request für Performance Trends
             var request = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Trends",
-                RecentWorkouts = GetDemoWorkouts(athleteId, timeFrame), // Später durch echte Daten ersetzen
-                AthleteProfile = GetDemoAthleteProfile(athleteId), // Später durch echte Daten ersetzen
+                RecentWorkouts = this.GetDemoWorkouts(athleteId, timeFrame), // Später durch echte Daten ersetzen
+                AthleteProfile = this.GetDemoAthleteProfile(athleteId), // Später durch echte Daten ersetzen
                 AdditionalContext = new Dictionary<string, object>
                 {
                     { "timeFrame", timeFrame },
-                    { "athleteId", athleteId }
-                }
+                    { "athleteId", athleteId },
+                },
             };
 
-            var result = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
-            return Ok(result);
+            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
+            return this.Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error analyzing performance trends for athlete {AthleteId}", athleteId);
-            return StatusCode(500, "An error occurred while analyzing performance trends");
+            this.logger.LogError(ex, "Error analyzing performance trends for athlete {AthleteId}", athleteId);
+            return this.StatusCode(500, "An error occurred while analyzing performance trends");
         }
     }
 
-    // Training Recommendations Endpoint 
+    // Training Recommendations Endpoint
     [HttpGet("recommendations/{athleteId}")]
     public async Task<ActionResult<WorkoutAnalysisResponseDto>> GetTrainingRecommendations(
         int athleteId)
     {
         try
         {
-            _logger.LogInformation("Getting training recommendations for athlete: {AthleteId}", athleteId);
+            this.logger.LogInformation("Getting training recommendations for athlete: {AthleteId}", athleteId);
 
             var request = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Recommendations",
-                RecentWorkouts = GetDemoWorkouts(athleteId, "week"),
-                AthleteProfile = GetDemoAthleteProfile(athleteId),
+                RecentWorkouts = this.GetDemoWorkouts(athleteId, "week"),
+                AthleteProfile = this.GetDemoAthleteProfile(athleteId),
                 AdditionalContext = new Dictionary<string, object>
                 {
                     { "focus", "training_optimization" },
-                    { "athleteId", athleteId }
-                }
+                    { "athleteId", athleteId },
+                },
             };
 
-            var result = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
-            return Ok(result);
+            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
+            return this.Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting training recommendations for athlete {AthleteId}", athleteId);
-            return StatusCode(500, "An error occurred while getting training recommendations");
+            this.logger.LogError(ex, "Error getting training recommendations for athlete {AthleteId}", athleteId);
+            return this.StatusCode(500, "An error occurred while getting training recommendations");
         }
     }
 
@@ -130,28 +133,28 @@ public class WorkoutAnalysisController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Analyzing health metrics for athlete: {AthleteId}", request.AthleteId);
+            this.logger.LogInformation("Analyzing health metrics for athlete: {AthleteId}", request.AthleteId);
 
             var analysisRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Health",
                 RecentWorkouts = request.RecentWorkouts,
-                AthleteProfile = GetDemoAthleteProfile(request.AthleteId),
+                AthleteProfile = this.GetDemoAthleteProfile(request.AthleteId),
                 AdditionalContext = new Dictionary<string, object>
                 {
                     { "focus", "injury_prevention" },
                     { "health_analysis", true },
-                    { "athleteId", request.AthleteId }
-                }
+                    { "athleteId", request.AthleteId },
+                },
             };
 
-            var result = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
-            return Ok(result);
+            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+            return this.Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error analyzing health metrics for athlete {AthleteId}", request.AthleteId);
-            return StatusCode(500, "An error occurred while analyzing health metrics");
+            this.logger.LogError(ex, "Error analyzing health metrics for athlete {AthleteId}", request.AthleteId);
+            return this.StatusCode(500, "An error occurred while analyzing health metrics");
         }
     }
 
@@ -173,35 +176,35 @@ public class WorkoutAnalysisController : ControllerBase
                         ActivityType = "Run",
                         Distance = 5.0,
                         Duration = 1800,
-                        Calories = 350
-                    }
+                        Calories = 350,
+                    },
                 },
                 AthleteProfile = new AthleteProfileDto
                 {
                     Name = "Test User",
                     FitnessLevel = "Intermediate",
-                    PrimaryGoal = "Health Check"
-                }
+                    PrimaryGoal = "Health Check",
+                },
             };
 
-            var result = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(testRequest);
+            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(testRequest);
 
-            return Ok(new
+            return this.Ok(new
             {
                 status = "healthy",
                 message = "Workout analysis service is responding",
                 timestamp = DateTime.UtcNow,
-                analysisGenerated = !string.IsNullOrEmpty(result.Analysis)
+                analysisGenerated = !string.IsNullOrEmpty(result.Analysis),
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Workout analysis health check failed");
-            return StatusCode(503, new
+            this.logger.LogError(ex, "Workout analysis health check failed");
+            return this.StatusCode(503, new
             {
                 status = "unhealthy",
                 message = ex.Message,
-                timestamp = DateTime.UtcNow
+                timestamp = DateTime.UtcNow,
             });
         }
     }
@@ -217,7 +220,7 @@ public class WorkoutAnalysisController : ControllerBase
                 Distance = 5.2,
                 Duration = 1800,
                 Calories = 350,
-                MetricsData = new Dictionary<string, double> { { "heartRate", 145 } }
+                MetricsData = new Dictionary<string, double> { { "heartRate", 145 } },
             },
             new WorkoutDataDto
             {
@@ -226,7 +229,7 @@ public class WorkoutAnalysisController : ControllerBase
                 Distance = 24.8,
                 Duration = 4500,
                 Calories = 890,
-                MetricsData = new Dictionary<string, double> { { "heartRate", 132 } }
+                MetricsData = new Dictionary<string, double> { { "heartRate", 132 } },
             },
             new WorkoutDataDto
             {
@@ -235,8 +238,8 @@ public class WorkoutAnalysisController : ControllerBase
                 Distance = 3.1,
                 Duration = 1080,
                 Calories = 245,
-                MetricsData = new Dictionary<string, double> { { "heartRate", 128 } }
-            }
+                MetricsData = new Dictionary<string, double> { { "heartRate", 128 } },
+            },
         };
     }
 
@@ -251,8 +254,8 @@ public class WorkoutAnalysisController : ControllerBase
             Preferences = new Dictionary<string, object>
             {
                 { "preferredActivities", new[] { "Run", "Ride" } },
-                { "trainingDays", 4 }
-            }
+                { "trainingDays", 4 },
+            },
         };
     }
 }

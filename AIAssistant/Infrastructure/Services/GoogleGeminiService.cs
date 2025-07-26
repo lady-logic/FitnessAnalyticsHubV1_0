@@ -1,22 +1,23 @@
-﻿using System.Text;
-using System.Text.Json;
-using AIAssistant.Application.Interfaces;
+﻿namespace FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
 
-namespace FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
+using global::AIAssistant.Application.Interfaces;
+using System.Net;
+using System.Text;
+using System.Text.Json;
 
 public class GoogleGeminiService : IAIPromptService
 {
-    private readonly HttpClient _httpClient;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<GoogleGeminiService> _logger;
+    private readonly HttpClient httpClient;
+    private readonly IConfiguration configuration;
+    private readonly ILogger<GoogleGeminiService> logger;
 
     // Google Gemini Modelle
-    private readonly Dictionary<string, string> _models = new()
+    private readonly Dictionary<string, string> models = new()
     {
         { "fitness", "gemini-1.5-flash" },      // Kostenlos, schnell
-        { "health", "gemini-1.5-flash" },       // Kostenlos, schnell  
+        { "health", "gemini-1.5-flash" },       // Kostenlos, schnell
         { "motivation", "gemini-1.5-flash" },   // Kostenlos, schnell
-        { "analysis", "gemini-1.5-pro" }       // Bessere Qualität (falls verfügbar)
+        { "analysis", "gemini-1.5-pro" },       // Bessere Qualität (falls verfügbar)
     };
 
     public GoogleGeminiService(
@@ -24,39 +25,40 @@ public class GoogleGeminiService : IAIPromptService
         IConfiguration configuration,
         ILogger<GoogleGeminiService> logger)
     {
-        _httpClient = httpClient;
-        _configuration = configuration;
-        _logger = logger;
+        this.httpClient = httpClient;
+        this.configuration = configuration;
+        this.logger = logger;
 
         // Base URL für Google Gemini API
-        _httpClient.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
+        this.httpClient.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
     }
 
     public async Task<string> GetFitnessAnalysisAsync(string prompt)
     {
-        return await GetGeminiCompletionAsync(prompt, "fitness");
+        return await this.GetGeminiCompletionAsync(prompt, "fitness");
     }
 
     public async Task<string> GetHealthAnalysisAsync(string prompt)
     {
-        return await GetGeminiCompletionAsync(prompt, "health");
+        return await this.GetGeminiCompletionAsync(prompt, "health");
     }
 
     public async Task<string> GetMotivationAsync(string prompt)
     {
-        return await GetGeminiCompletionAsync(prompt, "motivation");
+        return await this.GetGeminiCompletionAsync(prompt, "motivation");
     }
 
     private async Task<string> GetGeminiCompletionAsync(string prompt, string modelType)
     {
-        var enhancedPrompt = CreateEnhancedPrompt(prompt, modelType);
+        var enhancedPrompt = this.CreateEnhancedPrompt(prompt, modelType);
 
         try
         {
-            var model = _models.GetValueOrDefault(modelType, "gemini-1.5-flash");
-            var apiKey = GetApiKey();
+            var model = this.models.GetValueOrDefault(modelType, "gemini-1.5-flash");
+            var apiKey = this.GetApiKey();
 
-            _logger.LogInformation("Calling Google Gemini API with model: {Model} for type: {ModelType}",
+            this.logger.LogInformation(
+                "Calling Google Gemini API with model: {Model} for type: {ModelType}",
                 model, modelType);
 
             // Google Gemini API Request Format
@@ -68,22 +70,22 @@ public class GoogleGeminiService : IAIPromptService
                     {
                         parts = new[]
                         {
-                            new { text = enhancedPrompt }
-                        }
-                    }
+                            new { text = enhancedPrompt },
+                        },
+                    },
                 },
                 generationConfig = new
                 {
                     temperature = 0.7,
                     maxOutputTokens = 1000,
                     topP = 0.95,
-                    topK = 40
-                }
+                    topK = 40,
+                },
             };
 
             var jsonContent = JsonSerializer.Serialize(requestPayload, new JsonSerializerOptions
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             });
 
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
@@ -91,34 +93,23 @@ public class GoogleGeminiService : IAIPromptService
             // Google Gemini API Endpoint
             var endpoint = $"v1beta/models/{model}:generateContent?key={apiKey}";
 
-            _logger.LogDebug("Request URL: {Url}", endpoint);
-            _logger.LogDebug("Request payload: {Payload}", jsonContent);
+            this.logger.LogDebug("Request URL: {Url}", endpoint);
+            this.logger.LogDebug("Request payload: {Payload}", jsonContent);
 
-            var response = await _httpClient.PostAsync(endpoint, content);
+            var response = await this.httpClient.PostAsync(endpoint, content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            _logger.LogDebug("Response status: {StatusCode}", response.StatusCode);
-            _logger.LogDebug("Response content: {Content}", responseContent);
+            this.logger.LogDebug("Response status: {StatusCode}", response.StatusCode);
+            this.logger.LogDebug("Response content: {Content}", responseContent);
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("Google Gemini API error: {StatusCode} - {Error}", response.StatusCode, responseContent);
+                this.logger.LogError("Google Gemini API error: {StatusCode} - {Error}", response.StatusCode, responseContent);
 
                 // Spezifische Fehlerbehandlung
-                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    _logger.LogError("UNAUTHORIZED: Check your Google AI API key!");
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
-                {
-                    _logger.LogWarning("RATE LIMITED: Google Gemini rate limit exceeded");
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
-                {
-                    _logger.LogError("BAD REQUEST: Check your request format or API key");
-                }
+                this.LogGeminiStatus(response.StatusCode);
 
-                return GetFallbackResponse(modelType, ((int)response.StatusCode).ToString());
+                return this.GetFallbackResponse(modelType, ((int)response.StatusCode).ToString());
             }
 
             // Parse Google Gemini Response
@@ -136,40 +127,57 @@ public class GoogleGeminiService : IAIPromptService
                     if (firstPart.TryGetProperty("text", out var text))
                     {
                         var result = text.GetString() ?? string.Empty;
-                        _logger.LogInformation("Successfully received response from Google Gemini API");
+                        this.logger.LogInformation("Successfully received response from Google Gemini API");
                         return result.Trim();
                     }
                 }
             }
 
-            _logger.LogWarning("Unexpected response format from Google Gemini API");
-            _logger.LogDebug("Full response: {Response}", responseContent);
-            return GetFallbackResponse(modelType, "unexpected_format");
+            this.logger.LogWarning("Unexpected response format from Google Gemini API");
+            this.logger.LogDebug("Full response: {Response}", responseContent);
+            return this.GetFallbackResponse(modelType, "unexpected_format");
         }
         catch (JsonException ex)
         {
-            _logger.LogWarning("Invalid JSON response from Google Gemini API: {Error}", ex.Message);
-            return GetFallbackResponse(modelType, "invalid_json");
+            this.logger.LogWarning("Invalid JSON response from Google Gemini API: {Error}", ex.Message);
+            return this.GetFallbackResponse(modelType, "invalid_json");
         }
         catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
         {
-            _logger.LogWarning("Google Gemini request timeout for model type: {ModelType}", modelType);
-            return GetFallbackResponse(modelType, "timeout");
+            this.logger.LogWarning("Google Gemini request timeout for model type: {ModelType}", modelType);
+            return this.GetFallbackResponse(modelType, "timeout");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error calling Google Gemini API for {ModelType}", modelType);
-            return GetFallbackResponse(modelType, ex.Message);
+            this.logger.LogError(ex, "Error calling Google Gemini API for {ModelType}", modelType);
+            return this.GetFallbackResponse(modelType, ex.Message);
+        }
+    }
+
+    private void LogGeminiStatus(HttpStatusCode statusCode)
+    {
+        switch (statusCode)
+        {
+            case HttpStatusCode.Unauthorized:
+                this.logger.LogError("UNAUTHORIZED: Check your Google AI API key!");
+                break;
+            case HttpStatusCode.TooManyRequests:
+                this.logger.LogWarning("RATE LIMITED: Google Gemini rate limit exceeded");
+                break;
+            case HttpStatusCode.BadRequest:
+                this.logger.LogError("BAD REQUEST: Check your request format or API key");
+                break;
         }
     }
 
     private string GetApiKey()
     {
-        var apiKey = _configuration["GoogleAI:ApiKey"];
+        var apiKey = this.configuration["GoogleAI:ApiKey"];
         if (string.IsNullOrEmpty(apiKey))
         {
             throw new InvalidOperationException("Google AI API Key not configured. Please set 'GoogleAI:ApiKey' in configuration.");
         }
+
         return apiKey;
     }
 
@@ -282,7 +290,7 @@ Halte die Antwort praktisch und umsetzbar."
 
     private string GetFallbackResponse(string modelType, string errorType)
     {
-        _logger.LogInformation("Generating fallback response for {ModelType} due to: {Error}", modelType, errorType);
+        this.logger.LogInformation("Generating fallback response for {ModelType} due to: {Error}", modelType, errorType);
 
         return modelType.ToLower() switch
         {

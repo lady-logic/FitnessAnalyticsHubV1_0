@@ -1,5 +1,5 @@
-﻿using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 
 namespace AIAssistant.Application.DTOs;
 

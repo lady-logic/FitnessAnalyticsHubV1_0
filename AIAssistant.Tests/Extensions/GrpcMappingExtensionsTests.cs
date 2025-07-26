@@ -15,7 +15,7 @@ public class GrpcMappingExtensionsTests
         {
             Name = "John Doe",
             FitnessLevel = "Intermediate",
-            PrimaryGoal = "Weight Loss"
+            PrimaryGoal = "Weight Loss",
         };
 
         // Act
@@ -42,9 +42,9 @@ public class GrpcMappingExtensionsTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("", result.Name);
-        Assert.Equal("", result.FitnessLevel);
-        Assert.Equal("", result.PrimaryGoal);
+        Assert.Equal(string.Empty, result.Name);
+        Assert.Equal(string.Empty, result.FitnessLevel);
+        Assert.Equal(string.Empty, result.PrimaryGoal);
         Assert.NotNull(result.Id);
         Assert.NotNull(result.Preferences);
     }
@@ -59,8 +59,8 @@ public class GrpcMappingExtensionsTests
             {
                 Name = "Alice",
                 FitnessLevel = "Beginner",
-                PrimaryGoal = "Muscle Building"
-            }
+                PrimaryGoal = "Muscle Building",
+            },
         };
 
         // Act
@@ -87,8 +87,8 @@ public class GrpcMappingExtensionsTests
             AthleteProfile = new AthleteProfile
             {
                 Name = "Bob",
-                FitnessLevel = "Advanced"
-            }
+                FitnessLevel = "Advanced",
+            },
         };
         grpcRequest.RecentWorkouts.Add(new Workout
         {
@@ -96,7 +96,7 @@ public class GrpcMappingExtensionsTests
             ActivityType = "Run",
             Distance = 5000,
             Duration = 1800,
-            Calories = 300
+            Calories = 300,
         });
 
         // Act
@@ -119,7 +119,7 @@ public class GrpcMappingExtensionsTests
         var grpcRequest = new WorkoutAnalysisRequest
         {
             AnalysisType = "Health",
-            AthleteProfile = null
+            AthleteProfile = null,
         };
 
         // Act
@@ -140,7 +140,7 @@ public class GrpcMappingExtensionsTests
             ActivityType = "Cycling",
             Distance = 15000,
             Duration = 3600,
-            Calories = 500
+            Calories = 500,
         };
 
         // Act
@@ -168,7 +168,7 @@ public class GrpcMappingExtensionsTests
             ActivityType = "Test",
             Distance = 1000,
             Duration = 600,
-            Calories = 100
+            Calories = 100,
         };
 
         // Act
@@ -185,7 +185,7 @@ public class GrpcMappingExtensionsTests
         var grpcRequest = new WorkoutAnalysisRequest
         {
             AnalysisType = "Trends",
-            AthleteProfile = new AthleteProfile()
+            AthleteProfile = new AthleteProfile(),
         };
 
         grpcRequest.RecentWorkouts.Add(new Workout { Date = "2025-01-01", ActivityType = "Run" });

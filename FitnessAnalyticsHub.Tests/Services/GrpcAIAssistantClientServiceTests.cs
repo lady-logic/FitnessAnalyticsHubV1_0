@@ -8,17 +8,17 @@ namespace FitnessAnalyticsHub.Tests.Services;
 
 public class GrpcAIAssistantClientServiceTests : IDisposable
 {
-    private readonly Mock<ILogger<GrpcAIAssistantClientService>> _mockLogger;
-    private readonly Mock<IConfiguration> _mockConfiguration;
-    private GrpcAIAssistantClientService? _service;
+    private readonly Mock<ILogger<GrpcAIAssistantClientService>> mockLogger;
+    private readonly Mock<IConfiguration> mockConfiguration;
+    private GrpcAIAssistantClientService? service;
 
     public GrpcAIAssistantClientServiceTests()
     {
-        _mockLogger = new Mock<ILogger<GrpcAIAssistantClientService>>();
-        _mockConfiguration = new Mock<IConfiguration>();
+        this.mockLogger = new Mock<ILogger<GrpcAIAssistantClientService>>();
+        this.mockConfiguration = new Mock<IConfiguration>();
 
         // Setup default configuration
-        _mockConfiguration.Setup(c => c["AIAssistant:GrpcUrl"])
+        this.mockConfiguration.Setup(c => c["AIAssistant:GrpcUrl"])
             .Returns("http://localhost:5001");
     }
 
@@ -80,27 +80,27 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task GetMotivationAsync_WithNullAthleteProfile_LogsUnknownAthlete()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIMotivationRequestDto
         {
             AthleteProfile = null,
-            PreferredTone = "Motivational"
+            PreferredTone = "Motivational",
         };
 
         // Act & Assert - We expect this to throw since there's no actual gRPC server
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetMotivationAsync(request, CancellationToken.None));
+            () => this.service.GetMotivationAsync(request, CancellationToken.None));
 
         // Verify logging occurred before the exception
-        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: Unknown");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: Unknown");
     }
 
     [Fact]
     public async Task GetMotivationAsync_WithValidAthleteProfile_LogsAthleteName()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIMotivationRequestDto
         {
@@ -108,24 +108,24 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             {
                 Name = "John Doe",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Weight Loss"
+                PrimaryGoal = "Weight Loss",
             },
-            PreferredTone = "Encouraging"
+            PreferredTone = "Encouraging",
         };
 
         // Act & Assert - We expect this to throw since there's no actual gRPC server
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetMotivationAsync(request, CancellationToken.None));
+            () => this.service.GetMotivationAsync(request, CancellationToken.None));
 
         // Verify logging occurred before the exception
-        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: John Doe");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: John Doe");
     }
 
     [Fact]
     public async Task GetWorkoutAnalysisAsync_WithMultipleWorkouts_LogsWorkoutCount()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
@@ -133,7 +133,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             {
                 Name = "Mike Johnson",
                 FitnessLevel = "Advanced",
-                PrimaryGoal = "Performance"
+                PrimaryGoal = "Performance",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
@@ -143,7 +143,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
                     ActivityType = "Run",
                     Distance = 10.0,
                     Duration = 2700,
-                    Calories = 650
+                    Calories = 650,
                 },
                 new AIWorkoutDataDto
                 {
@@ -151,114 +151,114 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
                     ActivityType = "Cycle",
                     Distance = 25.0,
                     Duration = 3600,
-                    Calories = 800
-                }
+                    Calories = 800,
+                },
             },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act & Assert - We expect this to throw since there's no actual gRPC server
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
         // Verify logging occurred before the exception
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 2 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 2 workouts");
     }
 
     [Fact]
     public async Task GetWorkoutAnalysisAsync_WithEmptyWorkouts_LogsZeroWorkouts()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto { Name = "Beginner" },
             RecentWorkouts = new List<AIWorkoutDataDto>(),
-            AnalysisType = "General"
+            AnalysisType = "General",
         };
 
         // Act & Assert - We expect this to throw since there's no actual gRPC server
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
         // Verify logging occurred before the exception
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
     }
 
     [Fact]
     public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithValidRequest_LogsCorrectMessage()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
-                new AIWorkoutDataDto { ActivityType = "Swimming", Distance = 2.0, Duration = 60, Calories = 500 }
-            }
+                new AIWorkoutDataDto { ActivityType = "Swimming", Distance = 2.0, Duration = 60, Calories = 500 },
+            },
         };
 
         // Act & Assert - We expect this to throw since there's no actual gRPC server
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
 
         // Verify logging occurred before the exception
-        VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 1 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 1 workouts");
     }
 
     [Fact]
     public async Task GetPerformanceTrendsAsync_WithValidParameters_LogsCorrectMessage()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         const int athleteId = 123;
         const string timeFrame = "month";
 
         // Act & Assert - We expect this to throw since there's no actual gRPC server
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetPerformanceTrendsAsync(athleteId, timeFrame, CancellationToken.None));
+            () => this.service.GetPerformanceTrendsAsync(athleteId, timeFrame, CancellationToken.None));
 
         // Verify logging occurred before the exception
-        VerifyLogCalled(LogLevel.Information, $"performance trends for athlete: {athleteId}, timeFrame: {timeFrame}");
+        this.VerifyLogCalled(LogLevel.Information, $"performance trends for athlete: {athleteId}, timeFrame: {timeFrame}");
     }
 
     [Fact]
     public async Task GetTrainingRecommendationsAsync_WithValidAthleteId_LogsCorrectMessage()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         const int athleteId = 456;
 
         // Act & Assert - We expect this to throw since there's no actual gRPC server
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetTrainingRecommendationsAsync(athleteId, CancellationToken.None));
+            () => this.service.GetTrainingRecommendationsAsync(athleteId, CancellationToken.None));
 
         // Verify logging occurred before the exception
-        VerifyLogCalled(LogLevel.Information, $"training recommendations for athlete: {athleteId}");
+        this.VerifyLogCalled(LogLevel.Information, $"training recommendations for athlete: {athleteId}");
     }
 
     [Fact]
     public async Task AnalyzeHealthMetricsAsync_WithValidData_LogsCorrectMessage()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         const int athleteId = 789;
         var recentWorkouts = new List<AIWorkoutDataDto>
         {
-            new AIWorkoutDataDto { ActivityType = "Yoga", Duration = 60, Calories = 200 }
+            new AIWorkoutDataDto { ActivityType = "Yoga", Duration = 60, Calories = 200 },
         };
 
         // Act & Assert - We expect this to throw since there's no actual gRPC server
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.AnalyzeHealthMetricsAsync(athleteId, recentWorkouts, CancellationToken.None));
+            () => this.service.AnalyzeHealthMetricsAsync(athleteId, recentWorkouts, CancellationToken.None));
 
         // Verify logging occurred before the exception
-        VerifyLogCalled(LogLevel.Information, $"health metrics analysis for athlete: {athleteId}");
+        this.VerifyLogCalled(LogLevel.Information, $"health metrics analysis for athlete: {athleteId}");
     }
 
     #endregion
@@ -269,53 +269,53 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task IsHealthyAsync_WithConnectionError_ReturnsFalseAndLogsWarning()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act
-        var result = await _service.IsHealthyAsync(CancellationToken.None);
+        var result = await this.service.IsHealthyAsync(CancellationToken.None);
 
         // Assert
         Assert.False(result);
-        VerifyLogCalled(LogLevel.Warning, "Health check failed");
+        this.VerifyLogCalled(LogLevel.Warning, "Health check failed");
     }
 
     [Fact]
     public async Task GetMotivationAsync_WithGrpcConnectionError_LogsErrorAndThrows()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIMotivationRequestDto
         {
-            AthleteProfile = new AIAthleteProfileDto { Name = "Test User" }
+            AthleteProfile = new AIAthleteProfileDto { Name = "Test User" },
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetMotivationAsync(request, CancellationToken.None));
+            () => this.service.GetMotivationAsync(request, CancellationToken.None));
 
         // Verify error logging occurred
-        VerifyLogCalled(LogLevel.Error, "Error getting motivation");
+        this.VerifyLogCalled(LogLevel.Error, "Error getting motivation");
     }
 
     [Fact]
     public async Task GetWorkoutAnalysisAsync_WithGrpcConnectionError_LogsErrorAndThrows()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto { Name = "Test User" },
-            RecentWorkouts = new List<AIWorkoutDataDto>()
+            RecentWorkouts = new List<AIWorkoutDataDto>(),
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
         // Verify error logging occurred
-        VerifyLogCalled(LogLevel.Error, "Error getting workout analysis");
+        this.VerifyLogCalled(LogLevel.Error, "Error getting workout analysis");
     }
 
     #endregion
@@ -326,23 +326,23 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task GetWorkoutAnalysisAsync_WithNullAthleteProfile_HandlesGracefully()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = null, // Test null handling
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
-                new AIWorkoutDataDto { ActivityType = "Run", Distance = 5.0 }
-            }
+                new AIWorkoutDataDto { ActivityType = "Run", Distance = 5.0 },
+            },
         };
 
         // Act & Assert - Should not throw due to null athlete profile
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
         // Verify it still attempts the call (logs the workout count)
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 1 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 1 workouts");
     }
 
     [Theory]
@@ -353,21 +353,21 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task GetWorkoutAnalysisAsync_WithDifferentAnalysisTypes_LogsCorrectly(string? analysisType)
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
             AnalysisType = analysisType,
-            RecentWorkouts = new List<AIWorkoutDataDto>()
+            RecentWorkouts = new List<AIWorkoutDataDto>(),
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
         // Verify logging occurred regardless of analysis type
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
     }
 
     #endregion
@@ -378,117 +378,117 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithNullWorkouts_LogsZeroWorkouts()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
-            RecentWorkouts = null // Test null workouts
+            RecentWorkouts = null, // Test null workouts
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
 
         // Verify logging occurred
-        VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 0 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 0 workouts");
     }
 
     [Fact]
     public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithNullAthleteProfile_HandlesGracefully()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = null,
             RecentWorkouts = new List<AIWorkoutDataDto>
         {
-            new AIWorkoutDataDto { ActivityType = "Test", Distance = 1.0 }
-        }
+            new AIWorkoutDataDto { ActivityType = "Test", Distance = 1.0 },
+        },
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 1 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 1 workouts");
     }
 
     [Fact]
     public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithGrpcError_LogsErrorAndThrows()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
-            AthleteProfile = new AIAthleteProfileDto { Name = "Test" }
+            AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Error, "Error getting GoogleGemini workout analysis");
+        this.VerifyLogCalled(LogLevel.Error, "Error getting GoogleGemini workout analysis");
     }
 
     [Fact]
     public async Task GetPerformanceTrendsAsync_WithGrpcError_LogsErrorAndThrows()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetPerformanceTrendsAsync(123, "week", CancellationToken.None));
+            () => this.service.GetPerformanceTrendsAsync(123, "week", CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Error, "Error getting performance trends");
+        this.VerifyLogCalled(LogLevel.Error, "Error getting performance trends");
     }
 
     [Fact]
     public async Task GetTrainingRecommendationsAsync_WithGrpcError_LogsErrorAndThrows()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetTrainingRecommendationsAsync(456, CancellationToken.None));
+            () => this.service.GetTrainingRecommendationsAsync(456, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Error, "Error getting training recommendations");
+        this.VerifyLogCalled(LogLevel.Error, "Error getting training recommendations");
     }
 
     [Fact]
     public async Task AnalyzeHealthMetricsAsync_WithGrpcError_LogsErrorAndThrows()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var workouts = new List<AIWorkoutDataDto>
     {
-        new AIWorkoutDataDto { ActivityType = "Test" }
+        new AIWorkoutDataDto { ActivityType = "Test" },
     };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.AnalyzeHealthMetricsAsync(789, workouts, CancellationToken.None));
+            () => this.service.AnalyzeHealthMetricsAsync(789, workouts, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Error, "Error analyzing health metrics");
+        this.VerifyLogCalled(LogLevel.Error, "Error analyzing health metrics");
     }
 
     [Fact]
     public async Task AnalyzeHealthMetricsAsync_WithNullWorkouts_HandlesGracefully()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.AnalyzeHealthMetricsAsync(123, null, CancellationToken.None));
+            () => this.service.AnalyzeHealthMetricsAsync(123, null, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 123");
+        this.VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 123");
     }
 
     #endregion
@@ -499,45 +499,45 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task GetMotivationAsync_WithEmptyStrings_HandlesGracefully()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIMotivationRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto
             {
-                Name = "",
-                FitnessLevel = "",
-                PrimaryGoal = ""
+                Name = string.Empty,
+                FitnessLevel = string.Empty,
+                PrimaryGoal = string.Empty,
             },
-            PreferredTone = "",
-            ContextualInfo = ""
+            PreferredTone = string.Empty,
+            ContextualInfo = string.Empty,
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetMotivationAsync(request, CancellationToken.None));
+            () => this.service.GetMotivationAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete:");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete:");
     }
 
     [Fact]
     public async Task GetWorkoutAnalysisAsync_WithNullWorkouts_HandlesGracefully()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
             RecentWorkouts = null,
-            AnalysisType = "Test"
+            AnalysisType = "Test",
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
     }
 
     [Theory]
@@ -548,22 +548,22 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task GetPerformanceTrendsAsync_WithDifferentTimeFrames_LogsCorrectly(string? timeFrame)
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
         const int athleteId = 999;
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetPerformanceTrendsAsync(athleteId, timeFrame ?? "month", CancellationToken.None));
+            () => this.service.GetPerformanceTrendsAsync(athleteId, timeFrame ?? "month", CancellationToken.None));
 
         var expectedTimeFrame = timeFrame ?? "month";
-        VerifyLogCalled(LogLevel.Information, $"performance trends for athlete: {athleteId}, timeFrame: {expectedTimeFrame}");
+        this.VerifyLogCalled(LogLevel.Information, $"performance trends for athlete: {athleteId}, timeFrame: {expectedTimeFrame}");
     }
 
     [Fact]
     public async Task GetWorkoutAnalysisAsync_WithWorkoutsContainingNullValues_HandlesGracefully()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
@@ -571,7 +571,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             {
                 Name = null,
                 FitnessLevel = null,
-                PrimaryGoal = null
+                PrimaryGoal = null,
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
         {
@@ -581,17 +581,17 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
                 ActivityType = null,
                 Distance = 0,
                 Duration = 0,
-                Calories = 0
-            }
+                Calories = 0,
+            },
         },
-            AnalysisType = null
+            AnalysisType = null,
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 1 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 1 workouts");
     }
 
     #endregion
@@ -602,13 +602,13 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public void Dispose_CallsChannelDispose()
     {
         // Arrange & Act
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // This should not throw
-        _service.Dispose();
+        this.service.Dispose();
 
         // Calling dispose again should also not throw (idempotent)
-        _service.Dispose();
+        this.service.Dispose();
 
         // Assert - No exception thrown means test passes
         Assert.True(true);
@@ -618,12 +618,12 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public void Dispose_CanBeCalledMultipleTimes()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act & Assert - Should not throw
-        _service.Dispose();
-        _service.Dispose();
-        _service.Dispose();
+        this.service.Dispose();
+        this.service.Dispose();
+        this.service.Dispose();
 
         Assert.True(true);
     }
@@ -636,7 +636,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task AnalyzeHealthMetricsAsync_WithWorkoutsContainingNullActivityType_HandlesGracefully()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var workouts = new List<AIWorkoutDataDto>
     {
@@ -646,35 +646,35 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             ActivityType = null, // Test null handling
             Distance = 5.0,
             Duration = 1800,
-            Calories = 400
-        }
+            Calories = 400,
+        },
     };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.AnalyzeHealthMetricsAsync(555, workouts, CancellationToken.None));
+            () => this.service.AnalyzeHealthMetricsAsync(555, workouts, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 555");
+        this.VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 555");
     }
 
     [Fact]
     public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithEmptyAnalysisType_UsesGeneral()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
-            AnalysisType = "", // Empty string
+            AnalysisType = string.Empty, // Empty string
             AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
-            RecentWorkouts = new List<AIWorkoutDataDto>()
+            RecentWorkouts = new List<AIWorkoutDataDto>(),
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 0 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 0 workouts");
     }
 
     #endregion
@@ -687,7 +687,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
         // Arrange
         var emptyConfig = new Mock<IConfiguration>();
         emptyConfig.Setup(c => c["AIAssistant:GrpcUrl"])
-            .Returns(""); // Empty string test
+            .Returns(string.Empty); // Empty string test
 
         var mockLogger = new Mock<ILogger<GrpcAIAssistantClientService>>();
 
@@ -726,44 +726,44 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
         // Wir testen die Logik bis zum gRPC-Call und den Error-Catch
 
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIMotivationRequestDto
         {
-            AthleteProfile = new AIAthleteProfileDto { Name = "Test User" }
+            AthleteProfile = new AIAthleteProfileDto { Name = "Test User" },
         };
 
         // Act & Assert - This will fail at gRPC call but should log success message attempt
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetMotivationAsync(request, CancellationToken.None));
+            () => this.service.GetMotivationAsync(request, CancellationToken.None));
 
         // Verify that both info and error logs are called
-        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: Test User");
-        VerifyLogCalled(LogLevel.Error, "Error getting motivation");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: Test User");
+        this.VerifyLogCalled(LogLevel.Error, "Error getting motivation");
     }
 
     [Fact]
     public async Task GetWorkoutAnalysisAsync_WithSuccessfulResponse_LogsSuccessMessage()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto { Name = "Test User" },
             RecentWorkouts = new List<AIWorkoutDataDto>
         {
-            new AIWorkoutDataDto { ActivityType = "Run" }
-        }
+            new AIWorkoutDataDto { ActivityType = "Run" },
+        },
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
         // Verify logging
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 1 workouts");
-        VerifyLogCalled(LogLevel.Error, "Error getting workout analysis");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 1 workouts");
+        this.VerifyLogCalled(LogLevel.Error, "Error getting workout analysis");
     }
 
     #endregion
@@ -778,7 +778,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
         // but we can test that the method handles the parsing logic correctly
 
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIMotivationRequestDto
         {
@@ -786,18 +786,18 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             {
                 Name = "Test User",
                 FitnessLevel = "Beginner",
-                PrimaryGoal = "Health"
+                PrimaryGoal = "Health",
             },
             PreferredTone = "Encouraging",
-            ContextualInfo = "First time user"
+            ContextualInfo = "First time user",
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetMotivationAsync(request, CancellationToken.None));
+            () => this.service.GetMotivationAsync(request, CancellationToken.None));
 
         // The method should have attempted to process the request
-        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: Test User");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: Test User");
     }
 
     #endregion
@@ -810,7 +810,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
         // Test complete data mapping to ensure all properties are covered
 
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
@@ -818,7 +818,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             {
                 Name = "Complete User",
                 FitnessLevel = "Advanced",
-                PrimaryGoal = "Performance"
+                PrimaryGoal = "Performance",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
         {
@@ -828,7 +828,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
                 ActivityType = "Running",
                 Distance = 10.5,
                 Duration = 3600,
-                Calories = 650
+                Calories = 650,
             },
             new AIWorkoutDataDto
             {
@@ -836,24 +836,24 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
                 ActivityType = "Cycling",
                 Distance = 25.0,
                 Duration = 7200,
-                Calories = 800
-            }
+                Calories = 800,
+            },
         },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 2 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 2 workouts");
     }
 
     [Fact]
     public async Task GetGoogleGeminiWorkoutAnalysisAsync_WithCompleteData_ProcessesAllFields()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
@@ -861,7 +861,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             {
                 Name = "Gemini User",
                 FitnessLevel = "Expert",
-                PrimaryGoal = "Competition"
+                PrimaryGoal = "Competition",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
         {
@@ -871,24 +871,24 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
                 ActivityType = "Swimming",
                 Distance = 2.0,
                 Duration = 3600,
-                Calories = 400
-            }
+                Calories = 400,
+            },
         },
-            AnalysisType = "Health"
+            AnalysisType = "Health",
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 1 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "GoogleGemini workout analysis for 1 workouts");
     }
 
     [Fact]
     public async Task AnalyzeHealthMetricsAsync_WithCompleteWorkoutData_ProcessesAllFields()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var workouts = new List<AIWorkoutDataDto>
     {
@@ -898,7 +898,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             ActivityType = "Weight Training",
             Distance = 0, // Weight training typically has no distance
             Duration = 2700,
-            Calories = 350
+            Calories = 350,
         },
         new AIWorkoutDataDto
         {
@@ -906,15 +906,15 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             ActivityType = "Yoga",
             Distance = 0,
             Duration = 3600,
-            Calories = 200
-        }
+            Calories = 200,
+        },
     };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.AnalyzeHealthMetricsAsync(456, workouts, CancellationToken.None));
+            () => this.service.AnalyzeHealthMetricsAsync(456, workouts, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 456");
+        this.VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 456");
     }
 
     #endregion
@@ -925,31 +925,32 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task IsHealthyAsync_WithSpecificCancellationToken_HandlesCancellation()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
         using var cts = new CancellationTokenSource();
         cts.Cancel(); // Cancel immediately
 
         // Act
-        var result = await _service.IsHealthyAsync(cts.Token);
+        var result = await this.service.IsHealthyAsync(cts.Token);
 
         // Assert
         Assert.False(result);
+
         // Should log warning due to cancellation
-        VerifyLogCalled(LogLevel.Warning, "Health check failed");
+        this.VerifyLogCalled(LogLevel.Warning, "Health check failed");
     }
 
     [Fact]
     public async Task IsHealthyAsync_WithDefaultCancellationToken_ReturnsFalse()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act
-        var result = await _service.IsHealthyAsync();
+        var result = await this.service.IsHealthyAsync();
 
         // Assert
         Assert.False(result);
-        VerifyLogCalled(LogLevel.Warning, "Health check failed");
+        this.VerifyLogCalled(LogLevel.Warning, "Health check failed");
     }
 
     #endregion
@@ -960,7 +961,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     public async Task GetMotivationAsync_WithWhitespaceStrings_HandlesCorrectly()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIMotivationRequestDto
         {
@@ -968,37 +969,37 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
             {
                 Name = "   ", // Whitespace
                 FitnessLevel = "\t",
-                PrimaryGoal = "\n"
+                PrimaryGoal = "\n",
             },
             PreferredTone = "  Motivational  ",
-            ContextualInfo = "\r\n"
+            ContextualInfo = "\r\n",
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetMotivationAsync(request, CancellationToken.None));
+            () => this.service.GetMotivationAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete:");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete:");
     }
 
     [Fact]
     public async Task GetWorkoutAnalysisAsync_WithWhitespaceAnalysisType_HandlesCorrectly()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
             AnalysisType = "   ", // Whitespace
-            RecentWorkouts = new List<AIWorkoutDataDto>()
+            RecentWorkouts = new List<AIWorkoutDataDto>(),
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts");
     }
 
     #endregion
@@ -1010,54 +1011,54 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
     {
         // Test the default parameter
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetPerformanceTrendsAsync(999)); // No timeFrame specified
+            () => this.service.GetPerformanceTrendsAsync(999)); // No timeFrame specified
 
-        VerifyLogCalled(LogLevel.Information, "performance trends for athlete: 999, timeFrame: month");
+        this.VerifyLogCalled(LogLevel.Information, "performance trends for athlete: 999, timeFrame: month");
     }
 
     [Fact]
     public async Task GetPerformanceTrendsAsync_WithZeroAthleteId_HandlesCorrectly()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetPerformanceTrendsAsync(0, "week", CancellationToken.None));
+            () => this.service.GetPerformanceTrendsAsync(0, "week", CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "performance trends for athlete: 0, timeFrame: week");
+        this.VerifyLogCalled(LogLevel.Information, "performance trends for athlete: 0, timeFrame: week");
     }
 
     [Fact]
     public async Task GetTrainingRecommendationsAsync_WithNegativeAthleteId_HandlesCorrectly()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.GetTrainingRecommendationsAsync(-1, CancellationToken.None));
+            () => this.service.GetTrainingRecommendationsAsync(-1, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "training recommendations for athlete: -1");
+        this.VerifyLogCalled(LogLevel.Information, "training recommendations for athlete: -1");
     }
 
     [Fact]
     public async Task AnalyzeHealthMetricsAsync_WithEmptyWorkoutsList_HandlesCorrectly()
     {
         // Arrange
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         var emptyWorkouts = new List<AIWorkoutDataDto>();
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<Exception>(
-            () => _service.AnalyzeHealthMetricsAsync(123, emptyWorkouts, CancellationToken.None));
+            () => this.service.AnalyzeHealthMetricsAsync(123, emptyWorkouts, CancellationToken.None));
 
-        VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 123");
+        this.VerifyLogCalled(LogLevel.Information, "health metrics analysis for athlete: 123");
     }
 
     #endregion
@@ -1071,12 +1072,12 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
         // We can't directly set _channel to null, but we can test multiple dispose calls
 
         // Arrange & Act
-        _service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        this.service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Multiple dispose calls should not throw
-        _service.Dispose();
-        _service.Dispose();
-        _service.Dispose();
+        this.service.Dispose();
+        this.service.Dispose();
+        this.service.Dispose();
 
         // Assert - No exception = success
         Assert.True(true);
@@ -1089,7 +1090,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
         // This indirectly tests the client creation logic
 
         // Arrange & Act
-        using var service = new GrpcAIAssistantClientService(_mockLogger.Object, _mockConfiguration.Object);
+        using var service = new GrpcAIAssistantClientService(this.mockLogger.Object, this.mockConfiguration.Object);
 
         // Assert - If constructor completed without exception, clients were created
         Assert.NotNull(service);
@@ -1101,7 +1102,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
 
     private void VerifyLogCalled(LogLevel logLevel, string message)
     {
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 logLevel,
                 It.IsAny<EventId>(),
@@ -1117,7 +1118,7 @@ public class GrpcAIAssistantClientServiceTests : IDisposable
 
     public void Dispose()
     {
-        _service?.Dispose();
+        this.service?.Dispose();
         GC.SuppressFinalize(this);
     }
 

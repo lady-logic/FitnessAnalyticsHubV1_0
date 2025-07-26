@@ -24,8 +24,8 @@ public class AthleteProfileExtensionsTests
             Preferences = new Dictionary<string, object>
             {
                 { "preferredActivities", new[] { "Run", "Bike" } },
-                { "trainingDays", 5 }
-            }
+                { "trainingDays", 5 },
+            },
         };
 
         // Act
@@ -50,7 +50,7 @@ public class AthleteProfileExtensionsTests
             Name = "Test User",
             FitnessLevel = "Beginner",
             PrimaryGoal = "Get Started",
-            Preferences = null
+            Preferences = null,
         };
 
         // Act
@@ -97,7 +97,7 @@ public class AthleteProfileExtensionsTests
             Id = null,
             Name = "Test User",
             FitnessLevel = "Beginner",
-            PrimaryGoal = "General Fitness"
+            PrimaryGoal = "General Fitness",
         };
 
         // Act
@@ -144,7 +144,7 @@ public class AthleteProfileExtensionsTests
         {
             Name = null,
             FitnessLevel = "Beginner",
-            PrimaryGoal = "Get Started"
+            PrimaryGoal = "Get Started",
         };
 
         // Act
@@ -152,7 +152,7 @@ public class AthleteProfileExtensionsTests
 
         // Assert
         Assert.NotNull(dto);
-        Assert.Equal("", dto.Name); // Should convert null to empty string
+        Assert.Equal(string.Empty, dto.Name); // Should convert null to empty string
         Assert.Equal("Beginner", dto.FitnessLevel);
         Assert.Equal("Get Started", dto.PrimaryGoal);
     }
@@ -169,7 +169,7 @@ public class AthleteProfileExtensionsTests
         {
             Name = "gRPC Athlete",
             FitnessLevel = "Advanced",
-            PrimaryGoal = "Triathlon Training"
+            PrimaryGoal = "Triathlon Training",
         };
 
         // Act
@@ -190,6 +190,7 @@ public class AthleteProfileExtensionsTests
     {
         // Arrange
         var grpcProfile = new global::Fitnessanalyticshub.AthleteProfile();
+
         // gRPC Properties haben automatisch default values (leere Strings)
 
         // Act
@@ -197,9 +198,9 @@ public class AthleteProfileExtensionsTests
 
         // Assert
         Assert.NotNull(dto);
-        Assert.Equal("", dto.Name);
-        Assert.Equal("", dto.FitnessLevel);
-        Assert.Equal("", dto.PrimaryGoal);
+        Assert.Equal(string.Empty, dto.Name);
+        Assert.Equal(string.Empty, dto.FitnessLevel);
+        Assert.Equal(string.Empty, dto.PrimaryGoal);
         Assert.NotNull(dto.Id); // ID wird generiert
         Assert.NotEqual(Guid.Empty.ToString(), dto.Id);
     }
@@ -219,7 +220,7 @@ public class AthleteProfileExtensionsTests
         {
             Name = invalidName,
             FitnessLevel = "Beginner",
-            PrimaryGoal = "Test"
+            PrimaryGoal = "Test",
         };
 
         // Act
@@ -227,7 +228,7 @@ public class AthleteProfileExtensionsTests
 
         // Assert
         Assert.NotNull(dto);
-        Assert.Equal(invalidName ?? "", dto.Name);
+        Assert.Equal(invalidName ?? string.Empty, dto.Name);
     }
 
     [Fact]
@@ -239,12 +240,13 @@ public class AthleteProfileExtensionsTests
             { "preferredActivities", new[] { "Run", "Bike", "Swim" } },
             { "trainingDays", 6 },
             { "maxDistance", 42.2 },
-            { "goals", new Dictionary<string, object>
+            {
+                "goals", new Dictionary<string, object>
                 {
                     { "5K", "sub20" },
-                    { "Marathon", "sub3" }
+                    { "Marathon", "sub3" },
                 }
-            }
+            },
         };
 
         var dto = new AthleteProfileDto
@@ -253,7 +255,7 @@ public class AthleteProfileExtensionsTests
             Name = "Complex Athlete",
             FitnessLevel = "Elite",
             PrimaryGoal = "Olympic Qualifying",
-            Preferences = complexPreferences
+            Preferences = complexPreferences,
         };
 
         // Act

@@ -13,10 +13,10 @@ namespace FitnessAnalyticsHub.Tests.Services;
 
 public class AthleteServiceTests
 {
-    private readonly ApplicationDbContext _context;
-    private readonly Mock<IStravaService> _mockStravaService;
-    private readonly IMapper _mapper;
-    private readonly AthleteService _athleteService;
+    private readonly ApplicationDbContext context;
+    private readonly Mock<IStravaService> mockStravaService;
+    private readonly IMapper mapper;
+    private readonly AthleteService athleteService;
 
     public AthleteServiceTests()
     {
@@ -25,26 +25,26 @@ public class AthleteServiceTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
-        _mockStravaService = new Mock<IStravaService>();
+        this.context = new ApplicationDbContext(options);
+        this.mockStravaService = new Mock<IStravaService>();
 
         // Konfiguriere AutoMapper mit dem tatsächlichen Mappingprofil
         var mapperConfig = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
-        _mapper = mapperConfig.CreateMapper();
+        this.mapper = mapperConfig.CreateMapper();
 
         // Service erstellen
-        _athleteService = new AthleteService(
-            _context,
-            _mockStravaService.Object,
-            _mapper);
+        this.athleteService = new AthleteService(
+            this.context,
+            this.mockStravaService.Object,
+            this.mapper);
     }
 
     public void Dispose()
     {
-        _context.Dispose();
+        this.context.Dispose();
     }
 
     [Fact]
@@ -60,14 +60,14 @@ public class AthleteServiceTests
             City = "Berlin",
             Country = "Germany",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _athleteService.GetAthleteByIdAsync(1, CancellationToken.None);
+        var result = await this.athleteService.GetAthleteByIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -86,7 +86,7 @@ public class AthleteServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
-            () => _athleteService.GetAthleteByIdAsync(999, CancellationToken.None));
+            () => this.athleteService.GetAthleteByIdAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.AthleteId);
     }
@@ -104,7 +104,7 @@ public class AthleteServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         },
         new Athlete
         {
@@ -113,15 +113,15 @@ public class AthleteServiceTests
             LastName = "Schmidt",
             Email = "anna@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
-        }
+            UpdatedAt = DateTime.Now,
+        },
     };
 
-        await _context.Athletes.AddRangeAsync(athletes);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddRangeAsync(athletes);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _athleteService.GetAllAthletesAsync(CancellationToken.None);
+        var result = await this.athleteService.GetAllAthletesAsync(CancellationToken.None);
 
         // Assert
         var resultList = result.ToList();
@@ -140,11 +140,11 @@ public class AthleteServiceTests
             LastName = "User",
             Email = "test@test.com",
             City = "Munich",
-            Country = "Germany"
+            Country = "Germany",
         };
 
         // Act
-        var result = await _athleteService.CreateAthleteAsync(createDto, CancellationToken.None);
+        var result = await this.athleteService.CreateAthleteAsync(createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -154,7 +154,7 @@ public class AthleteServiceTests
         Assert.True(result.Id > 0);
 
         // Verify in database
-        var athleteInDb = await _context.Athletes.FindAsync(result.Id);
+        var athleteInDb = await this.context.Athletes.FindAsync(result.Id);
         Assert.NotNull(athleteInDb);
         Assert.Equal("Test", athleteInDb.FirstName);
     }
@@ -172,11 +172,11 @@ public class AthleteServiceTests
             City = "Berlin",
             Country = "Germany",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.SaveChangesAsync();
 
         var updateDto = new UpdateAthleteDto
         {
@@ -184,14 +184,14 @@ public class AthleteServiceTests
             FirstName = "Maximilian",
             LastName = "Mustermann",
             City = "Munich",
-            Country = "Germany"
+            Country = "Germany",
         };
 
         // Act
-        await _athleteService.UpdateAthleteAsync(updateDto, CancellationToken.None);
+        await this.athleteService.UpdateAthleteAsync(updateDto, CancellationToken.None);
 
         // Assert
-        var updatedAthlete = await _context.Athletes.FindAsync(1);
+        var updatedAthlete = await this.context.Athletes.FindAsync(1);
         Assert.NotNull(updatedAthlete);
         Assert.Equal("Maximilian", updatedAthlete.FirstName);
         Assert.Equal("Munich", updatedAthlete.City);
@@ -205,12 +205,12 @@ public class AthleteServiceTests
         {
             Id = 999,
             FirstName = "Test",
-            LastName = "User"
+            LastName = "User",
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
-            () => _athleteService.UpdateAthleteAsync(updateDto, CancellationToken.None));
+            () => this.athleteService.UpdateAthleteAsync(updateDto, CancellationToken.None));
 
         Assert.Equal(999, exception.AthleteId);
     }
@@ -226,17 +226,17 @@ public class AthleteServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.SaveChangesAsync();
 
         // Act
-        await _athleteService.DeleteAthleteAsync(1, CancellationToken.None);
+        await this.athleteService.DeleteAthleteAsync(1, CancellationToken.None);
 
         // Assert
-        var deletedAthlete = await _context.Athletes.FindAsync(1);
+        var deletedAthlete = await this.context.Athletes.FindAsync(1);
         Assert.Null(deletedAthlete);
     }
 
@@ -247,7 +247,7 @@ public class AthleteServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
-            () => _athleteService.DeleteAthleteAsync(999, CancellationToken.None));
+            () => this.athleteService.DeleteAthleteAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.AthleteId);
     }
@@ -265,14 +265,14 @@ public class AthleteServiceTests
             Email = "john@strava.com",
             City = "San Francisco",
             Country = "USA",
-            ProfilePictureUrl = "https://strava.com/profile.jpg"
+            ProfilePictureUrl = "https://strava.com/profile.jpg",
         };
 
-        _mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>()))
+        this.mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>()))
             .ReturnsAsync(stravaAthlete);
 
         // Act
-        var result = await _athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
+        var result = await this.athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -283,7 +283,7 @@ public class AthleteServiceTests
         Assert.True(result.Id > 0);
 
         // Verify in database
-        var athleteInDb = await _context.Athletes.FirstOrDefaultAsync(a => a.StravaId == "12345");
+        var athleteInDb = await this.context.Athletes.FirstOrDefaultAsync(a => a.StravaId == "12345");
         Assert.NotNull(athleteInDb);
         Assert.Equal("12345", athleteInDb.StravaId);
         Assert.Equal("John", athleteInDb.FirstName);
@@ -302,11 +302,11 @@ public class AthleteServiceTests
             Email = "old@email.com",
             City = "Old City",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
-        await _context.Athletes.AddAsync(existingAthlete);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(existingAthlete);
+        await this.context.SaveChangesAsync();
 
         var stravaAthlete = new Athlete
         {
@@ -317,14 +317,14 @@ public class AthleteServiceTests
             Email = "new@strava.com",
             City = "San Francisco",
             Country = "USA",
-            ProfilePictureUrl = "https://strava.com/new_profile.jpg"
+            ProfilePictureUrl = "https://strava.com/new_profile.jpg",
         };
 
-        _mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>()))
+        this.mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>()))
             .ReturnsAsync(stravaAthlete);
 
         // Act
-        var result = await _athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
+        var result = await this.athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -334,7 +334,7 @@ public class AthleteServiceTests
         Assert.Equal("johndoe_updated", result.Username); // Username sollte aktualisiert sein
 
         // Verify in database - sollte nur einen Athlete geben
-        var athletesInDb = await _context.Athletes.Where(a => a.StravaId == "12345").ToListAsync();
+        var athletesInDb = await this.context.Athletes.Where(a => a.StravaId == "12345").ToListAsync();
         Assert.Single(athletesInDb);
         Assert.Equal("new@strava.com", athletesInDb[0].Email);
         Assert.Equal("johndoe_updated", athletesInDb[0].Username);

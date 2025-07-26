@@ -1,5 +1,5 @@
-﻿using FitnessAnalyticsHub.Domain.Enums;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using FitnessAnalyticsHub.Domain.Enums;
 
 namespace FitnessAnalyticsHub.Application.DTOs;
 

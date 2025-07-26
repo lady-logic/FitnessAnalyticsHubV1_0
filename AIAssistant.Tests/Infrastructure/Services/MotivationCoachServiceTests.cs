@@ -11,15 +11,15 @@ namespace AIAssistant.Tests.Infrastructure.Services;
 
 public class MotivationCoachServiceTests
 {
-    private readonly Mock<IAIPromptService> _mockAIPromptService;
-    private readonly Mock<ILogger<MotivationCoachService>> _mockLogger;
-    private readonly MotivationCoachService _service;
+    private readonly Mock<IAIPromptService> mockAIPromptService;
+    private readonly Mock<ILogger<MotivationCoachService>> mockLogger;
+    private readonly MotivationCoachService service;
 
     public MotivationCoachServiceTests()
     {
-        _mockAIPromptService = new Mock<IAIPromptService>();
-        _mockLogger = MockSetup.CreateMockLogger<MotivationCoachService>();
-        _service = new MotivationCoachService(_mockAIPromptService.Object, _mockLogger.Object);
+        this.mockAIPromptService = new Mock<IAIPromptService>();
+        this.mockLogger = MockSetup.CreateMockLogger<MotivationCoachService>();
+        this.service = new MotivationCoachService(this.mockAIPromptService.Object, this.mockLogger.Object);
     }
 
     #region GenerateMotivationAsync Tests
@@ -31,12 +31,12 @@ public class MotivationCoachServiceTests
         var request = CreateTestMotivationRequest();
         var aiResponse = CreateWellFormattedAIResponse();
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -46,8 +46,8 @@ public class MotivationCoachServiceTests
         Assert.True(result.ActionableTips.Count > 0);
         Assert.True(result.GeneratedAt > DateTime.MinValue);
 
-        MockSetup.VerifyLoggerCalledWithInformation(_mockLogger, "Generating motivational message", Times.Once());
-        MockSetup.VerifyLoggerCalledWithInformation(_mockLogger, "Successfully generated motivational message", Times.Once());
+        MockSetup.VerifyLoggerCalledWithInformation(this.mockLogger, "Generating motivational message", Times.Once());
+        MockSetup.VerifyLoggerCalledWithInformation(this.mockLogger, "Successfully generated motivational message", Times.Once());
     }
 
     [Fact]
@@ -66,12 +66,12 @@ Tips:
 3. Celebrate small wins along the way to maintain motivation
 ";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(structuredResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Contains("Great job on your fitness journey", result.MotivationalMessage);
@@ -87,12 +87,12 @@ Tips:
         var request = CreateTestMotivationRequest();
         var minimalResponse = "Keep pushing forward! You've got this!";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(minimalResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Equal(minimalResponse, result.MotivationalMessage);
@@ -106,12 +106,12 @@ Tips:
         // Arrange
         var request = CreateTestMotivationRequest("John");
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ThrowsAsync(new Exception("AI service unavailable"));
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -120,7 +120,7 @@ Tips:
         Assert.Equal(3, result.ActionableTips!.Count);
         Assert.Contains("Set small, achievable goals", result.ActionableTips[0]);
 
-        MockSetup.VerifyLoggerCalledWithError(_mockLogger, "Error generating motivational message", Times.Once());
+        MockSetup.VerifyLoggerCalledWithError(this.mockLogger, "Error generating motivational message", Times.Once());
     }
 
     [Theory]
@@ -132,12 +132,12 @@ Tips:
         // Arrange
         var request = CreateTestMotivationRequest();
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(emptyResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Equal("You're doing great! Keep up the excellent work with your fitness journey.", result.MotivationalMessage);
@@ -156,18 +156,18 @@ Tips:
         var request = CreateTestMotivationRequest();
         var aiResponse = "You're doing amazing! Keep it up!";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await _service.GetHuggingFaceMotivationalMessageAsync(request);
+        var result = await this.service.GetHuggingFaceMotivationalMessageAsync(request);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(aiResponse, result.MotivationalMessage);
 
-        _mockAIPromptService.Verify(s => s.GetMotivationAsync(It.IsAny<string>()), Times.Once);
+        this.mockAIPromptService.Verify(s => s.GetMotivationAsync(It.IsAny<string>()), Times.Once);
     }
 
     #endregion
@@ -184,19 +184,19 @@ Tips:
             {
                 Name = "Sarah",
                 FitnessLevel = "Advanced",
-                PrimaryGoal = "Marathon Training"
+                PrimaryGoal = "Marathon Training",
             },
-            IsStruggling = true
+            IsStruggling = true,
         };
 
-        string capturedPrompt = "";
-        _mockAIPromptService
+        string capturedPrompt = string.Empty;
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .Callback<string>(prompt => capturedPrompt = prompt)
             .ReturnsAsync("Great job!");
 
         // Act
-        await _service.GenerateMotivationAsync(request);
+        await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Contains("Sarah", capturedPrompt);
@@ -217,18 +217,18 @@ Tips:
                 ActivityType = "Run",
                 Distance = 10,
                 Duration = 3600, // 1 hour
-                Date = DateTime.Now.AddDays(-1)
-            }
+                Date = DateTime.Now.AddDays(-1),
+            },
         };
 
-        string capturedPrompt = "";
-        _mockAIPromptService
+        string capturedPrompt = string.Empty;
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .Callback<string>(prompt => capturedPrompt = prompt)
             .ReturnsAsync("Great run!");
 
         // Act
-        await _service.GenerateMotivationAsync(request);
+        await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Contains("Last workout: Run", capturedPrompt);
@@ -243,17 +243,17 @@ Tips:
         var request = new MotivationRequestDto
         {
             AthleteProfile = null,
-            IsStruggling = false
+            IsStruggling = false,
         };
 
-        string capturedPrompt = "";
-        _mockAIPromptService
+        string capturedPrompt = string.Empty;
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .Callback<string>(prompt => capturedPrompt = prompt)
             .ReturnsAsync("Keep going!");
 
         // Act
-        await _service.GenerateMotivationAsync(request);
+        await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Contains("Champion", capturedPrompt); // Default name
@@ -277,12 +277,12 @@ Quote: Success is not about being perfect, it's about being better than yesterda
 
 Keep pushing forward!";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Equal("Success is not about being perfect, it's about being better than yesterday.", result.Quote);
@@ -303,12 +303,12 @@ Tips:
 4. This tip should be ignored as we limit to 3
 ";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result.ActionableTips);
@@ -332,12 +332,12 @@ Actionable tips:
 * Remember why you started this journey
 ";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result.ActionableTips);
@@ -355,12 +355,12 @@ Actionable tips:
         var longMessage = string.Join(". ", Enumerable.Repeat("This is a very long motivational sentence that goes on and on", 10));
         var aiResponse = $"{longMessage}. Quote: \"Test quote\"";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.True(result.MotivationalMessage.Length <= 300); // Should be limited
@@ -378,14 +378,14 @@ Actionable tips:
         var request = CreateTestMotivationRequest("TestAthlete");
         var messages = new HashSet<string>();
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ThrowsAsync(new Exception("Service down"));
 
         // Act - Generate multiple fallback messages
         for (int i = 0; i < 10; i++)
         {
-            var result = await _service.GenerateMotivationAsync(request);
+            var result = await this.service.GenerateMotivationAsync(request);
             messages.Add(result.MotivationalMessage);
         }
 
@@ -400,12 +400,12 @@ Actionable tips:
         // Arrange
         var request = CreateTestMotivationRequest();
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ThrowsAsync(new Exception("Service unavailable"));
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Contains("Robert Collier", result.Quote!);
@@ -429,16 +429,16 @@ Actionable tips:
             {
                 Name = "María José-Smith",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "General Fitness"
-            }
+                PrimaryGoal = "General Fitness",
+            },
         };
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync("¡Excelente trabajo, María!");
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Contains("María", result.MotivationalMessage);
@@ -457,12 +457,12 @@ Tips:
 4. Another good tip that meets the minimum length requirement
 ";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result.ActionableTips);
@@ -481,12 +481,12 @@ Great job!
 ""Believe in yourself and achieve your dreams""
 Keep going!";
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
 
         // Assert
         Assert.Equal("Believe in yourself and achieve your dreams", result.Quote);
@@ -503,13 +503,13 @@ Keep going!";
         var request = CreateTestMotivationRequest();
         var largeResponse = string.Join("\n", Enumerable.Repeat("This is a line of AI response text.", 1000));
 
-        _mockAIPromptService
+        this.mockAIPromptService
             .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
             .ReturnsAsync(largeResponse);
 
         // Act
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var result = await _service.GenerateMotivationAsync(request);
+        var result = await this.service.GenerateMotivationAsync(request);
         stopwatch.Stop();
 
         // Assert
@@ -529,7 +529,7 @@ Keep going!";
             AthleteProfile = CreateTestAthleteProfile(athleteName),
             IsStruggling = false,
             LastWorkout = null,
-            UpcomingWorkoutType = null
+            UpcomingWorkoutType = null,
         };
     }
 
@@ -540,7 +540,7 @@ Keep going!";
             Id = "123",
             Name = name,
             FitnessLevel = "Intermediate",
-            PrimaryGoal = "General Fitness"
+            PrimaryGoal = "General Fitness",
         };
     }
 

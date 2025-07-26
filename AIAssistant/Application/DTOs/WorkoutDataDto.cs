@@ -2,7 +2,7 @@
 
 namespace FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 
-public class WorkoutDataDto  
+public class WorkoutDataDto
 {
     [Required]
     public DateTime Date { get; set; }

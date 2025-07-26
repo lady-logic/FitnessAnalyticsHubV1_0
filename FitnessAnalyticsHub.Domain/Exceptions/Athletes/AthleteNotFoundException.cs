@@ -5,7 +5,7 @@
         public AthleteNotFoundException(int athleteId)
             : base($"Athlete with ID {athleteId} not found")
         {
-            AthleteId = athleteId;
+            this.AthleteId = athleteId;
         }
 
         public int AthleteId { get; }

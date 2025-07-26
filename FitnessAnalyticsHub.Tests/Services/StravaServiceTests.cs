@@ -1,50 +1,50 @@
-﻿using System.Net;
-using System.Text;
-using System.Text.Json;
-using FitnessAnalyticsHub.Infrastructure.Configuration;
-using FitnessAnalyticsHub.Infrastructure.Exceptions;
-using FitnessAnalyticsHub.Infrastructure.Services;
-using Microsoft.Extensions.Options;
-using Moq;
-using Moq.Protected;
-
-namespace FitnessAnalyticsHub.Tests.Services
+﻿namespace FitnessAnalyticsHub.Tests.Services
 {
+    using System.Net;
+    using System.Text;
+    using System.Text.Json;
+    using FitnessAnalyticsHub.Infrastructure.Configuration;
+    using FitnessAnalyticsHub.Infrastructure.Exceptions;
+    using FitnessAnalyticsHub.Infrastructure.Services;
+    using Microsoft.Extensions.Options;
+    using Moq;
+    using Moq.Protected;
+
     public class StravaServiceTests : IDisposable
     {
-        private readonly Mock<IHttpClientFactory> _mockHttpClientFactory;
-        private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
-        private readonly HttpClient _httpClient;
-        private readonly Mock<IOptions<StravaConfiguration>> _mockOptions;
-        private readonly StravaConfiguration _config;
-        private readonly StravaService _stravaService;
+        private readonly Mock<IHttpClientFactory> mockHttpClientFactory;
+        private readonly Mock<HttpMessageHandler> mockHttpMessageHandler;
+        private readonly HttpClient httpClient;
+        private readonly Mock<IOptions<StravaConfiguration>> mockOptions;
+        private readonly StravaConfiguration config;
+        private readonly StravaService stravaService;
 
         public StravaServiceTests()
         {
-            _mockHttpClientFactory = new Mock<IHttpClientFactory>();
-            _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-            _httpClient = new HttpClient(_mockHttpMessageHandler.Object)
+            this.mockHttpClientFactory = new Mock<IHttpClientFactory>();
+            this.mockHttpMessageHandler = new Mock<HttpMessageHandler>();
+            this.httpClient = new HttpClient(this.mockHttpMessageHandler.Object)
             {
-                BaseAddress = new Uri("https://www.strava.com/api/v3/")
+                BaseAddress = new Uri("https://www.strava.com/api/v3/"),
             };
 
-            _config = new StravaConfiguration
+            this.config = new StravaConfiguration
             {
                 ClientId = "test_client_id",
                 ClientSecret = "test_client_secret",
                 RedirectUrl = "http://localhost/callback",
                 BaseUrl = "https://www.strava.com/api/v3/",
                 AuthorizeUrl = "https://www.strava.com/oauth/authorize",
-                TokenUrl = "https://www.strava.com/oauth/token"
+                TokenUrl = "https://www.strava.com/oauth/token",
             };
 
-            _mockOptions = new Mock<IOptions<StravaConfiguration>>();
-            _mockOptions.Setup(x => x.Value).Returns(_config);
+            this.mockOptions = new Mock<IOptions<StravaConfiguration>>();
+            this.mockOptions.Setup(x => x.Value).Returns(this.config);
 
-            _mockHttpClientFactory.Setup(x => x.CreateClient("StravaApi"))
-                                  .Returns(_httpClient);
+            this.mockHttpClientFactory.Setup(x => x.CreateClient("StravaApi"))
+                                  .Returns(this.httpClient);
 
-            _stravaService = new StravaService(_mockHttpClientFactory.Object, _mockOptions.Object);
+            this.stravaService = new StravaService(this.mockHttpClientFactory.Object, this.mockOptions.Object);
         }
 
         #region GetAuthorizationUrlAsync Tests
@@ -53,7 +53,7 @@ namespace FitnessAnalyticsHub.Tests.Services
         public async Task GetAuthorizationUrlAsync_ShouldReturnCorrectUrl()
         {
             // Act
-            var result = await _stravaService.GetAuthorizationUrlAsync();
+            var result = await this.stravaService.GetAuthorizationUrlAsync();
 
             // Assert
             Assert.NotNull(result);
@@ -79,16 +79,16 @@ namespace FitnessAnalyticsHub.Tests.Services
                 access_token = "test_access_token",
                 expires_at = 1234567890,
                 expires_in = 3600,
-                refresh_token = "test_refresh_token"
+                refresh_token = "test_refresh_token",
             };
 
             var jsonResponse = JsonSerializer.Serialize(tokenResponse);
             var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
             };
 
-            _mockHttpMessageHandler.Protected()
+            this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
@@ -96,7 +96,7 @@ namespace FitnessAnalyticsHub.Tests.Services
                 .ReturnsAsync(httpResponse);
 
             // Act
-            var result = await _stravaService.ExchangeCodeForTokenAsync(authCode);
+            var result = await this.stravaService.ExchangeCodeForTokenAsync(authCode);
 
             // Assert
             Assert.NotNull(result);
@@ -114,7 +114,7 @@ namespace FitnessAnalyticsHub.Tests.Services
             var authCode = "invalid_code";
             var httpResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
 
-            _mockHttpMessageHandler.Protected()
+            this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
@@ -123,7 +123,7 @@ namespace FitnessAnalyticsHub.Tests.Services
 
             // Act & Assert
             await Assert.ThrowsAsync<HttpRequestException>(
-                () => _stravaService.ExchangeCodeForTokenAsync(authCode));
+                () => this.stravaService.ExchangeCodeForTokenAsync(authCode));
         }
 
         #endregion
@@ -145,16 +145,16 @@ namespace FitnessAnalyticsHub.Tests.Services
                 city = "Test City",
                 country = "Test Country",
                 profile = "https://example.com/profile.jpg",
-                email = "test@example.com"
+                email = "test@example.com",
             };
 
             var jsonResponse = JsonSerializer.Serialize(athleteResponse);
             var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
             };
 
-            _mockHttpMessageHandler.Protected()
+            this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.Is<HttpRequestMessage>(req =>
@@ -164,7 +164,7 @@ namespace FitnessAnalyticsHub.Tests.Services
                 .ReturnsAsync(httpResponse);
 
             // Act
-            var result = await _stravaService.GetAthleteProfileAsync(accessToken);
+            var result = await this.stravaService.GetAthleteProfileAsync(accessToken);
 
             // Assert
             Assert.NotNull(result);
@@ -182,7 +182,7 @@ namespace FitnessAnalyticsHub.Tests.Services
         {
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
-                () => _stravaService.GetAthleteProfileAsync(null));
+                () => this.stravaService.GetAthleteProfileAsync(null));
 
             Assert.Equal("Access token cannot be null or empty", exception.Message);
         }
@@ -192,7 +192,7 @@ namespace FitnessAnalyticsHub.Tests.Services
         {
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
-                () => _stravaService.GetAthleteProfileAsync("   "));
+                () => this.stravaService.GetAthleteProfileAsync("   "));
 
             Assert.Equal("Access token cannot be null or empty", exception.Message);
         }
@@ -226,7 +226,7 @@ namespace FitnessAnalyticsHub.Tests.Services
                     max_heartrate = (int?)180,
                     average_watts = (double?)250,
                     max_watts = (double?)400,
-                    average_cadence = (double?)90
+                    average_cadence = (double?)90,
                 },
                 new
                 {
@@ -246,17 +246,17 @@ namespace FitnessAnalyticsHub.Tests.Services
                     max_heartrate = (int?)170,
                     average_watts = (double?)200,
                     max_watts = (double?)350,
-                    average_cadence = (double?)85
-                }
+                    average_cadence = (double?)85,
+                },
             };
 
             var jsonResponse = JsonSerializer.Serialize(activitiesResponse);
             var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
             };
 
-            _mockHttpMessageHandler.Protected()
+            this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.Is<HttpRequestMessage>(req =>
@@ -266,7 +266,7 @@ namespace FitnessAnalyticsHub.Tests.Services
                 .ReturnsAsync(httpResponse);
 
             // Act
-            var result = await _stravaService.GetActivitiesAsync(accessToken);
+            var result = await this.stravaService.GetActivitiesAsync(accessToken);
 
             // Assert
             Assert.NotNull(result);
@@ -286,7 +286,7 @@ namespace FitnessAnalyticsHub.Tests.Services
             var accessToken = "invalid_token";
             var httpResponse = new HttpResponseMessage(HttpStatusCode.Unauthorized);
 
-            _mockHttpMessageHandler.Protected()
+            this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
@@ -295,7 +295,7 @@ namespace FitnessAnalyticsHub.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
-                () => _stravaService.GetActivitiesAsync(accessToken));
+                () => this.stravaService.GetActivitiesAsync(accessToken));
 
             Assert.Equal("Access token is invalid or expired", exception.Message);
         }
@@ -307,7 +307,7 @@ namespace FitnessAnalyticsHub.Tests.Services
             var accessToken = "valid_token";
             var httpResponse = new HttpResponseMessage(HttpStatusCode.Forbidden);
 
-            _mockHttpMessageHandler.Protected()
+            this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
@@ -316,7 +316,7 @@ namespace FitnessAnalyticsHub.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<StravaApiException>(
-                () => _stravaService.GetActivitiesAsync(accessToken));
+                () => this.stravaService.GetActivitiesAsync(accessToken));
 
             Assert.Equal("Access forbidden - insufficient permissions", exception.Message);
             Assert.Equal(403, exception.StatusCode);
@@ -329,7 +329,7 @@ namespace FitnessAnalyticsHub.Tests.Services
             var accessToken = "valid_token";
             var httpResponse = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
 
-            _mockHttpMessageHandler.Protected()
+            this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
                     "SendAsync",
                     ItExpr.IsAny<HttpRequestMessage>(),
@@ -338,7 +338,7 @@ namespace FitnessAnalyticsHub.Tests.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<StravaApiException>(
-                () => _stravaService.GetActivitiesAsync(accessToken));
+                () => this.stravaService.GetActivitiesAsync(accessToken));
 
             Assert.Equal("Rate limit exceeded - too many requests", exception.Message);
             Assert.Equal(429, exception.StatusCode);
@@ -349,7 +349,7 @@ namespace FitnessAnalyticsHub.Tests.Services
         {
             // Act & Assert
             var exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
-                () => _stravaService.GetActivitiesAsync(null));
+                () => this.stravaService.GetActivitiesAsync(null));
 
             Assert.Equal("Access token cannot be null or empty", exception.Message);
         }
@@ -364,14 +364,14 @@ namespace FitnessAnalyticsHub.Tests.Services
             // Arrange
             var invalidConfig = new StravaConfiguration
             {
-                ClientId = "", // Leer
-                ClientSecret = "test_secret"
+                ClientId = string.Empty, // Leer
+                ClientSecret = "test_secret",
             };
 
             var mockInvalidOptions = new Mock<IOptions<StravaConfiguration>>();
             mockInvalidOptions.Setup(x => x.Value).Returns(invalidConfig);
 
-            var invalidStravaService = new StravaService(_mockHttpClientFactory.Object, mockInvalidOptions.Object);
+            var invalidStravaService = new StravaService(this.mockHttpClientFactory.Object, mockInvalidOptions.Object);
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<StravaConfigurationException>(
@@ -386,13 +386,13 @@ namespace FitnessAnalyticsHub.Tests.Services
         {
             if (disposing)
             {
-                _httpClient?.Dispose();
+                this.httpClient?.Dispose();
             }
         }
 
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
     }

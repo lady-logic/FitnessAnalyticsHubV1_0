@@ -1,7 +1,7 @@
-﻿using FitnessAnalyticsHub.Infrastructure.Exceptions;
-
-namespace FitnessAnalyticsHub.Tests.Exceptions
+﻿namespace FitnessAnalyticsHub.Tests.Exceptions
 {
+    using FitnessAnalyticsHub.Infrastructure.Exceptions;
+
     public class StravaExceptionTests
     {
         #region StravaServiceException Tests

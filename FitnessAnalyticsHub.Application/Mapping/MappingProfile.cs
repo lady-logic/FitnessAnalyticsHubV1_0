@@ -10,33 +10,34 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         // Athlete mappings
-        CreateMap<Athlete, AthleteDto>();
-        CreateMap<CreateAthleteDto, Athlete>();
-        CreateMap<UpdateAthleteDto, Athlete>();
-        CreateMap<Athlete, Athlete>()
+        this.CreateMap<Athlete, AthleteDto>();
+        this.CreateMap<CreateAthleteDto, Athlete>();
+        this.CreateMap<UpdateAthleteDto, Athlete>();
+        this.CreateMap<Athlete, Athlete>()
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.Now))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
 
         // Activity mappings
-        CreateMap<Activity, ActivityDto>()
+        this.CreateMap<Activity, ActivityDto>()
             .ForMember(dest => dest.MovingTime, opt => opt.MapFrom(src => TimeSpan.FromSeconds(src.MovingTime)))
             .ForMember(dest => dest.ElapsedTime, opt => opt.MapFrom(src => TimeSpan.FromSeconds(src.ElapsedTime)))
             .ForMember(dest => dest.AthleteFullName, opt => opt.MapFrom(src =>
             src.Athlete != null ? $"{src.Athlete.FirstName} {src.Athlete.LastName}" : string.Empty));
 
-        CreateMap<CreateActivityDto, Activity>()
+        this.CreateMap<CreateActivityDto, Activity>()
             .ForMember(dest => dest.MovingTime, opt => opt.MapFrom(src => src.MovingTimeSeconds))
             .ForMember(dest => dest.ElapsedTime, opt => opt.MapFrom(src => src.ElapsedTimeSeconds))
+
             // Pace als berechneten Wert aus Distance und MovingTime
             .ForMember(dest => dest.Pace, opt => opt.MapFrom(src =>
-                CreatePaceFromDistanceAndTime(src.Distance, src.MovingTimeSeconds)));
+                this.CreatePaceFromDistanceAndTime(src.Distance, src.MovingTimeSeconds)));
 
-        CreateMap<UpdateActivityDto, Activity>()
+        this.CreateMap<UpdateActivityDto, Activity>()
             .ForMember(dest => dest.MovingTime, opt => opt.MapFrom(src => src.MovingTimeSeconds))
             .ForMember(dest => dest.ElapsedTime, opt => opt.MapFrom(src => src.ElapsedTimeSeconds));
 
-        CreateMap<Activity, Activity>()
+        this.CreateMap<Activity, Activity>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.AthleteId, opt => opt.Ignore()) // Wird separat gesetzt
             .ForMember(dest => dest.Athlete, opt => opt.Ignore())
@@ -45,21 +46,21 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Description, opt => opt.MapFrom(src => (string)null)); // Explizit null setzen
 
         // Training plan mappings
-        CreateMap<TrainingPlan, TrainingPlanDto>()
+        this.CreateMap<TrainingPlan, TrainingPlanDto>()
             .ForMember(dest => dest.AthleteName, opt => opt.MapFrom(src => src.Athlete != null ? $"{src.Athlete.FirstName} {src.Athlete.LastName}" : string.Empty));
-        CreateMap<CreateTrainingPlanDto, TrainingPlan>();
-        CreateMap<UpdateTrainingPlanDto, TrainingPlan>();
+        this.CreateMap<CreateTrainingPlanDto, TrainingPlan>();
+        this.CreateMap<UpdateTrainingPlanDto, TrainingPlan>();
 
         // Planned activity mappings
-        CreateMap<PlannedActivity, PlannedActivityDto>()
+        this.CreateMap<PlannedActivity, PlannedActivityDto>()
             .ForMember(dest => dest.PlannedDuration, opt =>
                 opt.MapFrom(src => src.PlannedDuration.HasValue ? TimeSpan.FromMinutes(src.PlannedDuration.Value) : (TimeSpan?)null));
 
-        CreateMap<CreatePlannedActivityDto, PlannedActivity>()
+        this.CreateMap<CreatePlannedActivityDto, PlannedActivity>()
             .ForMember(dest => dest.PlannedDuration, opt =>
                 opt.MapFrom(src => src.PlannedDurationMinutes));
 
-        CreateMap<UpdatePlannedActivityDto, PlannedActivity>()
+        this.CreateMap<UpdatePlannedActivityDto, PlannedActivity>()
             .ForMember(dest => dest.PlannedDuration, opt =>
                 opt.MapFrom(src => src.PlannedDurationMinutes));
     }
@@ -67,7 +68,9 @@ public class MappingProfile : Profile
     private Pace CreatePaceFromDistanceAndTime(double distanceInKm, int movingTimeSeconds)
     {
         if (distanceInKm <= 0 || movingTimeSeconds <= 0)
+        {
             return null; // oder einen Default-Pace
+        }
 
         // Berechne Sekunden pro Kilometer
         double secondsPerKm = movingTimeSeconds / distanceInKm;

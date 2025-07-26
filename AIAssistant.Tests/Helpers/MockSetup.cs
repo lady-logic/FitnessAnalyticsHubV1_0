@@ -1,4 +1,7 @@
-﻿using AIAssistant.Application.DTOs;
+﻿using System.Net;
+using System.Text;
+using System.Text.Json;
+using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
@@ -6,9 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
-using System.Net;
-using System.Text;
-using System.Text.Json;
 
 namespace AIAssistant.Tests.Helpers;
 
@@ -35,7 +35,7 @@ public static class MockSetup
             var json = JsonSerializer.Serialize(responseObject);
             response = new HttpResponseMessage(statusCode)
             {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
+                Content = new StringContent(json, Encoding.UTF8, "application/json"),
             };
         }
         else
@@ -77,7 +77,7 @@ public static class MockSetup
     {
         return new HttpClient(mockHandler.Object)
         {
-            BaseAddress = new Uri("https://test.api.com/")
+            BaseAddress = new Uri("https://test.api.com/"),
         };
     }
 
@@ -178,7 +178,7 @@ public static class MockSetup
             Recommendations = new List<string> { "Default recommendation 1", "Default recommendation 2" },
             GeneratedAt = DateTime.UtcNow,
             Provider = "Mock",
-            RequestId = Guid.NewGuid().ToString()
+            RequestId = Guid.NewGuid().ToString(),
         };
 
         mock.Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
@@ -192,7 +192,7 @@ public static class MockSetup
                 Recommendations = new List<string> { "GoogleGemini recommendation 1" },
                 GeneratedAt = DateTime.UtcNow,
                 Provider = "GoogleGemini",
-                RequestId = Guid.NewGuid().ToString()
+                RequestId = Guid.NewGuid().ToString(),
             });
 
         return mock;
@@ -215,10 +215,10 @@ public static class MockSetup
                 {
                     message = new
                     {
-                        content = content
-                    }
-                }
-            }
+                        content = content,
+                    },
+                },
+            },
         };
     }
 
@@ -238,10 +238,10 @@ public static class MockSetup
                         parts = new[]
                         {
                             new { text = content }
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         };
     }
 
@@ -255,8 +255,8 @@ public static class MockSetup
             error = new
             {
                 message = error,
-                code = code
-            }
+                code = code,
+            },
         };
     }
 
@@ -339,8 +339,6 @@ public static class MockSetup
 
     #region Service Mocks Extensions
 
-    
-
     /// <summary>
     /// Creates a mock WorkoutAnalysisService that throws exceptions
     /// </summary>
@@ -376,9 +374,9 @@ public static class MockSetup
             {
                 "Set small achievable goals",
                 "Focus on consistency",
-                "Celebrate small wins"
+                "Celebrate small wins",
             },
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
         mock.Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
@@ -433,8 +431,8 @@ public static class MockSetup
                 MetricsData = new Dictionary<string, double>
                 {
                     { "heartRate", 140 + i },
-                    { "pace", 5.0 - (i * 0.1) }
-                }
+                    { "pace", 5.0 - (i * 0.1) },
+                },
             });
         }
 
@@ -456,8 +454,8 @@ public static class MockSetup
             {
                 { "preferredActivities", new[] { "Run", "Bike" } },
                 { "trainingDays", 4 },
-                { "intensityPreference", "moderate" }
-            }
+                { "intensityPreference", "moderate" },
+            },
         };
     }
 
@@ -474,10 +472,10 @@ public static class MockSetup
             {
                 { "restingHeartRate", 60 },
                 { "weight", 70.5 },
-                { "sleepHours", 7.5 }
+                { "sleepHours", 7.5 },
             },
             FocusAreas = new List<string> { "injury_prevention", "recovery" },
-            KnownIssues = new List<string> { "previous_knee_injury" }
+            KnownIssues = new List<string> { "previous_knee_injury" },
         };
     }
 
@@ -491,7 +489,7 @@ public static class MockSetup
             AthleteProfile = CreateTestAthleteProfile(athleteName),
             LastWorkout = CreateTestWorkoutData(1).First(),
             UpcomingWorkoutType = "Run",
-            IsStruggling = false
+            IsStruggling = false,
         };
     }
 
@@ -512,8 +510,8 @@ public static class MockSetup
             {
                 { "testContext", "unit_test" },
                 { "analysisType", analysisType },
-                { "timestamp", DateTime.UtcNow }
-            }
+                { "timestamp", DateTime.UtcNow },
+            },
         };
     }
 
@@ -591,11 +589,13 @@ public static class MockSetup
         Assert.NotNull(response);
         Assert.False(string.IsNullOrWhiteSpace(response.MotivationalMessage));
         Assert.True(response.GeneratedAt > DateTime.MinValue);
+
         // Quote and ActionableTips can be null, but if present should not be empty
         if (response.Quote != null)
         {
             Assert.False(string.IsNullOrWhiteSpace(response.Quote));
         }
+
         if (response.ActionableTips != null)
         {
             Assert.All(response.ActionableTips, tip => Assert.False(string.IsNullOrWhiteSpace(tip)));

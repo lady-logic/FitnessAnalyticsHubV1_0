@@ -1,10 +1,10 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
+﻿#nullable disable
 
 namespace FitnessAnalyticsHub.Infrastructure.Migrations
 {
+    using System;
+    using Microsoft.EntityFrameworkCore.Migrations;
+
     /// <inheritdoc />
     public partial class InitialWithNullablePace : Migration
     {
@@ -26,7 +26,7 @@ namespace FitnessAnalyticsHub.Infrastructure.Migrations
                     Country = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
                     ProfilePictureUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -60,7 +60,7 @@ namespace FitnessAnalyticsHub.Infrastructure.Migrations
                     AveragePower = table.Column<double>(type: "REAL", nullable: true),
                     MaxPower = table.Column<double>(type: "REAL", nullable: true),
                     AverageCadence = table.Column<double>(type: "REAL", nullable: true),
-                    PacePerKilometerInTicks = table.Column<TimeSpan>(type: "TEXT", nullable: true)
+                    PacePerKilometerInTicks = table.Column<TimeSpan>(type: "TEXT", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -87,7 +87,7 @@ namespace FitnessAnalyticsHub.Infrastructure.Migrations
                     Goal = table.Column<int>(type: "INTEGER", nullable: false),
                     Notes = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -113,7 +113,7 @@ namespace FitnessAnalyticsHub.Infrastructure.Migrations
                     PlannedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     PlannedDuration = table.Column<int>(type: "INTEGER", nullable: true),
                     PlannedDistance = table.Column<double>(type: "REAL", nullable: true),
-                    CompletedActivityId = table.Column<int>(type: "INTEGER", nullable: true)
+                    CompletedActivityId = table.Column<int>(type: "INTEGER", nullable: true),
                 },
                 constraints: table =>
                 {

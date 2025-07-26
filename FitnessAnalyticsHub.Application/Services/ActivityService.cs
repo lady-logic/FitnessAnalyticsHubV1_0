@@ -11,84 +11,90 @@ namespace FitnessAnalyticsHub.Application.Services;
 
 public class ActivityService : IActivityService
 {
-    private readonly IApplicationDbContext _context;
-    private readonly IStravaService _stravaService;
-    private readonly IMapper _mapper;
+    private readonly IApplicationDbContext context;
+    private readonly IStravaService stravaService;
+    private readonly IMapper mapper;
 
     public ActivityService(
     IApplicationDbContext context,
     IStravaService stravaService,
     IMapper mapper)
     {
-        _context = context;
-        _stravaService = stravaService;
-        _mapper = mapper;
+        this.context = context;
+        this.stravaService = stravaService;
+        this.mapper = mapper;
     }
 
     public async Task<ActivityDto> GetActivityByIdAsync(int id, CancellationToken cancellationToken)
     {
-        var activity = await _context.Activities
+        var activity = await this.context.Activities
             .Include(a => a.Athlete)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
         if (activity == null)
+        {
             throw new ActivityNotFoundException(id);
+        }
 
-        var activityDto = _mapper.Map<ActivityDto>(activity);
+        var activityDto = this.mapper.Map<ActivityDto>(activity);
 
         return activityDto;
     }
 
     public async Task<IEnumerable<ActivityDto>> GetActivitiesByAthleteIdAsync(int athleteId, CancellationToken cancellationToken)
     {
-        var activities = await _context.Activities
+        var activities = await this.context.Activities
             .Include(a => a.Athlete)
             .Where(a => a.AthleteId == athleteId)
             .ToListAsync(cancellationToken);
 
-        var activityDtos = _mapper.Map<IEnumerable<ActivityDto>>(activities);
+        var activityDtos = this.mapper.Map<IEnumerable<ActivityDto>>(activities);
         return activityDtos;
     }
 
     public async Task<ActivityDto> CreateActivityAsync(CreateActivityDto activityDto, CancellationToken cancellationToken)
     {
-        var activity = _mapper.Map<Activity>(activityDto);
+        var activity = this.mapper.Map<Activity>(activityDto);
 
-        await _context.Activities.AddAsync(activity, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        await this.context.Activities.AddAsync(activity, cancellationToken);
+        await this.context.SaveChangesAsync(cancellationToken);
 
         // Activity mit Athlete laden für das Mapping
-        var activityWithAthlete = await _context.Activities
+        var activityWithAthlete = await this.context.Activities
             .Include(a => a.Athlete)
             .FirstAsync(a => a.Id == activity.Id, cancellationToken);
 
-        var resultDto = _mapper.Map<ActivityDto>(activityWithAthlete);
+        var resultDto = this.mapper.Map<ActivityDto>(activityWithAthlete);
         return resultDto;
     }
 
     public async Task UpdateActivityAsync(UpdateActivityDto activityDto, CancellationToken cancellationToken)
     {
-        var activity = await _context.Activities.FirstOrDefaultAsync(a => a.Id == activityDto.Id, cancellationToken);
+        var activity = await this.context.Activities.FirstOrDefaultAsync(a => a.Id == activityDto.Id, cancellationToken);
 
         if (activity == null)
+        {
             throw new ActivityNotFoundException(activityDto.Id);
+        }
 
-        _mapper.Map(activityDto, activity);
+        this.mapper.Map(activityDto, activity);
         activity.UpdatedAt = DateTime.Now;
 
         // _context.Activities.Update(activity); // Nicht nötig - EF Core tracked automatisch!
-        await _context.SaveChangesAsync(cancellationToken);
+        await this.context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteActivityAsync(int id, CancellationToken cancellationToken)
     {
-        var activity = await _context.Activities.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        var activity = await this.context.Activities.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
         if (activity == null)
+        {
             throw new ActivityNotFoundException(id);
+        }
 
-        _context.Activities.Remove(activity);
-        await _context.SaveChangesAsync(cancellationToken);
+        this.context.Activities.Remove(activity);
+        await this.context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<ActivityDto>> ImportActivitiesFromStravaAsync(CancellationToken cancellationToken)
@@ -96,20 +102,20 @@ public class ActivityService : IActivityService
         Console.WriteLine("=== IMPORTING YOUR STRAVA ACTIVITIES ===");
 
         // StravaService aufrufen
-        var (stravaAthlete, stravaActivities) = await _stravaService.ImportMyActivitiesAsync();
+        var (stravaAthlete, stravaActivities) = await this.stravaService.ImportMyActivitiesAsync();
 
         // Athlet in DB finden oder erstellen
-        var athlete = await _context.Athletes.FirstOrDefaultAsync(a => a.StravaId == stravaAthlete.StravaId, cancellationToken);
+        var athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.StravaId == stravaAthlete.StravaId, cancellationToken);
 
         if (athlete == null)
         {
             // Neuen Athleten erstellen
-            athlete = _mapper.Map<Athlete>(stravaAthlete);
+            athlete = this.mapper.Map<Athlete>(stravaAthlete);
             athlete.CreatedAt = DateTime.Now;
             athlete.UpdatedAt = DateTime.Now;
 
-            await _context.Athletes.AddAsync(athlete, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
+            await this.context.Athletes.AddAsync(athlete, cancellationToken);
+            await this.context.SaveChangesAsync(cancellationToken);
 
             Console.WriteLine($"✅ Created new athlete: {athlete.FirstName} {athlete.LastName} (ID: {athlete.Id})");
         }
@@ -121,7 +127,7 @@ public class ActivityService : IActivityService
         // Aktivitäten verarbeiten und speichern
         // BULK CHECK: Alle existierenden StravaIds auf einmal abfragen
         var stravaIds = stravaActivities.Select(sa => sa.StravaId).ToList();
-        var existingStravaIds = await _context.Activities
+        var existingStravaIds = await this.context.Activities
             .Where(a => a.AthleteId == athlete.Id && stravaIds.Contains(a.StravaId))
             .Select(a => a.StravaId)
             .ToListAsync(cancellationToken);
@@ -135,19 +141,19 @@ public class ActivityService : IActivityService
 
         foreach (var stravaActivity in newStravaActivities)
         {
-            var newActivity = _mapper.Map<Activity>(stravaActivity);
+            var newActivity = this.mapper.Map<Activity>(stravaActivity);
             newActivity.AthleteId = athlete.Id;
             newActivity.Athlete = athlete; // Für das AthleteFullName Mapping
 
-            await _context.Activities.AddAsync(newActivity, cancellationToken);
+            await this.context.Activities.AddAsync(newActivity, cancellationToken);
 
-            var activityDto = _mapper.Map<ActivityDto>(newActivity);
+            var activityDto = this.mapper.Map<ActivityDto>(newActivity);
             importedActivities.Add(activityDto);
 
             Console.WriteLine($"✅ Imported: {newActivity.Name} ({newActivity.SportType}, {newActivity.Distance / 1000:F1}km)");
         }
 
-        await _context.SaveChangesAsync(cancellationToken);
+        await this.context.SaveChangesAsync(cancellationToken);
 
         Console.WriteLine($"=== IMPORT COMPLETE ===");
         Console.WriteLine($"Total activities from Strava: {stravaActivities.Count()}");
@@ -159,12 +165,14 @@ public class ActivityService : IActivityService
     public async Task<ActivityStatisticsDto> GetAthleteActivityStatisticsAsync(int athleteId, CancellationToken cancellationToken)
     {
         // Prüfen ob Athlet existiert
-        var athleteExists = await _context.Athletes.AnyAsync(a => a.Id == athleteId, cancellationToken);
+        var athleteExists = await this.context.Athletes.AnyAsync(a => a.Id == athleteId, cancellationToken);
 
         if (!athleteExists)
+        {
             throw new AthleteNotFoundException(athleteId);
+        }
 
-        var activities = await _context.Activities
+        var activities = await this.context.Activities
             .Where(a => a.AthleteId == athleteId)
             .ToListAsync(cancellationToken);
 
@@ -184,7 +192,7 @@ public class ActivityService : IActivityService
             .ToDictionary(g => g.Key, g => g.Count()),
             ActivitiesByMonth = activities
             .GroupBy(a => a.StartDateLocal.Month)
-            .ToDictionary(g => g.Key, g => g.Count())
+            .ToDictionary(g => g.Key, g => g.Count()),
         };
     }
 
@@ -197,7 +205,7 @@ public class ActivityService : IActivityService
             TotalDuration = TimeSpan.Zero,
             TotalElevationGain = 0,
             ActivitiesByType = new Dictionary<string, int>(),
-            ActivitiesByMonth = new Dictionary<int, int>()
+            ActivitiesByMonth = new Dictionary<int, int>(),
         };
     }
 }

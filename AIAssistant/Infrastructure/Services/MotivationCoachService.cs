@@ -1,57 +1,59 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Infrastructure.Services;
+
+using System.Text.RegularExpressions;
+using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
-using System.Text.RegularExpressions;
-
-namespace AIAssistant.Infrastructure.Services;
 
 public class MotivationCoachService : IMotivationCoachService
 {
-    private readonly IAIPromptService _aiPromptService;
-    private readonly ILogger<MotivationCoachService> _logger;
+    private readonly IAIPromptService aiPromptService;
+    private readonly ILogger<MotivationCoachService> logger;
 
     public MotivationCoachService(
         IAIPromptService aiPromptService,
         ILogger<MotivationCoachService> logger)
     {
-        _aiPromptService = aiPromptService;
-        _logger = logger;
+        this.aiPromptService = aiPromptService;
+        this.logger = logger;
     }
 
     public async Task<MotivationResponseDto> GenerateMotivationAsync(MotivationRequestDto request)
     {
         try
         {
-            _logger.LogInformation("Generating motivational message for athlete: {Name}",
+            this.logger.LogInformation(
+                "Generating motivational message for athlete: {Name}",
                 request.AthleteProfile?.Name ?? "Unknown");
 
-            var prompt = BuildMotivationPrompt(request);
+            var prompt = this.BuildMotivationPrompt(request);
 
-            var aiResponse = await _aiPromptService.GetMotivationAsync(prompt);
+            var aiResponse = await this.aiPromptService.GetMotivationAsync(prompt);
 
-            var result = ParseMotivationResponse(aiResponse);
+            var result = this.ParseMotivationResponse(aiResponse);
 
-            _logger.LogInformation("Successfully generated motivational message with {MessageLength} characters",
+            this.logger.LogInformation(
+                "Successfully generated motivational message with {MessageLength} characters",
                 result.MotivationalMessage?.Length ?? 0);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating motivational message");
+            this.logger.LogError(ex, "Error generating motivational message");
 
             // Fallback motivational message
             return new MotivationResponseDto
             {
-                MotivationalMessage = GetFallbackMotivation(request),
+                MotivationalMessage = this.GetFallbackMotivation(request),
                 Quote = "\"Success is the sum of small efforts repeated day in and day out.\" - Robert Collier",
                 ActionableTips = new List<string>
                 {
                     "Set small, achievable goals for today",
                     "Focus on consistency over perfection",
-                    "Celebrate every small victory"
+                    "Celebrate every small victory",
                 },
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
         }
     }
@@ -60,7 +62,7 @@ public class MotivationCoachService : IMotivationCoachService
     public async Task<MotivationResponseDto> GetHuggingFaceMotivationalMessageAsync(
         MotivationRequestDto request)
     {
-        return await GenerateMotivationAsync(request);
+        return await this.GenerateMotivationAsync(request);
     }
 
     private string BuildMotivationPrompt(MotivationRequestDto request)
@@ -74,7 +76,7 @@ public class MotivationCoachService : IMotivationCoachService
             $"{TimeSpan.FromSeconds(request.LastWorkout.Duration):hh\\:mm\\:ss}" :
             "No recent workout data available";
 
-        var motivationLevel = (request.IsStruggling) ?
+        var motivationLevel = request.IsStruggling ?
             "The athlete is currently struggling with motivation and needs extra encouragement." :
             "The athlete is looking for additional motivation to stay on track.";
 
@@ -101,10 +103,10 @@ Response:";
     {
         var response = new MotivationResponseDto
         {
-            MotivationalMessage = ExtractMotivationalMessage(aiResponse),
-            Quote = ExtractQuote(aiResponse),
-            ActionableTips = ExtractTips(aiResponse),
-            GeneratedAt = DateTime.UtcNow
+            MotivationalMessage = this.ExtractMotivationalMessage(aiResponse),
+            Quote = this.ExtractQuote(aiResponse),
+            ActionableTips = this.ExtractTips(aiResponse),
+            GeneratedAt = DateTime.UtcNow,
         };
 
         return response;
@@ -113,7 +115,9 @@ Response:";
     private string ExtractMotivationalMessage(string aiResponse)
     {
         if (string.IsNullOrWhiteSpace(aiResponse))
+        {
             return "You're doing great! Keep up the excellent work with your fitness journey.";
+        }
 
         // Extrahiere Hauptnachricht (ersten Absatz oder bis zum Quote/Tips)
         var lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
@@ -129,14 +133,20 @@ Response:";
                 cleanLine.StartsWith("Actionable", StringComparison.OrdinalIgnoreCase) ||
                 cleanLine.StartsWith("1.", StringComparison.OrdinalIgnoreCase) ||
                 cleanLine.StartsWith("2.", StringComparison.OrdinalIgnoreCase))
+            {
                 break;
+            }
 
             // Ignoriere reine Quotes in Anführungszeichen am Anfang von Zeilen
             if (cleanLine.StartsWith('"') && cleanLine.EndsWith('"') && cleanLine.Length > 20)
+            {
                 continue;
+            }
 
             if (!string.IsNullOrWhiteSpace(cleanLine))
+            {
                 messageLines.Add(cleanLine);
+            }
         }
 
         var result = messageLines.Any() ? string.Join(" ", messageLines) :
@@ -155,7 +165,9 @@ Response:";
     private string? ExtractQuote(string aiResponse)
     {
         if (string.IsNullOrWhiteSpace(aiResponse))
+        {
             return null;
+        }
 
         // Suche nach Zitaten in Anführungszeichen
         var quoteMatches = System.Text.RegularExpressions.Regex.Matches(
@@ -164,6 +176,7 @@ Response:";
         foreach (System.Text.RegularExpressions.Match match in quoteMatches)
         {
             var quote = match.Groups[1].Value.Trim();
+
             // Filtere motivierende Quotes (keine technischen Texte)
             if (quote.Length >= 15 && quote.Length <= 150 &&
                 (quote.Contains("success") || quote.Contains("achieve") || quote.Contains("goal") ||
@@ -182,7 +195,9 @@ Response:";
             {
                 var quoteLine = quoteParts[1].Split('\n')[0].Trim().Trim('"', '-', '*').Trim();
                 if (!string.IsNullOrWhiteSpace(quoteLine) && quoteLine.Length >= 15)
+                {
                     return quoteLine; // ← Keine Keyword-Prüfung mehr
+                }
             }
         }
 
@@ -192,12 +207,14 @@ Response:";
     private List<string>? ExtractTips(string aiResponse)
     {
         if (string.IsNullOrWhiteSpace(aiResponse))
+        {
             return null;
+        }
 
         var tips = new List<string>();
 
         // Suche nach "Tips:" oder ähnlichen Labels
-        var tipsSection = "";
+        var tipsSection = string.Empty;
         var lowerResponse = aiResponse.ToLower();
 
         if (lowerResponse.Contains("tips:"))
@@ -225,7 +242,10 @@ Response:";
                     !cleanLine.StartsWith("Quote", StringComparison.OrdinalIgnoreCase))
                 {
                     tips.Add(cleanLine);
-                    if (tips.Count >= 3) break; // Maximal 3 Tips
+                    if (tips.Count >= 3)
+                    {
+                        break; // Maximal 3 Tips
+                    }
                 }
             }
         }
@@ -244,7 +264,7 @@ Response:";
             $"Great job, {athleteName}! Your consistency in training is inspiring. Every workout brings you closer to your {primaryGoal}.",
             $"You're making excellent progress, {athleteName}! Your dedication to fitness shows real commitment to your health and goals.",
             $"Keep pushing forward, {athleteName}! Your {fitnessLevel} level shows you have what it takes to achieve great things.",
-            $"Amazing work, {athleteName}! Your commitment to {primaryGoal} is paying off. Stay strong and keep moving forward!"
+            $"Amazing work, {athleteName}! Your commitment to {primaryGoal} is paying off. Stay strong and keep moving forward!",
         };
 
         using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();

@@ -23,8 +23,8 @@ public static class GrpcTestExtensions
             {
                 Name = athleteName,
                 FitnessLevel = fitnessLevel,
-                PrimaryGoal = primaryGoal
-            }
+                PrimaryGoal = primaryGoal,
+            },
         };
     }
 
@@ -39,7 +39,7 @@ public static class GrpcTestExtensions
         var request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
         {
             PreferredAiProvider = preferredAiProvider,
-            AnalysisType = analysisType
+            AnalysisType = analysisType,
         };
 
         // Füge Demo-Workouts hinzu
@@ -51,7 +51,7 @@ public static class GrpcTestExtensions
                 ActivityType = i % 2 == 0 ? "Run" : "Ride",
                 Distance = 5000 + (i * 1000),
                 Duration = 1800 + (i * 300),
-                Calories = 350 + (i * 50)
+                Calories = 350 + (i * 50),
             });
         }
 
@@ -68,7 +68,7 @@ public static class GrpcTestExtensions
         return new global::Fitnessanalyticshub.PerformanceTrendsRequest
         {
             AthleteId = athleteId,
-            TimeFrame = timeFrame
+            TimeFrame = timeFrame,
         };
     }
 
@@ -80,7 +80,7 @@ public static class GrpcTestExtensions
     {
         return new global::Fitnessanalyticshub.TrainingRecommendationsRequest
         {
-            AthleteId = athleteId
+            AthleteId = athleteId,
         };
     }
 
@@ -93,7 +93,7 @@ public static class GrpcTestExtensions
     {
         var request = new global::Fitnessanalyticshub.HealthAnalysisRequest
         {
-            AthleteId = athleteId
+            AthleteId = athleteId,
         };
 
         for (int i = 0; i < workoutCount; i++)
@@ -104,7 +104,7 @@ public static class GrpcTestExtensions
                 ActivityType = "Run",
                 Distance = 5000,
                 Duration = 1800,
-                Calories = 350
+                Calories = 350,
             });
         }
 
@@ -131,9 +131,9 @@ public static class GrpcTestExtensions
             {
                 "Set realistic goals",
                 "Stay consistent",
-                "Celebrate progress"
+                "Celebrate progress",
             },
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
     }
 
@@ -153,17 +153,17 @@ public static class GrpcTestExtensions
             {
                 "Consistent training pattern",
                 "Good cardiovascular endurance",
-                "Improving pace over time"
+                "Improving pace over time",
             },
             Recommendations = recommendations ?? new List<string>
             {
                 "Maintain current training frequency",
                 "Add strength training sessions",
-                "Focus on recovery between workouts"
+                "Focus on recovery between workouts",
             },
             Provider = provider,
             GeneratedAt = DateTime.UtcNow,
-            RequestId = Guid.NewGuid().ToString()
+            RequestId = Guid.NewGuid().ToString(),
         };
     }
 
@@ -302,7 +302,7 @@ public static class GrpcTestExtensions
         var request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
         {
             PreferredAiProvider = "googlegemini",
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Verschiedene Workout-Typen
@@ -312,7 +312,7 @@ public static class GrpcTestExtensions
             ActivityType = "Run",
             Distance = 10000, // 10km
             Duration = 3000,  // 50 minutes
-            Calories = 600
+            Calories = 600,
         });
 
         request.RecentWorkouts.Add(new global::Fitnessanalyticshub.Workout
@@ -321,7 +321,7 @@ public static class GrpcTestExtensions
             ActivityType = "Ride",
             Distance = 40000, // 40km
             Duration = 7200,  // 2 hours
-            Calories = 1200
+            Calories = 1200,
         });
 
         request.RecentWorkouts.Add(new global::Fitnessanalyticshub.Workout
@@ -330,7 +330,7 @@ public static class GrpcTestExtensions
             ActivityType = "Swim",
             Distance = 2000,  // 2km
             Duration = 3600,  // 1 hour
-            Calories = 500
+            Calories = 500,
         });
 
         return request;

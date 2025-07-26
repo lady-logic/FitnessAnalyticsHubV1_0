@@ -1,6 +1,6 @@
-﻿using AIAssistant.UI.API.Services;
-using AIAssistant.Application.Interfaces;
+﻿using AIAssistant.Application.Interfaces;
 using AIAssistant.Infrastructure.Services;
+using AIAssistant.UI.API.Services;
 using FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
 using FitnessAnalyticsHub.AIAssistant.UI.API.Services;
 
@@ -20,7 +20,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Fitness Analytics Hub - AI Assistant",
         Version = "v1",
-        Description = "AI-powered fitness analytics"
+        Description = "AI-powered fitness analytics",
     });
 });
 
@@ -72,7 +72,8 @@ var app = builder.Build();
 // gRPC Services registrieren
 app.MapGrpcService<MotivationGrpcService>();
 app.MapGrpcService<WorkoutAnalysisGrpcService>();
-// gRPC-Reflection für Debugging 
+
+// gRPC-Reflection für Debugging
 app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 
 // Configure the HTTP request pipeline.
@@ -101,7 +102,7 @@ app.MapGet("/health", () => new
 {
     status = "healthy",
     service = "AI Assistant",
-    timestamp = DateTime.UtcNow
+    timestamp = DateTime.UtcNow,
 });
 
 Console.WriteLine("🤖 AI Assistant Service starting...");

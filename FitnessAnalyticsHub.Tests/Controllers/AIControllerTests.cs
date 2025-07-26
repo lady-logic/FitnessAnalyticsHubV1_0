@@ -11,15 +11,15 @@ namespace FitnessAnalyticsHub.Tests.Controllers;
 
 public class AIControllerTests : ControllerTestBase<AIController>
 {
-    private readonly Mock<IAIAssistantClientService> _mockAIAssistantClient;
-    private readonly Mock<ILogger<AIController>> _mockLogger;
-    private readonly AIController _controller;
+    private readonly Mock<IAIAssistantClientService> mockAIAssistantClient;
+    private readonly Mock<ILogger<AIController>> mockLogger;
+    private readonly AIController controller;
 
     public AIControllerTests()
     {
-        _mockAIAssistantClient = new Mock<IAIAssistantClientService>();
-        _mockLogger = new Mock<ILogger<AIController>>();
-        _controller = new AIController(_mockAIAssistantClient.Object, _mockLogger.Object);
+        this.mockAIAssistantClient = new Mock<IAIAssistantClientService>();
+        this.mockLogger = new Mock<ILogger<AIController>>();
+        this.controller = new AIController(this.mockAIAssistantClient.Object, this.mockLogger.Object);
     }
 
     #region GetMotivation Tests
@@ -34,7 +34,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 Name = "John Doe",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Weight Loss"
+                PrimaryGoal = "Weight Loss",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
@@ -44,11 +44,11 @@ public class AIControllerTests : ControllerTestBase<AIController>
                     ActivityType = "Run",
                     Distance = 5.0,
                     Duration = 1800,
-                    Calories = 350
-                }
+                    Calories = 350,
+                },
             },
             PreferredTone = "Encouraging",
-            ContextualInfo = "Feeling a bit tired today"
+            ContextualInfo = "Feeling a bit tired today",
         };
 
         var expectedResponse = new AIMotivationResponseDto
@@ -59,18 +59,18 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 "Focus on hydration before your next run",
                 "Try a 5-minute warm-up routine",
-                "Set a small goal for tomorrow"
+                "Set a small goal for tomorrow",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "AIAssistant-HuggingFace"
+            Source = "AIAssistant-HuggingFace",
         };
 
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.GetMotivationAsync(request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetMotivation(request, CancellationToken.None);
+        var result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -82,7 +82,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
         Assert.Equal(expectedResponse.Source, response.Source);
 
         // Verify that the service was called correctly
-        _mockAIAssistantClient.Verify(x => x.GetMotivationAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+        this.mockAIAssistantClient.Verify(x => x.GetMotivationAsync(request, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -95,8 +95,9 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 Name = "Jane Smith",
                 FitnessLevel = "Beginner",
-                PrimaryGoal = "General Fitness"
-            }
+                PrimaryGoal = "General Fitness",
+            },
+
             // No recent workouts, no preferred tone, no contextual info
         };
 
@@ -107,18 +108,18 @@ public class AIControllerTests : ControllerTestBase<AIController>
             ActionableTips = new List<string>
             {
                 "Start with 10 minutes of walking daily",
-                "Set realistic weekly goals"
+                "Set realistic weekly goals",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "AIAssistant-GoogleGemini"
+            Source = "AIAssistant-GoogleGemini",
         };
 
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.GetMotivationAsync(It.IsAny<AIMotivationRequestDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetMotivation(request, CancellationToken.None);
+        var result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -139,20 +140,20 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 Name = "Test User",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Endurance"
-            }
+                PrimaryGoal = "Endurance",
+            },
         };
 
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.GetMotivationAsync(It.IsAny<AIMotivationRequestDto>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new AIAssistantApiException("AI service is temporarily unavailable", 503));
 
         // Act & Assert
         await Assert.ThrowsAsync<AIAssistantApiException>(
-            () => _controller.GetMotivation(request, CancellationToken.None));
+            () => this.controller.GetMotivation(request, CancellationToken.None));
 
         // Verify service was called
-        _mockAIAssistantClient.Verify(x => x.GetMotivationAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+        this.mockAIAssistantClient.Verify(x => x.GetMotivationAsync(request, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     #endregion
@@ -169,7 +170,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 Name = "Mike Johnson",
                 FitnessLevel = "Advanced",
-                PrimaryGoal = "Performance Improvement"
+                PrimaryGoal = "Performance Improvement",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
@@ -179,7 +180,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
                     ActivityType = "Run",
                     Distance = 10.0,
                     Duration = 2700, // 45 minutes
-                    Calories = 650
+                    Calories = 650,
                 },
                 new AIWorkoutDataDto
                 {
@@ -187,11 +188,11 @@ public class AIControllerTests : ControllerTestBase<AIController>
                     ActivityType = "Ride",
                     Distance = 30.0,
                     Duration = 5400, // 90 minutes
-                    Calories = 1200
-                }
+                    Calories = 1200,
+                },
             },
             AnalysisType = "Performance",
-            FocusAreas = new List<string> { "endurance", "pacing", "recovery" }
+            FocusAreas = new List<string> { "endurance", "pacing", "recovery" },
         };
 
         var expectedResponse = new AIWorkoutAnalysisResponseDto
@@ -201,24 +202,24 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 "Average pace has improved by 15 seconds per kilometer",
                 "Heart rate zones indicate optimal training intensity",
-                "Recovery time between high-intensity sessions is appropriate"
+                "Recovery time between high-intensity sessions is appropriate",
             },
             Recommendations = new List<string>
             {
                 "Continue current endurance base building",
                 "Add one tempo run per week",
-                "Consider incorporating strength training 2x per week"
+                "Consider incorporating strength training 2x per week",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "AIAssistant-GoogleGemini"
+            Source = "AIAssistant-GoogleGemini",
         };
 
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.GetWorkoutAnalysisAsync(request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetWorkoutAnalysis(request, CancellationToken.None);
+        var result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -230,7 +231,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
         Assert.Equal(expectedResponse.Source, response.Source);
 
         // Verify service was called correctly
-        _mockAIAssistantClient.Verify(x => x.GetWorkoutAnalysisAsync(request, It.IsAny<CancellationToken>()), Times.Once);
+        this.mockAIAssistantClient.Verify(x => x.GetWorkoutAnalysisAsync(request, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -243,10 +244,10 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 Name = "New User",
                 FitnessLevel = "Beginner",
-                PrimaryGoal = "Get Started"
+                PrimaryGoal = "Get Started",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>(), // Empty list
-            AnalysisType = "General"
+            AnalysisType = "General",
         };
 
         var expectedResponse = new AIWorkoutAnalysisResponseDto
@@ -255,24 +256,24 @@ public class AIControllerTests : ControllerTestBase<AIController>
             KeyInsights = new List<string>
             {
                 "Starting with 3 workouts per week is ideal for beginners",
-                "Focus on form over intensity initially"
+                "Focus on form over intensity initially",
             },
             Recommendations = new List<string>
             {
                 "Begin with 20-30 minute walks",
                 "Add bodyweight exercises 2x per week",
-                "Track your progress to stay motivated"
+                "Track your progress to stay motivated",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "AIAssistant-Fallback"
+            Source = "AIAssistant-Fallback",
         };
 
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.GetWorkoutAnalysisAsync(It.IsAny<AIWorkoutAnalysisRequestDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetWorkoutAnalysis(request, CancellationToken.None);
+        var result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -298,7 +299,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 Name = "Test Athlete",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Endurance"
+                PrimaryGoal = "Endurance",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
@@ -308,10 +309,10 @@ public class AIControllerTests : ControllerTestBase<AIController>
                     ActivityType = "Run",
                     Distance = 5.0,
                     Duration = 1800,
-                    Calories = 400
-                }
+                    Calories = 400,
+                },
             },
-            AnalysisType = analysisType
+            AnalysisType = analysisType,
         };
 
         var expectedResponse = new AIWorkoutAnalysisResponseDto
@@ -320,15 +321,15 @@ public class AIControllerTests : ControllerTestBase<AIController>
             KeyInsights = new List<string> { $"Key insight for {analysisType} analysis" },
             Recommendations = new List<string> { $"Recommendation based on {analysisType} focus" },
             GeneratedAt = DateTime.UtcNow,
-            Source = "AIAssistant-Test"
+            Source = "AIAssistant-Test",
         };
 
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.GetWorkoutAnalysisAsync(It.IsAny<AIWorkoutAnalysisRequestDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetWorkoutAnalysis(request, CancellationToken.None);
+        var result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -337,7 +338,8 @@ public class AIControllerTests : ControllerTestBase<AIController>
         Assert.Contains(analysisType.ToLower(), response.Analysis.ToLower());
 
         // Verify the request was passed correctly
-        _mockAIAssistantClient.Verify(x => x.GetWorkoutAnalysisAsync(
+        this.mockAIAssistantClient.Verify(
+            x => x.GetWorkoutAnalysisAsync(
             It.Is<AIWorkoutAnalysisRequestDto>(r => r.AnalysisType == analysisType),
             It.IsAny<CancellationToken>()),
             Times.Once);
@@ -351,12 +353,12 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetAIHealth_WhenServiceIsHealthy_ReturnsOkWithHealthyStatus()
     {
         // Arrange
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.IsHealthyAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
-        var result = await _controller.GetAIHealth(CancellationToken.None);
+        var result = await this.controller.GetAIHealth(CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -382,19 +384,19 @@ public class AIControllerTests : ControllerTestBase<AIController>
         Assert.True(DateTime.UtcNow.Subtract(timestamp).TotalSeconds < 5); // Within 5 seconds
 
         // Verify service was called
-        _mockAIAssistantClient.Verify(x => x.IsHealthyAsync(It.IsAny<CancellationToken>()), Times.Once);
+        this.mockAIAssistantClient.Verify(x => x.IsHealthyAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task GetAIHealth_WhenServiceIsUnhealthy_ReturnsOkWithUnhealthyStatus()
     {
         // Arrange
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.IsHealthyAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
-        var result = await _controller.GetAIHealth(CancellationToken.None);
+        var result = await this.controller.GetAIHealth(CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -412,13 +414,13 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetAIHealth_WhenServiceThrowsException_ThrowsException()
     {
         // Arrange
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.IsHealthyAsync(It.IsAny<CancellationToken>()))
             .ThrowsAsync(new TimeoutException("Health check timed out"));
 
         // Act & Assert
         await Assert.ThrowsAsync<TimeoutException>(
-            () => _controller.GetAIHealth(CancellationToken.None));
+            () => this.controller.GetAIHealth(CancellationToken.None));
     }
 
     #endregion
@@ -435,27 +437,27 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 Name = "Logged Athlete",
                 FitnessLevel = "Advanced",
-                PrimaryGoal = "Competition"
-            }
+                PrimaryGoal = "Competition",
+            },
         };
 
         var response = new AIMotivationResponseDto
         {
             MotivationalMessage = "Test message",
             Source = "Test-Source",
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.GetMotivationAsync(It.IsAny<AIMotivationRequestDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
         // Act
-        await _controller.GetMotivation(request, CancellationToken.None);
+        await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
         // Verify that logging was called with correct athlete name
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
@@ -465,7 +467,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             Times.Once);
 
         // Verify response source was logged
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
@@ -486,28 +488,28 @@ public class AIControllerTests : ControllerTestBase<AIController>
             {
                 new AIWorkoutDataDto { ActivityType = "Run" },
                 new AIWorkoutDataDto { ActivityType = "Bike" },
-                new AIWorkoutDataDto { ActivityType = "Swim" }
+                new AIWorkoutDataDto { ActivityType = "Swim" },
             },
-            AnalysisType = "TestAnalysis"
+            AnalysisType = "TestAnalysis",
         };
 
         var response = new AIWorkoutAnalysisResponseDto
         {
             Analysis = "Test analysis",
             Source = "Test-Source",
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockAIAssistantClient
+        this.mockAIAssistantClient
             .Setup(x => x.GetWorkoutAnalysisAsync(It.IsAny<AIWorkoutAnalysisRequestDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
         // Act
-        await _controller.GetWorkoutAnalysis(request, CancellationToken.None);
+        await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
 
         // Assert
         // Verify workout count and analysis type were logged
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),

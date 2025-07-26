@@ -7,36 +7,35 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
-using Xunit;
 
 namespace FitnessAnalyticsHub.Tests.Services;
 
 public class GrpcJsonClientServiceTests
 {
-    private readonly Mock<ILogger<GrpcJsonClientService>> _mockLogger;
-    private readonly Mock<IConfiguration> _mockConfiguration;
-    private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
-    private readonly HttpClient _httpClient;
-    private readonly GrpcJsonClientService _service;
+    private readonly Mock<ILogger<GrpcJsonClientService>> mockLogger;
+    private readonly Mock<IConfiguration> mockConfiguration;
+    private readonly Mock<HttpMessageHandler> mockHttpMessageHandler;
+    private readonly HttpClient httpClient;
+    private readonly GrpcJsonClientService service;
 
     public GrpcJsonClientServiceTests()
     {
-        _mockLogger = new Mock<ILogger<GrpcJsonClientService>>();
-        _mockConfiguration = new Mock<IConfiguration>();
-        _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
+        this.mockLogger = new Mock<ILogger<GrpcJsonClientService>>();
+        this.mockConfiguration = new Mock<IConfiguration>();
+        this.mockHttpMessageHandler = new Mock<HttpMessageHandler>();
 
         // Setup configuration
-        _mockConfiguration.Setup(c => c["AIAssistant:BaseUrl"])
+        this.mockConfiguration.Setup(c => c["AIAssistant:BaseUrl"])
             .Returns("http://localhost:5169");
 
         // Setup HttpClient with mocked handler
-        _httpClient = new HttpClient(_mockHttpMessageHandler.Object);
-        _service = new GrpcJsonClientService(_httpClient, _mockLogger.Object, _mockConfiguration.Object);
+        this.httpClient = new HttpClient(this.mockHttpMessageHandler.Object);
+        this.service = new GrpcJsonClientService(this.httpClient, this.mockLogger.Object, this.mockConfiguration.Object);
     }
 
     public void Dispose()
     {
-        _httpClient?.Dispose();
+        this.httpClient?.Dispose();
     }
 
     #region GetMotivationAsync Tests
@@ -51,8 +50,8 @@ public class GrpcJsonClientServiceTests
             {
                 Name = "John Doe",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Weight Loss"
-            }
+                PrimaryGoal = "Weight Loss",
+            },
         };
 
         var responseJson = JsonSerializer.Serialize(new
@@ -60,13 +59,13 @@ public class GrpcJsonClientServiceTests
             motivationalMessage = "You're doing great!",
             quote = "Success is earned",
             actionableTips = new[] { "Stay consistent", "Track progress" },
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetMotivationAsync(request);
+        var result = await this.service.GetMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -77,7 +76,7 @@ public class GrpcJsonClientServiceTests
         Assert.Equal("gRPC-JSON", result.Source);
 
         // Verify HTTP call
-        VerifyHttpCall(HttpMethod.Post, "/grpc-json/MotivationService/GetMotivation");
+        this.VerifyHttpCall(HttpMethod.Post, "/grpc-json/MotivationService/GetMotivation");
     }
 
     [Fact]
@@ -86,13 +85,13 @@ public class GrpcJsonClientServiceTests
         // Arrange
         var request = new AIMotivationRequestDto
         {
-            AthleteProfile = new AIAthleteProfileDto { Name = "Jane Doe" }
+            AthleteProfile = new AIAthleteProfileDto { Name = "Jane Doe" },
         };
 
-        SetupHttpResponse(HttpStatusCode.InternalServerError, "Server Error");
+        this.SetupHttpResponse(HttpStatusCode.InternalServerError, "Server Error");
 
         // Act
-        var result = await _service.GetMotivationAsync(request);
+        var result = await this.service.GetMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -102,7 +101,7 @@ public class GrpcJsonClientServiceTests
         Assert.True(result.ActionableTips.Count > 0);
 
         // Verify error logging
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
@@ -121,13 +120,13 @@ public class GrpcJsonClientServiceTests
         var responseJson = JsonSerializer.Serialize(new
         {
             motivationalMessage = "Keep going!",
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetMotivationAsync(request);
+        var result = await this.service.GetMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -147,11 +146,11 @@ public class GrpcJsonClientServiceTests
             AthleteProfile = new AIAthleteProfileDto { Name = "John", FitnessLevel = "Advanced" },
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
-                new() { Date = DateTime.UtcNow.AddDays(-1), ActivityType = "Running", Distance = 5.0, Duration = 30, Calories = 300 },
-                new() { Date = DateTime.UtcNow.AddDays(-2), ActivityType = "Cycling", Distance = 15.0, Duration = 45, Calories = 400 }
+                new () { Date = DateTime.UtcNow.AddDays(-1), ActivityType = "Running", Distance = 5.0, Duration = 30, Calories = 300 },
+                new () { Date = DateTime.UtcNow.AddDays(-2), ActivityType = "Cycling", Distance = 15.0, Duration = 45, Calories = 400 },
             },
             AnalysisType = "Performance",
-            FocusAreas = new List<string> { "Endurance", "Speed" }
+            FocusAreas = new List<string> { "Endurance", "Speed" },
         };
 
         var responseJson = JsonSerializer.Serialize(new
@@ -159,13 +158,13 @@ public class GrpcJsonClientServiceTests
             analysis = "Great progress shown",
             keyInsights = new[] { "Consistent training", "Good variety" },
             recommendations = new[] { "Increase intensity", "Add strength training" },
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetWorkoutAnalysisAsync(request);
+        var result = await this.service.GetWorkoutAnalysisAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -174,7 +173,7 @@ public class GrpcJsonClientServiceTests
         Assert.Equal(2, result.Recommendations.Count);
         Assert.Equal("gRPC-JSON-GoogleGemini", result.Source);
 
-        VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/GetWorkoutAnalysis");
+        this.VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/GetWorkoutAnalysis");
     }
 
     [Fact]
@@ -184,19 +183,19 @@ public class GrpcJsonClientServiceTests
         var request = new AIWorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<AIWorkoutDataDto>(),
-            AnalysisType = "General"
+            AnalysisType = "General",
         };
 
         var responseJson = JsonSerializer.Serialize(new
         {
             analysis = "No workouts to analyze",
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetWorkoutAnalysisAsync(request);
+        var result = await this.service.GetWorkoutAnalysisAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -211,14 +210,14 @@ public class GrpcJsonClientServiceTests
         {
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
-                new() { Distance = 5.0, Calories = 300 }
-            }
+                new () { Distance = 5.0, Calories = 300 },
+            },
         };
 
-        SetupHttpResponse(HttpStatusCode.BadRequest, "Bad Request");
+        this.SetupHttpResponse(HttpStatusCode.BadRequest, "Bad Request");
 
         // Act
-        var result = await _service.GetWorkoutAnalysisAsync(request);
+        var result = await this.service.GetWorkoutAnalysisAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -240,8 +239,8 @@ public class GrpcJsonClientServiceTests
         {
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
-                new() { Date = DateTime.UtcNow, ActivityType = "Swimming", Distance = 2.0, Duration = 60, Calories = 500 }
-            }
+                new () { Date = DateTime.UtcNow, ActivityType = "Swimming", Distance = 2.0, Duration = 60, Calories = 500 },
+            },
         };
 
         var responseJson = JsonSerializer.Serialize(new
@@ -249,20 +248,20 @@ public class GrpcJsonClientServiceTests
             analysis = "Swimming analysis complete",
             keyInsights = new[] { "Excellent cardiovascular workout" },
             recommendations = new[] { "Consider adding interval training" },
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetGoogleGeminiWorkoutAnalysisAsync(request);
+        var result = await this.service.GetGoogleGeminiWorkoutAnalysisAsync(request);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Swimming analysis complete", result.Analysis);
         Assert.Equal("gRPC-JSON-GoogleGemini", result.Source);
 
-        VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/AnalyzeGoogleGeminiWorkouts");
+        this.VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/AnalyzeGoogleGeminiWorkouts");
     }
 
     #endregion
@@ -281,20 +280,20 @@ public class GrpcJsonClientServiceTests
             analysis = "Performance trending upward",
             keyInsights = new[] { "Consistent improvement", "Good recovery" },
             recommendations = new[] { "Maintain current pace", "Add variety" },
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetPerformanceTrendsAsync(athleteId, timeFrame);
+        var result = await this.service.GetPerformanceTrendsAsync(athleteId, timeFrame);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Performance trending upward", result.Analysis);
         Assert.Equal("gRPC-JSON-PerformanceTrends", result.Source);
 
-        VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/GetPerformanceTrends");
+        this.VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/GetPerformanceTrends");
     }
 
     [Fact]
@@ -306,13 +305,13 @@ public class GrpcJsonClientServiceTests
         var responseJson = JsonSerializer.Serialize(new
         {
             analysis = "Monthly trends analysis",
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetPerformanceTrendsAsync(athleteId);
+        var result = await this.service.GetPerformanceTrendsAsync(athleteId);
 
         // Assert
         Assert.NotNull(result);
@@ -326,10 +325,10 @@ public class GrpcJsonClientServiceTests
         const int athleteId = 789;
         const string timeFrame = "year";
 
-        SetupHttpResponse(HttpStatusCode.ServiceUnavailable, "Service Unavailable");
+        this.SetupHttpResponse(HttpStatusCode.ServiceUnavailable, "Service Unavailable");
 
         // Act
-        var result = await _service.GetPerformanceTrendsAsync(athleteId, timeFrame);
+        var result = await this.service.GetPerformanceTrendsAsync(athleteId, timeFrame);
 
         // Assert
         Assert.NotNull(result);
@@ -353,20 +352,20 @@ public class GrpcJsonClientServiceTests
             analysis = "Training recommendations ready",
             keyInsights = new[] { "Good base fitness", "Room for improvement" },
             recommendations = new[] { "Increase frequency", "Focus on form" },
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetTrainingRecommendationsAsync(athleteId);
+        var result = await this.service.GetTrainingRecommendationsAsync(athleteId);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Training recommendations ready", result.Analysis);
         Assert.Equal("gRPC-JSON-TrainingRecommendations", result.Source);
 
-        VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/GetTrainingRecommendations");
+        this.VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/GetTrainingRecommendations");
     }
 
     #endregion
@@ -380,8 +379,8 @@ public class GrpcJsonClientServiceTests
         const int athleteId = 555;
         var recentWorkouts = new List<AIWorkoutDataDto>
         {
-            new() { Date = DateTime.UtcNow, ActivityType = "Yoga", Duration = 60, Calories = 200 },
-            new() { Date = DateTime.UtcNow.AddDays(-1), ActivityType = "Pilates", Duration = 45, Calories = 150 }
+            new () { Date = DateTime.UtcNow, ActivityType = "Yoga", Duration = 60, Calories = 200 },
+            new () { Date = DateTime.UtcNow.AddDays(-1), ActivityType = "Pilates", Duration = 45, Calories = 150 },
         };
 
         var responseJson = JsonSerializer.Serialize(new
@@ -389,20 +388,20 @@ public class GrpcJsonClientServiceTests
             analysis = "Health metrics look good",
             keyInsights = new[] { "Balanced activity", "Good calorie burn" },
             recommendations = new[] { "Keep it up", "Stay hydrated" },
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.AnalyzeHealthMetricsAsync(athleteId, recentWorkouts);
+        var result = await this.service.AnalyzeHealthMetricsAsync(athleteId, recentWorkouts);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal("Health metrics look good", result.Analysis);
         Assert.Equal("gRPC-JSON-HealthMetrics", result.Source);
 
-        VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/AnalyzeHealthMetrics");
+        this.VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/AnalyzeHealthMetrics");
     }
 
     [Fact]
@@ -414,13 +413,13 @@ public class GrpcJsonClientServiceTests
         var responseJson = JsonSerializer.Serialize(new
         {
             analysis = "No workout data available",
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.AnalyzeHealthMetricsAsync(athleteId, null);
+        var result = await this.service.AnalyzeHealthMetricsAsync(athleteId, null);
 
         // Assert
         Assert.NotNull(result);
@@ -436,14 +435,14 @@ public class GrpcJsonClientServiceTests
     {
         // Arrange
         var responseJson = JsonSerializer.Serialize(new { status = "healthy" });
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.IsHealthyAsync();
+        var result = await this.service.IsHealthyAsync();
 
         // Assert
         Assert.True(result);
-        VerifyHttpCall(HttpMethod.Get, "/grpc-json/health");
+        this.VerifyHttpCall(HttpMethod.Get, "/grpc-json/health");
     }
 
     [Fact]
@@ -451,10 +450,10 @@ public class GrpcJsonClientServiceTests
     {
         // Arrange
         var responseJson = JsonSerializer.Serialize(new { status = "unhealthy" });
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.IsHealthyAsync();
+        var result = await this.service.IsHealthyAsync();
 
         // Assert
         Assert.False(result);
@@ -464,16 +463,16 @@ public class GrpcJsonClientServiceTests
     public async Task IsHealthyAsync_WithHttpError_ReturnsFalse()
     {
         // Arrange
-        SetupHttpResponse(HttpStatusCode.ServiceUnavailable, "Service Unavailable");
+        this.SetupHttpResponse(HttpStatusCode.ServiceUnavailable, "Service Unavailable");
 
         // Act
-        var result = await _service.IsHealthyAsync();
+        var result = await this.service.IsHealthyAsync();
 
         // Assert
         Assert.False(result);
 
         // Verify warning logging
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
@@ -491,10 +490,10 @@ public class GrpcJsonClientServiceTests
     {
         // Arrange
         var responseJson = JsonSerializer.Serialize(new { status });
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.IsHealthyAsync();
+        var result = await this.service.IsHealthyAsync();
 
         // Assert
         Assert.True(result);
@@ -505,7 +504,7 @@ public class GrpcJsonClientServiceTests
     #region Edge Cases and Error Handling Tests
 
     [Fact]
-    public async Task Constructor_WithNullBaseUrl_UsesDefaultUrl()
+    public Task Constructor_WithNullBaseUrl_UsesDefaultUrl()
     {
         // Arrange
         var mockConfig = new Mock<IConfiguration>();
@@ -514,8 +513,9 @@ public class GrpcJsonClientServiceTests
         using var httpClient = new HttpClient();
 
         // Act & Assert - Should not throw
-        var service = new GrpcJsonClientService(httpClient, _mockLogger.Object, mockConfig.Object);
+        var service = new GrpcJsonClientService(httpClient, this.mockLogger.Object, mockConfig.Object);
         Assert.NotNull(service);
+        return Task.CompletedTask;
     }
 
     [Fact]
@@ -526,11 +526,11 @@ public class GrpcJsonClientServiceTests
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        SetupHttpResponseWithDelay(HttpStatusCode.OK, "{}", TimeSpan.FromSeconds(1));
+        this.SetupHttpResponseWithDelay(HttpStatusCode.OK, "{}", TimeSpan.FromSeconds(1));
 
         // Act & Assert
         var exception = await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => _service.GetMotivationAsync(request, cts.Token));
+            () => this.service.GetMotivationAsync(request, cts.Token));
 
         // TaskCanceledException is a subclass of OperationCanceledException
         Assert.True(exception is TaskCanceledException || exception is OperationCanceledException);
@@ -541,11 +541,11 @@ public class GrpcJsonClientServiceTests
     {
         // Arrange
         var request = new AIWorkoutAnalysisRequestDto();
-        SetupHttpResponse(HttpStatusCode.OK, "invalid json");
+        this.SetupHttpResponse(HttpStatusCode.OK, "invalid json");
 
         // Act & Assert
         await Assert.ThrowsAsync<JsonException>(
-            () => _service.GetWorkoutAnalysisAsync(request));
+            () => this.service.GetWorkoutAnalysisAsync(request));
     }
 
     [Fact]
@@ -556,12 +556,12 @@ public class GrpcJsonClientServiceTests
         var responseJson = JsonSerializer.Serialize(new
         {
             motivationalMessage = "Great work!",
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetMotivationAsync(request);
+        var result = await this.service.GetMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -579,13 +579,14 @@ public class GrpcJsonClientServiceTests
         {
             motivationalMessage = "Keep going!",
             quote = "Success is a journey",
+
             // actionableTips missing
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetMotivationAsync(request);
+        var result = await this.service.GetMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -602,10 +603,10 @@ public class GrpcJsonClientServiceTests
     {
         var response = new HttpResponseMessage(statusCode)
         {
-            Content = new StringContent(content, Encoding.UTF8, "application/json")
+            Content = new StringContent(content, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler
+        this.mockHttpMessageHandler
             .Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
@@ -618,10 +619,10 @@ public class GrpcJsonClientServiceTests
     {
         var response = new HttpResponseMessage(statusCode)
         {
-            Content = new StringContent(content, Encoding.UTF8, "application/json")
+            Content = new StringContent(content, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler
+        this.mockHttpMessageHandler
             .Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
@@ -636,7 +637,7 @@ public class GrpcJsonClientServiceTests
 
     private void VerifyHttpCall(HttpMethod method, string expectedPath)
     {
-        _mockHttpMessageHandler
+        this.mockHttpMessageHandler
             .Protected()
             .Verify(
                 "SendAsync",
@@ -665,20 +666,20 @@ public class GrpcJsonClientServiceTests
             {
                 Name = "Test User",
                 FitnessLevel = fitnessLevel,
-                PrimaryGoal = primaryGoal
-            }
+                PrimaryGoal = primaryGoal,
+            },
         };
 
         var responseJson = JsonSerializer.Serialize(new
         {
             motivationalMessage = $"Great work on your {primaryGoal} journey!",
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetMotivationAsync(request);
+        var result = await this.service.GetMotivationAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -696,24 +697,24 @@ public class GrpcJsonClientServiceTests
         var request = new AIWorkoutAnalysisRequestDto
         {
             AnalysisType = analysisType,
-            RecentWorkouts = new List<AIWorkoutDataDto>()
+            RecentWorkouts = new List<AIWorkoutDataDto>(),
         };
 
         var responseJson = JsonSerializer.Serialize(new
         {
             analysis = $"{analysisType} analysis complete",
-            generatedAt = DateTime.UtcNow.ToString("O")
+            generatedAt = DateTime.UtcNow.ToString("O"),
         });
 
-        SetupHttpResponse(HttpStatusCode.OK, responseJson);
+        this.SetupHttpResponse(HttpStatusCode.OK, responseJson);
 
         // Act
-        var result = await _service.GetWorkoutAnalysisAsync(request);
+        var result = await this.service.GetWorkoutAnalysisAsync(request);
 
         // Assert
         Assert.NotNull(result);
         Assert.Contains(analysisType, result.Analysis);
-        VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/GetWorkoutAnalysis");
+        this.VerifyHttpCall(HttpMethod.Post, "/grpc-json/WorkoutService/GetWorkoutAnalysis");
     }
 
     #endregion

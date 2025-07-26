@@ -60,7 +60,7 @@ public class WorkoutDataExtensionsTests
             { "maxPace", 3.45 },
             { "elevationGain", 125.7 },
             { "cadence", 180.0 },
-            { "powerOutput", 250.8 }
+            { "powerOutput", 250.8 },
         };
 
         var dto = new WorkoutDataDto
@@ -70,7 +70,7 @@ public class WorkoutDataExtensionsTests
             Distance = 15000,
             Duration = 3600,
             Calories = 750,
-            MetricsData = complexMetrics
+            MetricsData = complexMetrics,
         };
 
         // Act
@@ -101,8 +101,8 @@ public class WorkoutDataExtensionsTests
             MetricsData = new Dictionary<string, double>
             {
                 { "strokeRate", 30 },
-                { "pace", 1.5 }
-            }
+                { "pace", 1.5 },
+            },
         };
 
         // Act
@@ -129,7 +129,7 @@ public class WorkoutDataExtensionsTests
             Distance = 3000,
             Duration = 1800,
             Calories = 200,
-            MetricsData = null
+            MetricsData = null,
         };
 
         // Act
@@ -154,7 +154,7 @@ public class WorkoutDataExtensionsTests
             ActivityType = "Run",
             Distance = 5000,
             Duration = 1800,
-            Calories = 350
+            Calories = 350,
         };
 
         // Act
@@ -180,7 +180,7 @@ public class WorkoutDataExtensionsTests
             ActivityType = "Run",
             Distance = 5000,
             Duration = 1800,
-            Calories = 350
+            Calories = 350,
         };
 
         // Act
@@ -197,6 +197,7 @@ public class WorkoutDataExtensionsTests
     {
         // Arrange
         var grpcWorkout = new global::Fitnessanalyticshub.Workout();
+
         // Alle Properties haben gRPC default values
 
         // Act
@@ -204,7 +205,7 @@ public class WorkoutDataExtensionsTests
 
         // Assert
         Assert.NotNull(dto);
-        Assert.Equal("", dto.ActivityType); // gRPC default für string
+        Assert.Equal(string.Empty, dto.ActivityType); // gRPC default für string
         Assert.Equal(0, dto.Distance);      // gRPC default für int/double
         Assert.Equal(0, dto.Duration);
         Assert.Equal(0, dto.Calories);
@@ -224,7 +225,7 @@ public class WorkoutDataExtensionsTests
             ActivityType = "Test",
             Distance = 1000,
             Duration = 600,
-            Calories = 100
+            Calories = 100,
         };
 
         // Act
@@ -275,7 +276,7 @@ public class WorkoutDataExtensionsTests
             ActivityType = "Run",
             Distance = 5000,
             Duration = 1800,
-            Calories = 350
+            Calories = 350,
         };
 
         // Act
@@ -292,11 +293,11 @@ public class WorkoutDataExtensionsTests
         // Arrange
         var grpcJsonWorkout = new GrpcJsonWorkoutDto
         {
-            Date = "",
+            Date = string.Empty,
             ActivityType = "Swim",
             Distance = 1000,
             Duration = 1200,
-            Calories = 200
+            Calories = 200,
         };
 
         // Act
@@ -324,11 +325,11 @@ public class WorkoutDataExtensionsTests
             RecentWorkouts = new[]
             {
                 TestDataBuilder.GrpcJsonWorkout().WithActivityType("Run").Build(),
-                TestDataBuilder.GrpcJsonWorkout().WithActivityType("Ride").Build()
+                TestDataBuilder.GrpcJsonWorkout().WithActivityType("Ride").Build(),
             },
             AnalysisType = "Performance",
             FocusAreas = new[] { "endurance", "speed" },
-            PreferredAiProvider = "GoogleGemini"
+            PreferredAiProvider = "GoogleGemini",
         };
 
         // Act
@@ -353,7 +354,7 @@ public class WorkoutDataExtensionsTests
         {
             AthleteProfile = null,
             RecentWorkouts = new[] { TestDataBuilder.GrpcJsonWorkout().Build() },
-            AnalysisType = "Health"
+            AnalysisType = "Health",
         };
 
         // Act
@@ -375,7 +376,7 @@ public class WorkoutDataExtensionsTests
         {
             AthleteProfile = TestDataBuilder.GrpcJsonAthleteProfile().Build(),
             RecentWorkouts = null,
-            AnalysisType = "Trends"
+            AnalysisType = "Trends",
         };
 
         // Act
@@ -396,7 +397,7 @@ public class WorkoutDataExtensionsTests
         {
             AthleteProfile = TestDataBuilder.GrpcJsonAthleteProfile().Build(),
             RecentWorkouts = new[] { TestDataBuilder.GrpcJsonWorkout().Build() },
-            AnalysisType = null
+            AnalysisType = null,
         };
 
         // Act
@@ -421,7 +422,7 @@ public class WorkoutDataExtensionsTests
             ActivityType = "Rest",
             Distance = 0,
             Duration = 0,
-            Calories = 0
+            Calories = 0,
         };
 
         // Act
@@ -447,7 +448,7 @@ public class WorkoutDataExtensionsTests
             ActivityType = "Ultra Marathon",
             Distance = 100000, // 100km
             Duration = 36000,  // 10 hours
-            Calories = 5000
+            Calories = 5000,
         };
 
         // Act
@@ -478,7 +479,7 @@ public class WorkoutDataExtensionsTests
             { "averageHeartRate", 165.5 },
             { "maxHeartRate", 185.0 },
             { "averagePace", 5.0 },
-            { "elevationGain", 250.3 }
+            { "elevationGain", 250.3 },
         };
 
         // Act
@@ -496,7 +497,7 @@ public class WorkoutDataExtensionsTests
 
     [Theory]
     [InlineData(-1000)] // Negative distance (invalid)
-    [InlineData(0)]     // Zero distance (rest day)
+    [InlineData(0)] // Zero distance (rest day)
     [InlineData(200000)] // Very long distance (200km)
     public void ToWorkoutDataDto_WithVariousDistances_HandlesCorrectly(double distance)
     {
@@ -507,7 +508,7 @@ public class WorkoutDataExtensionsTests
             ActivityType = "Test",
             Distance = distance,
             Duration = 3600,
-            Calories = 400
+            Calories = 400,
         };
 
         // Act
@@ -519,9 +520,9 @@ public class WorkoutDataExtensionsTests
     }
 
     [Theory]
-    [InlineData(0)]      // No duration
-    [InlineData(60)]     // 1 minute
-    [InlineData(86400)]  // 24 hours
+    [InlineData(0)] // No duration
+    [InlineData(60)] // 1 minute
+    [InlineData(86400)] // 24 hours
     public void ToWorkoutDataDto_WithVariousDurations_HandlesCorrectly(int duration)
     {
         // Arrange
@@ -531,7 +532,7 @@ public class WorkoutDataExtensionsTests
             ActivityType = "Test",
             Distance = 5000,
             Duration = duration,
-            Calories = 400
+            Calories = 400,
         };
 
         // Act

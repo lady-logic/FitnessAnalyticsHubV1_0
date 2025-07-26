@@ -1,33 +1,33 @@
-﻿using AIAssistant._04_UI.API.Controllers;
+﻿namespace AIAssistant.Tests.Controllers;
+
 using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
 using AIAssistant.Tests.Base;
+using AIAssistant.UI.API.Controllers;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Newtonsoft.Json;
 
-namespace AIAssistant.Tests.Controllers;
-
 public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonController>
 {
-    private readonly Mock<IMotivationCoachService> _mockMotivationService;
-    private readonly Mock<IWorkoutAnalysisService> _mockWorkoutAnalysisService;
-    private readonly Mock<ILogger<GrpcJsonController>> _mockLogger;
-    private readonly GrpcJsonController _controller;
+    private readonly Mock<IMotivationCoachService> mockMotivationService;
+    private readonly Mock<IWorkoutAnalysisService> mockWorkoutAnalysisService;
+    private readonly Mock<ILogger<GrpcJsonController>> mockLogger;
+    private readonly GrpcJsonController controller;
 
     public GrpcJsonControllerTests()
     {
-        _mockMotivationService = new Mock<IMotivationCoachService>();
-        _mockWorkoutAnalysisService = new Mock<IWorkoutAnalysisService>();
-        _mockLogger = CreateMockLogger<GrpcJsonController>();
+        this.mockMotivationService = new Mock<IMotivationCoachService>();
+        this.mockWorkoutAnalysisService = new Mock<IWorkoutAnalysisService>();
+        this.mockLogger = this.CreateMockLogger<GrpcJsonController>();
 
-        _controller = new GrpcJsonController(
-            _mockMotivationService.Object,
-            _mockWorkoutAnalysisService.Object,
-            _mockLogger.Object);
+        this.controller = new GrpcJsonController(
+            this.mockMotivationService.Object,
+            this.mockWorkoutAnalysisService.Object,
+            this.mockLogger.Object);
     }
 
     private GrpcJsonMotivationRequestDto CreateMotivationRequest()
@@ -38,8 +38,8 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
             {
                 Name = "John Doe",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Weight Loss"
-            }
+                PrimaryGoal = "Weight Loss",
+            },
         };
     }
 
@@ -51,7 +51,7 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
             AthleteProfile = new GrpcJsonAthleteProfileDto
             {
                 Name = "Jane Smith",
-                FitnessLevel = "Advanced"
+                FitnessLevel = "Advanced",
             },
             RecentWorkouts = new[]
             {
@@ -61,9 +61,9 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
                     ActivityType = "Run",
                     Distance = 5000,
                     Duration = 1800,
-                    Calories = 300
-                }
-            }
+                    Calories = 300,
+                },
+            },
         };
     }
 
@@ -71,78 +71,78 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
     public async Task GetMotivation_WithValidRequest_ReturnsOkResult()
     {
         // Arrange
-        var request = CreateMotivationRequest();
+        var request = this.CreateMotivationRequest();
         var serviceResponse = new MotivationResponseDto
         {
             MotivationalMessage = "Keep going!",
             Quote = "Success is a journey",
             ActionableTips = new List<string> { "Stay hydrated", "Get enough sleep" },
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ReturnsAsync(serviceResponse);
 
         // Act
-        var result = await _controller.GetMotivation(request);
+        var result = await this.controller.GetMotivationAsync(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
 
         // Verify service was called
-        _mockMotivationService.Verify(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()), Times.Once);
+        this.mockMotivationService.Verify(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()), Times.Once);
     }
 
     [Fact]
     public async Task GetWorkoutAnalysis_WithValidRequest_ReturnsOkResult()
     {
         // Arrange
-        var request = CreateWorkoutAnalysisRequest();
+        var request = this.CreateWorkoutAnalysisRequest();
         var serviceResponse = new WorkoutAnalysisResponseDto
         {
             Analysis = "Great progress in your training",
             KeyInsights = new List<string> { "Consistent pace", "Good endurance" },
             Recommendations = new List<string> { "Increase distance", "Add intervals" },
             GeneratedAt = DateTime.UtcNow,
-            Provider = "GoogleGemini"
+            Provider = "GoogleGemini",
         };
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(serviceResponse);
 
         // Act
-        var result = await _controller.GetWorkoutAnalysis(request);
+        var result = await this.controller.GetWorkoutAnalysisAsync(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
 
         // Verify service was called
-        _mockWorkoutAnalysisService.Verify(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()), Times.Once);
+        this.mockWorkoutAnalysisService.Verify(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()), Times.Once);
     }
 
     [Fact]
     public async Task AnalyzeGoogleGeminiWorkouts_WithValidRequest_ReturnsOkResult()
     {
         // Arrange
-        var request = CreateWorkoutAnalysisRequest();
+        var request = this.CreateWorkoutAnalysisRequest();
         var serviceResponse = new WorkoutAnalysisResponseDto
         {
             Analysis = "GoogleGemini analysis result",
             KeyInsights = new List<string> { "AI insight" },
             Recommendations = new List<string> { "AI recommendation" },
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(serviceResponse);
 
         // Act
-        var result = await _controller.AnalyzeGoogleGeminiWorkouts(request);
+        var result = await this.controller.AnalyzeGoogleGeminiWorkoutsAsync(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -153,7 +153,7 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
     public async Task HealthCheck_ReturnsHealthyStatus()
     {
         // Act
-        var result = await _controller.HealthCheck();
+        var result = await this.controller.HealthCheckAsync();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -173,11 +173,11 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
         var request = new GrpcJsonPerformanceTrendsRequestDto
         {
             AthleteId = 123,
-            TimeFrame = "30days"
+            TimeFrame = "30days",
         };
 
         // Act
-        var result = await _controller.GetPerformanceTrends(request);
+        var result = await this.controller.GetPerformanceTrendsAsync(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -194,11 +194,11 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
         // Arrange
         var request = new GrpcJsonTrainingRecommendationsRequestDto
         {
-            AthleteId = 456
+            AthleteId = 456,
         };
 
         // Act
-        var result = await _controller.GetTrainingRecommendations(request);
+        var result = await this.controller.GetTrainingRecommendationsAsync(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -219,12 +219,12 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
             RecentWorkouts = new[]
             {
                 new GrpcJsonWorkoutDto { Calories = 300 },
-                new GrpcJsonWorkoutDto { Calories = 250 }
-            }
+                new GrpcJsonWorkoutDto { Calories = 250 },
+            },
         };
 
         // Act
-        var result = await _controller.AnalyzeHealthMetrics(request);
+        var result = await this.controller.AnalyzeHealthMetricsAsync(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -242,21 +242,21 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
         // Arrange
         var request = new GrpcJsonMotivationRequestDto
         {
-            AthleteProfile = null
+            AthleteProfile = null,
         };
 
         var serviceResponse = new MotivationResponseDto
         {
             MotivationalMessage = "Default motivation",
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ReturnsAsync(serviceResponse);
 
         // Act
-        var result = await _controller.GetMotivation(request);
+        var result = await this.controller.GetMotivationAsync(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -270,21 +270,21 @@ public class GrpcJsonControllerTests : AIAssistantControllerTestBase<GrpcJsonCon
         var request = new GrpcJsonWorkoutAnalysisRequestDto
         {
             AnalysisType = "Performance",
-            RecentWorkouts = null
+            RecentWorkouts = null,
         };
 
         var serviceResponse = new WorkoutAnalysisResponseDto
         {
             Analysis = "No workouts to analyze",
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(serviceResponse);
 
         // Act
-        var result = await _controller.GetWorkoutAnalysis(request);
+        var result = await this.controller.GetWorkoutAnalysisAsync(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);

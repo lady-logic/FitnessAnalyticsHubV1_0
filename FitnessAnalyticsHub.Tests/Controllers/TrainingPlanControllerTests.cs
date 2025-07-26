@@ -10,13 +10,13 @@ namespace FitnessAnalyticsHub.Tests.Controllers;
 
 public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanController>
 {
-    private readonly Mock<ITrainingPlanService> _mockTrainingPlanService;
-    private readonly TrainingPlanController _controller;
+    private readonly Mock<ITrainingPlanService> mockTrainingPlanService;
+    private readonly TrainingPlanController controller;
 
     public TrainingPlanControllerTests()
     {
-        _mockTrainingPlanService = new Mock<ITrainingPlanService>();
-        _controller = new TrainingPlanController(_mockTrainingPlanService.Object);
+        this.mockTrainingPlanService = new Mock<ITrainingPlanService>();
+        this.controller = new TrainingPlanController(this.mockTrainingPlanService.Object);
     }
 
     #region GetById Tests
@@ -34,15 +34,15 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
             AthleteName = "Test Athlete",
             StartDate = DateTime.Now,
             EndDate = DateTime.Now.AddDays(90),
-            Goal = Domain.Enums.TrainingGoal.EnduranceImprovement
+            Goal = Domain.Enums.TrainingGoal.EnduranceImprovement,
         };
 
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.GetTrainingPlanByIdAsync(trainingPlanId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTrainingPlan);
 
         // Act
-        var result = await _controller.GetById(trainingPlanId, CancellationToken.None);
+        var result = await this.controller.GetById(trainingPlanId, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -56,12 +56,12 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
     {
         // Arrange
         var invalidId = 999;
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.GetTrainingPlanByIdAsync(invalidId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TrainingPlanDto?)null);
 
         // Act
-        var result = await _controller.GetById(invalidId, CancellationToken.None);
+        var result = await this.controller.GetById(invalidId, CancellationToken.None);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result.Result);
@@ -84,23 +84,23 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
                 Id = 1,
                 Name = "Marathon Training",
                 AthleteId = athleteId,
-                AthleteName = "Test Athlete"
+                AthleteName = "Test Athlete",
             },
             new TrainingPlanDto
             {
                 Id = 2,
                 Name = "5K Training",
                 AthleteId = athleteId,
-                AthleteName = "Test Athlete"
-            }
+                AthleteName = "Test Athlete",
+            },
         };
 
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.GetTrainingPlansByAthleteIdAsync(athleteId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedTrainingPlans);
 
         // Act
-        var result = await _controller.GetByAthleteId(athleteId, CancellationToken.None);
+        var result = await this.controller.GetByAthleteId(athleteId, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -123,7 +123,7 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
             Description = "Test Description",
             StartDate = DateTime.Now,
             EndDate = DateTime.Now.AddDays(60),
-            Goal = Domain.Enums.TrainingGoal.GeneralFitness
+            Goal = Domain.Enums.TrainingGoal.GeneralFitness,
         };
 
         var createdTrainingPlan = new TrainingPlanDto
@@ -135,15 +135,15 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
             StartDate = createDto.StartDate,
             EndDate = createDto.EndDate,
             Goal = createDto.Goal,
-            AthleteName = "Test Athlete"
+            AthleteName = "Test Athlete",
         };
 
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.CreateTrainingPlanAsync(createDto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(createdTrainingPlan);
 
         // Act
-        var result = await _controller.Create(createDto, CancellationToken.None);
+        var result = await this.controller.Create(createDto, CancellationToken.None);
 
         // Assert
         var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
@@ -171,19 +171,19 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
             Description = "Updated Description",
             StartDate = DateTime.Now,
             EndDate = DateTime.Now.AddDays(90),
-            Goal = Domain.Enums.TrainingGoal.RacePreparation
+            Goal = Domain.Enums.TrainingGoal.RacePreparation,
         };
 
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.UpdateTrainingPlanAsync(updateDto, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _controller.Update(id, updateDto, CancellationToken.None);
+        var result = await this.controller.Update(id, updateDto, CancellationToken.None);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
-        _mockTrainingPlanService.Verify(s => s.UpdateTrainingPlanAsync(updateDto, It.IsAny<CancellationToken>()), Times.Once);
+        this.mockTrainingPlanService.Verify(s => s.UpdateTrainingPlanAsync(updateDto, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -194,18 +194,18 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
         var updateDto = new UpdateTrainingPlanDto
         {
             Id = 2, // Different ID
-            Name = "Updated Training Plan"
+            Name = "Updated Training Plan",
         };
 
         // Act
-        var result = await _controller.Update(id, updateDto, CancellationToken.None);
+        var result = await this.controller.Update(id, updateDto, CancellationToken.None);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("ID in der URL stimmt nicht mit der ID im Körper überein.", badRequestResult.Value);
 
         // Service should never be called
-        _mockTrainingPlanService.Verify(s => s.UpdateTrainingPlanAsync(It.IsAny<UpdateTrainingPlanDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        this.mockTrainingPlanService.Verify(s => s.UpdateTrainingPlanAsync(It.IsAny<UpdateTrainingPlanDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -216,15 +216,15 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
         var updateDto = new UpdateTrainingPlanDto
         {
             Id = id,
-            Name = "Updated Training Plan"
+            Name = "Updated Training Plan",
         };
 
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.UpdateTrainingPlanAsync(updateDto, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Training plan not found"));
 
         // Act
-        var result = await _controller.Update(id, updateDto, CancellationToken.None);
+        var result = await this.controller.Update(id, updateDto, CancellationToken.None);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
@@ -240,16 +240,16 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
     {
         // Arrange
         var id = 1;
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.DeleteTrainingPlanAsync(id, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _controller.Delete(id, CancellationToken.None);
+        var result = await this.controller.Delete(id, CancellationToken.None);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
-        _mockTrainingPlanService.Verify(s => s.DeleteTrainingPlanAsync(id, It.IsAny<CancellationToken>()), Times.Once);
+        this.mockTrainingPlanService.Verify(s => s.DeleteTrainingPlanAsync(id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -257,12 +257,12 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
     {
         // Arrange
         var id = 999;
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.DeleteTrainingPlanAsync(id, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("Training plan not found"));
 
         // Act
-        var result = await _controller.Delete(id, CancellationToken.None);
+        var result = await this.controller.Delete(id, CancellationToken.None);
 
         // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
@@ -286,7 +286,7 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
             SportType = "Run",
             PlannedDate = DateTime.Now.AddDays(1),
             PlannedDurationMinutes = 30,
-            PlannedDistance = 5.0
+            PlannedDistance = 5.0,
         };
 
         var createdPlannedActivity = new PlannedActivityDto
@@ -298,15 +298,15 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
             SportType = createDto.SportType,
             PlannedDate = createDto.PlannedDate,
             PlannedDuration = TimeSpan.FromMinutes(createDto.PlannedDurationMinutes ?? 0),
-            PlannedDistance = createDto.PlannedDistance
+            PlannedDistance = createDto.PlannedDistance,
         };
 
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.AddPlannedActivityAsync(trainingPlanId, createDto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(createdPlannedActivity);
 
         // Act
-        var result = await _controller.AddPlannedActivity(trainingPlanId, createDto, CancellationToken.None);
+        var result = await this.controller.AddPlannedActivity(trainingPlanId, createDto, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -323,11 +323,11 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
         var createDto = new CreatePlannedActivityDto
         {
             TrainingPlanId = 2, // Different ID
-            Title = "Morning Run"
+            Title = "Morning Run",
         };
 
         // Act
-        var result = await _controller.AddPlannedActivity(trainingPlanId, createDto, CancellationToken.None);
+        var result = await this.controller.AddPlannedActivity(trainingPlanId, createDto, CancellationToken.None);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
@@ -344,19 +344,19 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
             Id = plannedActivityId,
             Title = "Updated Activity",
             SportType = "Run",
-            PlannedDate = DateTime.Now.AddDays(2)
+            PlannedDate = DateTime.Now.AddDays(2),
         };
 
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.UpdatePlannedActivityAsync(updateDto, It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _controller.UpdatePlannedActivity(plannedActivityId, updateDto, CancellationToken.None);
+        var result = await this.controller.UpdatePlannedActivity(plannedActivityId, updateDto, CancellationToken.None);
 
         // Assert
         Assert.IsType<NoContentResult>(result);
-        _mockTrainingPlanService.Verify(s => s.UpdatePlannedActivityAsync(updateDto, It.IsAny<CancellationToken>()), Times.Once);
+        this.mockTrainingPlanService.Verify(s => s.UpdatePlannedActivityAsync(updateDto, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -372,12 +372,12 @@ public class TrainingPlanControllerTests : ControllerTestBase<TrainingPlanContro
             CompletedActivity = new ActivityDto { Id = activityId, Name = "Completed Run" },
         };
 
-        _mockTrainingPlanService
+        this.mockTrainingPlanService
             .Setup(s => s.MarkPlannedActivityAsCompletedAsync(plannedActivityId, activityId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(completedActivity);
 
         // Act
-        var result = await _controller.MarkPlannedActivityAsCompleted(plannedActivityId, activityId, CancellationToken.None);
+        var result = await this.controller.MarkPlannedActivityAsCompleted(plannedActivityId, activityId, CancellationToken.None);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);

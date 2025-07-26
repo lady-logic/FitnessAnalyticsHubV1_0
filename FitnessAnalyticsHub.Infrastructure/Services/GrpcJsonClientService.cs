@@ -9,30 +9,31 @@ namespace FitnessAnalyticsHub.Infrastructure.Services;
 
 public class GrpcJsonClientService : IAIAssistantClientService
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<GrpcJsonClientService> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient httpClient;
+    private readonly ILogger<GrpcJsonClientService> logger;
+    private readonly IConfiguration configuration;
 
     public GrpcJsonClientService(
         HttpClient httpClient,
         ILogger<GrpcJsonClientService> logger,
         IConfiguration configuration)
     {
-        _httpClient = httpClient;
-        _logger = logger;
-        _configuration = configuration;
+        this.httpClient = httpClient;
+        this.logger = logger;
+        this.configuration = configuration;
 
         // AIAssistant Base URL für gRPC-JSON Endpunkte
-        var aiAssistantUrl = _configuration["AIAssistant:BaseUrl"] ?? "http://localhost:5169";
-        _httpClient.BaseAddress = new Uri(aiAssistantUrl);
-        _httpClient.Timeout = TimeSpan.FromSeconds(30);
+        var aiAssistantUrl = this.configuration["AIAssistant:BaseUrl"] ?? "http://localhost:5169";
+        this.httpClient.BaseAddress = new Uri(aiAssistantUrl);
+        this.httpClient.Timeout = TimeSpan.FromSeconds(30);
 
-        _logger.LogInformation("GrpcJsonClientService initialized with base URL: {BaseUrl}", aiAssistantUrl);
+        this.logger.LogInformation("GrpcJsonClientService initialized with base URL: {BaseUrl}", aiAssistantUrl);
     }
 
     public async Task<AIMotivationResponseDto> GetMotivationAsync(AIMotivationRequestDto request, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("gRPC-JSON: Requesting motivation for athlete: {AthleteName}",
+        this.logger.LogInformation(
+            "gRPC-JSON: Requesting motivation for athlete: {AthleteName}",
             request.AthleteProfile?.Name ?? "Unknown");
 
         // Erstelle JSON im gRPC-Format (nicht REST-Format!)
@@ -40,27 +41,28 @@ public class GrpcJsonClientService : IAIAssistantClientService
         {
             athleteProfile = new
             {
-                name = request.AthleteProfile?.Name ?? "",
-                fitnessLevel = request.AthleteProfile?.FitnessLevel ?? "",
-                primaryGoal = request.AthleteProfile?.PrimaryGoal ?? ""
+                name = request.AthleteProfile?.Name ?? string.Empty,
+                fitnessLevel = request.AthleteProfile?.FitnessLevel ?? string.Empty,
+                primaryGoal = request.AthleteProfile?.PrimaryGoal ?? string.Empty,
             },
             isStruggling = false,
-            upcomingWorkoutType = (string?)null
+            upcomingWorkoutType = (string?)null,
         };
 
         var json = JsonSerializer.Serialize(grpcJsonRequest);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // HTTP POST zu gRPC-JSON Endpunkt
-        var response = await _httpClient.PostAsync("/grpc-json/MotivationService/GetMotivation", content, cancellationToken);
+        var response = await this.httpClient.PostAsync("/grpc-json/MotivationService/GetMotivation", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("gRPC-JSON motivation request failed: {StatusCode} - {Error}",
+            this.logger.LogError(
+                "gRPC-JSON motivation request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
-            return GetFallbackMotivation(request);
+            return this.GetFallbackMotivation(request);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -80,13 +82,14 @@ public class GrpcJsonClientService : IAIAssistantClientService
             GeneratedAt = grpcJsonResponse.TryGetProperty("generatedAt", out var dateProp) &&
               DateTime.TryParse(dateProp.GetString(), out var parsedDate)
               ? parsedDate : DateTime.UtcNow,
-            Source = "gRPC-JSON"
+            Source = "gRPC-JSON",
         };
     }
 
     public async Task<AIWorkoutAnalysisResponseDto> GetWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("gRPC-JSON: Requesting workout analysis for {WorkoutCount} workouts, type: {AnalysisType}",
+        this.logger.LogInformation(
+            "gRPC-JSON: Requesting workout analysis for {WorkoutCount} workouts, type: {AnalysisType}",
             request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
         // Erstelle JSON im gRPC-Format
@@ -94,35 +97,37 @@ public class GrpcJsonClientService : IAIAssistantClientService
         {
             athleteProfile = request.AthleteProfile != null ? new
             {
-                name = request.AthleteProfile.Name ?? "",
-                fitnessLevel = request.AthleteProfile.FitnessLevel ?? "",
-                primaryGoal = request.AthleteProfile.PrimaryGoal ?? ""
-            } : null,
+                name = request.AthleteProfile.Name ?? string.Empty,
+                fitnessLevel = request.AthleteProfile.FitnessLevel ?? string.Empty,
+                primaryGoal = request.AthleteProfile.PrimaryGoal ?? string.Empty,
+            }
+            : null,
             recentWorkouts = request.RecentWorkouts?.Select(w => new
             {
                 date = w.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 activityType = w.ActivityType,
                 distance = w.Distance,
                 duration = w.Duration,
-                calories = w.Calories
+                calories = w.Calories,
             }).ToArray() ?? Array.Empty<object>(),
             analysisType = request.AnalysisType ?? "Performance",
             focusAreas = request.FocusAreas ?? new List<string>(),
-            preferredAiProvider = "googlegemini"
+            preferredAiProvider = "googlegemini",
         };
 
         var json = JsonSerializer.Serialize(grpcJsonRequest);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("/grpc-json/WorkoutService/GetWorkoutAnalysis", content, cancellationToken);
+        var response = await this.httpClient.PostAsync("/grpc-json/WorkoutService/GetWorkoutAnalysis", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("gRPC-JSON workout analysis request failed: {StatusCode} - {Error}",
+            this.logger.LogError(
+                "gRPC-JSON workout analysis request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
-            return GetFallbackAnalysis(request);
+            return this.GetFallbackAnalysis(request);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -142,13 +147,14 @@ public class GrpcJsonClientService : IAIAssistantClientService
                             new List<string>(),
             GeneratedAt = DateTime.TryParse(grpcJsonResponse.GetProperty("generatedAt").GetString(), out var parsedDate)
                         ? parsedDate : DateTime.UtcNow,
-            Source = "gRPC-JSON-GoogleGemini"
+            Source = "gRPC-JSON-GoogleGemini",
         };
     }
 
     public async Task<AIWorkoutAnalysisResponseDto> GetGoogleGeminiWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("gRPC-JSON: Requesting GoogleGemini workout analysis for {WorkoutCount} workouts",
+        this.logger.LogInformation(
+            "gRPC-JSON: Requesting GoogleGemini workout analysis for {WorkoutCount} workouts",
             request.RecentWorkouts?.Count ?? 0);
 
         // Erstelle JSON im gRPC-Format (gleich wie GetWorkoutAnalysisAsync, aber explizit GoogleGemini)
@@ -156,35 +162,37 @@ public class GrpcJsonClientService : IAIAssistantClientService
         {
             athleteProfile = request.AthleteProfile != null ? new
             {
-                name = request.AthleteProfile.Name ?? "",
-                fitnessLevel = request.AthleteProfile.FitnessLevel ?? "",
-                primaryGoal = request.AthleteProfile.PrimaryGoal ?? ""
-            } : null,
+                name = request.AthleteProfile.Name ?? string.Empty,
+                fitnessLevel = request.AthleteProfile.FitnessLevel ?? string.Empty,
+                primaryGoal = request.AthleteProfile.PrimaryGoal ?? string.Empty,
+            }
+            : null,
             recentWorkouts = request.RecentWorkouts?.Select(w => new
             {
                 date = w.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 activityType = w.ActivityType,
                 distance = w.Distance,
                 duration = w.Duration,
-                calories = w.Calories
+                calories = w.Calories,
             }).ToArray() ?? Array.Empty<object>(),
             analysisType = request.AnalysisType ?? "Performance",
             focusAreas = request.FocusAreas ?? new List<string>(),
-            preferredAiProvider = "googlegemini"
+            preferredAiProvider = "googlegemini",
         };
 
         var json = JsonSerializer.Serialize(grpcJsonRequest);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("/grpc-json/WorkoutService/AnalyzeGoogleGeminiWorkouts", content, cancellationToken);
+        var response = await this.httpClient.PostAsync("/grpc-json/WorkoutService/AnalyzeGoogleGeminiWorkouts", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("gRPC-JSON GoogleGemini workout analysis request failed: {StatusCode} - {Error}",
+            this.logger.LogError(
+                "gRPC-JSON GoogleGemini workout analysis request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
-            return GetFallbackAnalysis(request);
+            return this.GetFallbackAnalysis(request);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -204,33 +212,35 @@ public class GrpcJsonClientService : IAIAssistantClientService
                             new List<string>(),
             GeneratedAt = DateTime.TryParse(grpcJsonResponse.GetProperty("generatedAt").GetString(), out var parsedDate)
                         ? parsedDate : DateTime.UtcNow,
-            Source = "gRPC-JSON-GoogleGemini"
+            Source = "gRPC-JSON-GoogleGemini",
         };
     }
 
     public async Task<AIWorkoutAnalysisResponseDto> GetPerformanceTrendsAsync(int athleteId, string timeFrame = "month", CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("gRPC-JSON: Requesting performance trends for athlete: {AthleteId}, timeFrame: {TimeFrame}",
+        this.logger.LogInformation(
+            "gRPC-JSON: Requesting performance trends for athlete: {AthleteId}, timeFrame: {TimeFrame}",
             athleteId, timeFrame);
 
         var grpcJsonRequest = new
         {
             athleteId = athleteId,
-            timeFrame = timeFrame
+            timeFrame = timeFrame,
         };
 
         var json = JsonSerializer.Serialize(grpcJsonRequest);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("/grpc-json/WorkoutService/GetPerformanceTrends", content, cancellationToken);
+        var response = await this.httpClient.PostAsync("/grpc-json/WorkoutService/GetPerformanceTrends", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("gRPC-JSON performance trends request failed: {StatusCode} - {Error}",
+            this.logger.LogError(
+                "gRPC-JSON performance trends request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
-            return GetFallbackPerformanceTrends(athleteId, timeFrame);
+            return this.GetFallbackPerformanceTrends(athleteId, timeFrame);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -250,31 +260,32 @@ public class GrpcJsonClientService : IAIAssistantClientService
                             new List<string>(),
             GeneratedAt = DateTime.TryParse(grpcJsonResponse.GetProperty("generatedAt").GetString(), out var parsedDate)
                         ? parsedDate : DateTime.UtcNow,
-            Source = "gRPC-JSON-PerformanceTrends"
+            Source = "gRPC-JSON-PerformanceTrends",
         };
     }
 
     public async Task<AIWorkoutAnalysisResponseDto> GetTrainingRecommendationsAsync(int athleteId, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("gRPC-JSON: Requesting training recommendations for athlete: {AthleteId}", athleteId);
+        this.logger.LogInformation("gRPC-JSON: Requesting training recommendations for athlete: {AthleteId}", athleteId);
 
         var grpcJsonRequest = new
         {
-            athleteId = athleteId
+            athleteId = athleteId,
         };
 
         var json = JsonSerializer.Serialize(grpcJsonRequest);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("/grpc-json/WorkoutService/GetTrainingRecommendations", content, cancellationToken);
+        var response = await this.httpClient.PostAsync("/grpc-json/WorkoutService/GetTrainingRecommendations", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("gRPC-JSON training recommendations request failed: {StatusCode} - {Error}",
+            this.logger.LogError(
+                "gRPC-JSON training recommendations request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
-            return GetFallbackTrainingRecommendations(athleteId);
+            return this.GetFallbackTrainingRecommendations(athleteId);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -294,13 +305,14 @@ public class GrpcJsonClientService : IAIAssistantClientService
                             new List<string>(),
             GeneratedAt = DateTime.TryParse(grpcJsonResponse.GetProperty("generatedAt").GetString(), out var parsedDate)
                         ? parsedDate : DateTime.UtcNow,
-            Source = "gRPC-JSON-TrainingRecommendations"
+            Source = "gRPC-JSON-TrainingRecommendations",
         };
     }
 
     public async Task<AIWorkoutAnalysisResponseDto> AnalyzeHealthMetricsAsync(int athleteId, List<AIWorkoutDataDto> recentWorkouts, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("gRPC-JSON: Requesting health metrics analysis for athlete: {AthleteId} with {WorkoutCount} workouts",
+        this.logger.LogInformation(
+            "gRPC-JSON: Requesting health metrics analysis for athlete: {AthleteId} with {WorkoutCount} workouts",
             athleteId, recentWorkouts?.Count ?? 0);
 
         var grpcJsonRequest = new
@@ -312,22 +324,23 @@ public class GrpcJsonClientService : IAIAssistantClientService
                 activityType = w.ActivityType,
                 distance = w.Distance,
                 duration = w.Duration,
-                calories = w.Calories
-            }).ToArray() ?? Array.Empty<object>()
+                calories = w.Calories,
+            }).ToArray() ?? Array.Empty<object>(),
         };
 
         var json = JsonSerializer.Serialize(grpcJsonRequest);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("/grpc-json/WorkoutService/AnalyzeHealthMetrics", content, cancellationToken);
+        var response = await this.httpClient.PostAsync("/grpc-json/WorkoutService/AnalyzeHealthMetrics", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("gRPC-JSON health metrics analysis request failed: {StatusCode} - {Error}",
+            this.logger.LogError(
+                "gRPC-JSON health metrics analysis request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
-            return GetFallbackHealthMetrics(athleteId, recentWorkouts);
+            return this.GetFallbackHealthMetrics(athleteId, recentWorkouts);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -347,19 +360,19 @@ public class GrpcJsonClientService : IAIAssistantClientService
                             new List<string>(),
             GeneratedAt = DateTime.TryParse(grpcJsonResponse.GetProperty("generatedAt").GetString(), out var parsedDate)
                         ? parsedDate : DateTime.UtcNow,
-            Source = "gRPC-JSON-HealthMetrics"
+            Source = "gRPC-JSON-HealthMetrics",
         };
     }
 
     public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("gRPC-JSON: Checking health status");
+        this.logger.LogInformation("gRPC-JSON: Checking health status");
 
-        var response = await _httpClient.GetAsync("/grpc-json/health", cancellationToken);
+        var response = await this.httpClient.GetAsync("/grpc-json/health", cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("gRPC-JSON: Health check failed with status: {StatusCode}", response.StatusCode);
+            this.logger.LogWarning("gRPC-JSON: Health check failed with status: {StatusCode}", response.StatusCode);
             return false;
         }
 
@@ -369,7 +382,7 @@ public class GrpcJsonClientService : IAIAssistantClientService
         var status = healthResponse.GetProperty("status").GetString();
         var isHealthy = status?.Equals("healthy", StringComparison.OrdinalIgnoreCase) == true;
 
-        _logger.LogInformation("gRPC-JSON: Health check result: {IsHealthy}", isHealthy);
+        this.logger.LogInformation("gRPC-JSON: Health check result: {IsHealthy}", isHealthy);
         return isHealthy;
     }
 
@@ -387,10 +400,10 @@ public class GrpcJsonClientService : IAIAssistantClientService
             {
                 "Set small, achievable goals for today",
                 "Focus on consistency over perfection",
-                "Celebrate every workout completed"
+                "Celebrate every workout completed",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "gRPC-JSON-Fallback"
+            Source = "gRPC-JSON-Fallback",
         };
     }
 
@@ -408,17 +421,17 @@ public class GrpcJsonClientService : IAIAssistantClientService
                 $"Completed {workoutCount} workouts with strong consistency",
                 $"Total distance of {totalDistance:F1}km demonstrates good endurance",
                 "Training patterns indicate balanced workout approach",
-                "Performance metrics show steady improvement"
+                "Performance metrics show steady improvement",
             },
             Recommendations = new List<string>
             {
                 "Continue current training schedule",
                 "Gradually increase intensity by 5-10%",
                 "Ensure adequate recovery between sessions",
-                "Consider adding workout variety"
+                "Consider adding workout variety",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "gRPC-JSON-Fallback"
+            Source = "gRPC-JSON-Fallback",
         };
     }
 
@@ -433,17 +446,17 @@ public class GrpcJsonClientService : IAIAssistantClientService
                 "Consistent training frequency maintained",
                 "Progressive overload patterns observed",
                 "Recovery metrics within healthy ranges",
-                "Performance trending upward"
+                "Performance trending upward",
             },
             Recommendations = new List<string>
             {
                 "Maintain current training consistency",
                 "Focus on progressive intensity increases",
                 "Monitor recovery indicators",
-                "Consider periodization strategies"
+                "Consider periodization strategies",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "gRPC-JSON-Fallback-PerformanceTrends"
+            Source = "gRPC-JSON-Fallback-PerformanceTrends",
         };
     }
 
@@ -458,17 +471,17 @@ public class GrpcJsonClientService : IAIAssistantClientService
                 "Current training load is appropriate",
                 "Room for intensity optimization",
                 "Recovery patterns are sustainable",
-                "Skill development opportunities identified"
+                "Skill development opportunities identified",
             },
             Recommendations = new List<string>
             {
                 "Incorporate 2-3 high-intensity sessions per week",
                 "Add cross-training activities for variety",
                 "Focus on technique refinement",
-                "Ensure adequate sleep and nutrition"
+                "Ensure adequate sleep and nutrition",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "gRPC-JSON-Fallback-TrainingRecommendations"
+            Source = "gRPC-JSON-Fallback-TrainingRecommendations",
         };
     }
 
@@ -486,17 +499,17 @@ public class GrpcJsonClientService : IAIAssistantClientService
                 $"Average caloric expenditure of {avgCalories:F0} calories per workout",
                 "Activity frequency supports cardiovascular health",
                 "Workout duration patterns are sustainable",
-                "Energy expenditure aligns with fitness goals"
+                "Energy expenditure aligns with fitness goals",
             },
             Recommendations = new List<string>
             {
                 "Continue current activity levels",
                 "Monitor heart rate during workouts",
                 "Track sleep quality and recovery",
-                "Maintain consistent hydration"
+                "Maintain consistent hydration",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "gRPC-JSON-Fallback-HealthMetrics"
+            Source = "gRPC-JSON-Fallback-HealthMetrics",
         };
     }
 

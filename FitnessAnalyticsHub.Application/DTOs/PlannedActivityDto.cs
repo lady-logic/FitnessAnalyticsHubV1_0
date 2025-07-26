@@ -11,5 +11,5 @@ public class PlannedActivityDto
     public TimeSpan? PlannedDuration { get; set; }
     public double? PlannedDistance { get; set; }
     public ActivityDto? CompletedActivity { get; set; }
-    public bool IsCompleted => CompletedActivity != null;
+    public bool IsCompleted => this.CompletedActivity != null;
 }

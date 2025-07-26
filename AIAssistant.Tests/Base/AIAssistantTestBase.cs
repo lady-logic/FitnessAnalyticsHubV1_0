@@ -1,17 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿namespace AIAssistant.Tests.Base;
+
+using System.Reflection;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Reflection;
-
-namespace AIAssistant.Tests.Base;
 
 /// <summary>
 /// Base class for AIAssistant controller tests that enforces architectural rules.
 /// Ensures controllers follow Clean Architecture principles.
 /// </summary>
 /// <typeparam name="TController">The controller type to test</typeparam>
-public abstract class AIAssistantControllerTestBase<TController> where TController : ControllerBase
+public abstract class AIAssistantControllerTestBase<TController>
+    where TController : ControllerBase
 {
     /// <summary>
     /// Verifies that the controller doesn't contain any try-catch blocks.
@@ -30,7 +31,9 @@ public abstract class AIAssistantControllerTestBase<TController> where TControll
             // Skip inherited methods from ControllerBase
             if (method.DeclaringType == typeof(ControllerBase) ||
                 method.DeclaringType == typeof(object))
+            {
                 continue;
+            }
 
             var methodBody = method.GetMethodBody();
             if (methodBody != null)
@@ -38,7 +41,8 @@ public abstract class AIAssistantControllerTestBase<TController> where TControll
                 // Check for try-catch patterns in IL code
                 var hasTryCatch = ContainsTryCatchBlock(method);
 
-                Assert.False(hasTryCatch,
+                Assert.False(
+                    hasTryCatch,
                     $"Controller method '{controllerType.Name}.{method.Name}' contains try-catch block. " +
                     "Controllers should not handle exceptions directly - let middleware handle them.");
             }
@@ -59,7 +63,8 @@ public abstract class AIAssistantControllerTestBase<TController> where TControll
         // Act & Assert
         foreach (var method in actionMethods)
         {
-            Assert.True(method.ReturnType.IsAssignableFrom(typeof(Task)) ||
+            Assert.True(
+                method.ReturnType.IsAssignableFrom(typeof(Task)) ||
                        (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)),
                 $"Action method '{controllerType.Name}.{method.Name}' should be async and return Task or Task<T>");
         }
@@ -82,7 +87,8 @@ public abstract class AIAssistantControllerTestBase<TController> where TControll
                 .Any(attr => attr.GetType().Name.StartsWith("Http") &&
                             attr.GetType().Name.EndsWith("Attribute"));
 
-            Assert.True(hasHttpAttribute,
+            Assert.True(
+                hasHttpAttribute,
                 $"Action method '{controllerType.Name}.{method.Name}' should have an HTTP method attribute (HttpGet, HttpPost, etc.)");
         }
     }
@@ -124,7 +130,10 @@ public abstract class AIAssistantControllerTestBase<TController> where TControll
         try
         {
             var methodBody = method.GetMethodBody();
-            if (methodBody == null) return false;
+            if (methodBody == null)
+            {
+                return false;
+            }
 
             // Check for exception handling clauses (try-catch blocks)
             var exceptionHandlingClauses = methodBody.ExceptionHandlingClauses;

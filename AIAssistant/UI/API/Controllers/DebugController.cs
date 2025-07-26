@@ -1,46 +1,45 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.UI.API.Controllers;
+
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AIAssistant.UI.API.Controllers;
-
 [ApiController]
 [Route("api/[controller]")]
 public class DebugController : ControllerBase
 {
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<DebugController> _logger;
+    private readonly IConfiguration configuration;
+    private readonly ILogger<DebugController> logger;
 
     public DebugController(IConfiguration configuration, ILogger<DebugController> logger)
     {
-        _configuration = configuration;
-        _logger = logger;
+        this.configuration = configuration;
+        this.logger = logger;
     }
 
     [HttpGet("config-check")]
-    public async Task<ActionResult> ConfigCheck()
+    public Task<ActionResult> ConfigCheck()
     {
-        var apiKey = _configuration["HuggingFace:ApiKey"];
-        return Ok(new
+        var apiKey = this.configuration["HuggingFace:ApiKey"];
+        return Task.FromResult<ActionResult>(this.Ok(new
         {
             hasApiKey = !string.IsNullOrEmpty(apiKey),
             apiKeyLength = apiKey?.Length ?? 0,
             apiKeyPreview = !string.IsNullOrEmpty(apiKey) ? $"{apiKey.Substring(0, Math.Min(10, apiKey.Length))}..." : "NULL",
             environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-            allHuggingFaceKeys = _configuration.GetSection("HuggingFace").GetChildren().Select(x => x.Key).ToArray()
-        });
+            allHuggingFaceKeys = this.configuration.GetSection("HuggingFace").GetChildren().Select(x => x.Key).ToArray(),
+        }));
     }
 
     [HttpGet("test-modern-huggingface")]
     public async Task<ActionResult> TestModernHuggingFace()
     {
-        var apiKey = _configuration["HuggingFace:ApiKey"];
+        var apiKey = this.configuration["HuggingFace:ApiKey"];
 
         if (string.IsNullOrEmpty(apiKey))
         {
-            return BadRequest("No HuggingFace API key found");
+            return this.BadRequest("No HuggingFace API key found");
         }
 
         try
@@ -53,7 +52,7 @@ public class DebugController : ControllerBase
             {
                 ("novita", "https://router.huggingface.co/novita/v3/openai/chat/completions", "deepseek-ai/DeepSeek-V3-0324"),
                 ("sambanova", "https://router.huggingface.co/sambanova/v1/chat/completions", "Meta-Llama-3.1-8B-Instruct"),
-                ("together", "https://router.huggingface.co/together/v1/chat/completions", "meta-llama/Llama-3.2-3B-Instruct-Turbo")
+                ("together", "https://router.huggingface.co/together/v1/chat/completions", "meta-llama/Llama-3.2-3B-Instruct-Turbo"),
             };
 
             var results = new List<object>();
@@ -67,17 +66,17 @@ public class DebugController : ControllerBase
                         model = model,
                         messages = new[]
                         {
-                            new { role = "user", content = "Give me a short fitness motivation!" }
+                            new { role = "user", content = "Give me a short fitness motivation!" },
                         },
                         max_tokens = 50,
                         temperature = 0.7,
-                        stream = false
+                        stream = false,
                     };
 
                     var json = System.Text.Json.JsonSerializer.Serialize(testPayload);
                     var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-                    _logger.LogInformation("Testing provider: {Provider} with URL: {Url}", provider, url);
+                    this.logger.LogInformation("Testing provider: {Provider} with URL: {Url}", provider, url);
                     var response = await httpClient.PostAsync(url, content);
                     var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -88,12 +87,12 @@ public class DebugController : ControllerBase
                         url = url,
                         statusCode = (int)response.StatusCode,
                         isSuccess = response.IsSuccessStatusCode,
-                        response = responseContent.Length > 500 ? responseContent.Substring(0, 500) + "..." : responseContent
+                        response = responseContent.Length > 500 ? responseContent.Substring(0, 500) + "..." : responseContent,
                     });
 
                     if (response.IsSuccessStatusCode)
                     {
-                        _logger.LogInformation("SUCCESS with provider: {Provider}!", provider);
+                        this.logger.LogInformation("SUCCESS with provider: {Provider}!", provider);
                         break; // Stoppe bei erstem erfolgreichen Provider
                     }
                 }
@@ -104,21 +103,21 @@ public class DebugController : ControllerBase
                         provider = provider,
                         model = model,
                         url = url,
-                        error = ex.Message
+                        error = ex.Message,
                     });
                 }
             }
 
-            return Ok(new
+            return this.Ok(new
             {
                 message = "Modern HuggingFace Inference Providers Test (Multiple Providers)",
                 testResults = results,
-                note = "Requires HuggingFace token with 'Inference Providers' scope"
+                note = "Requires HuggingFace token with 'Inference Providers' scope",
             });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return this.StatusCode(500, new { error = ex.Message });
         }
     }
 
@@ -128,7 +127,7 @@ public class DebugController : ControllerBase
         try
         {
             // Teste direkt über den HuggingFaceService
-            var motivationService = HttpContext.RequestServices.GetRequiredService<IMotivationCoachService>();
+            var motivationService = this.HttpContext.RequestServices.GetRequiredService<IMotivationCoachService>();
 
             var testRequest = new MotivationRequestDto
             {
@@ -136,10 +135,11 @@ public class DebugController : ControllerBase
                 {
                     Name = "TestUser",
                     FitnessLevel = "Intermediate",
-                    PrimaryGoal = "General Fitness"
+                    PrimaryGoal = "General Fitness",
                 },
-                //RecentWorkouts = new List<Domain.Models.WorkoutData>
-                //{
+
+                // RecentWorkouts = new List<Domain.Models.WorkoutData>
+                // {
                 //    new Domain.Models.WorkoutData
                 //    {
                 //        Date = DateTime.Now.AddDays(-1),
@@ -148,15 +148,15 @@ public class DebugController : ControllerBase
                 //        Duration = 1800,
                 //        Calories = 300
                 //    }
-                //},
-                //PreferredTone = "Encouraging",
-                //ContextualInfo = "Testing HuggingFace integration"
+                // },
+                // PreferredTone = "Encouraging",
+                // ContextualInfo = "Testing HuggingFace integration"
             };
 
-            _logger.LogInformation("Testing HuggingFaceService through MotivationCoachService...");
+            this.logger.LogInformation("Testing HuggingFaceService through MotivationCoachService...");
             var result = await motivationService.GetHuggingFaceMotivationalMessageAsync(testRequest);
 
-            return Ok(new
+            return this.Ok(new
             {
                 message = "HuggingFaceService Test via MotivationCoachService",
                 isSuccess = !string.IsNullOrEmpty(result.MotivationalMessage),
@@ -166,16 +166,16 @@ public class DebugController : ControllerBase
                 motivationLength = result.MotivationalMessage?.Length ?? 0,
                 containsAINote = result.MotivationalMessage?.Contains("AI analysis temporarily unavailable") == true,
                 generatedAt = result.GeneratedAt,
-                fullResponse = result
+                fullResponse = result,
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "HuggingFaceService test failed");
-            return StatusCode(500, new
+            this.logger.LogError(ex, "HuggingFaceService test failed");
+            return this.StatusCode(500, new
             {
                 error = ex.Message,
-                stackTrace = ex.StackTrace?.Split('\n').Take(5).ToArray()
+                stackTrace = ex.StackTrace?.Split('\n').Take(5).ToArray(),
             });
         }
     }
@@ -183,11 +183,11 @@ public class DebugController : ControllerBase
     [HttpGet("direct-huggingface-test")]
     public async Task<ActionResult> DirectHuggingFaceTest()
     {
-        var apiKey = _configuration["HuggingFace:ApiKey"];
+        var apiKey = this.configuration["HuggingFace:ApiKey"];
 
         if (string.IsNullOrEmpty(apiKey))
         {
-            return BadRequest("No HuggingFace API key found in configuration");
+            return this.BadRequest("No HuggingFace API key found in configuration");
         }
 
         try
@@ -205,34 +205,34 @@ public class DebugController : ControllerBase
                     max_length = 50,
                     temperature = 0.7,
                     do_sample = true,
-                    return_full_text = false
-                }
+                    return_full_text = false,
+                },
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(testPayload);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            _logger.LogInformation("Testing HuggingFace API directly...");
+            this.logger.LogInformation("Testing HuggingFace API directly...");
             var response = await httpClient.PostAsync(testUrl, content);
 
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            return Ok(new
+            return this.Ok(new
             {
                 statusCode = (int)response.StatusCode,
                 isSuccess = response.IsSuccessStatusCode,
                 responseBody = responseContent,
                 requestUrl = testUrl,
-                headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(",", h.Value))
+                headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(",", h.Value)),
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Direct HuggingFace test failed");
-            return StatusCode(500, new
+            this.logger.LogError(ex, "Direct HuggingFace test failed");
+            return this.StatusCode(500, new
             {
                 error = ex.Message,
-                stackTrace = ex.StackTrace
+                stackTrace = ex.StackTrace,
             });
         }
     }
@@ -243,47 +243,47 @@ public class DebugController : ControllerBase
         try
         {
             using var httpClient = new HttpClient();
-            // KEIN Authorization Header!
 
+            // KEIN Authorization Header!
             var testUrl = "https://api-inference.huggingface.co/models/openai-community/gpt2";
             var testPayload = new
             {
-                inputs = "Hello, I am a fitness coach and"
+                inputs = "Hello, I am a fitness coach and",
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(testPayload);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            _logger.LogInformation("Testing WITHOUT authentication...");
+            this.logger.LogInformation("Testing WITHOUT authentication...");
             var response = await httpClient.PostAsync(testUrl, content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            return Ok(new
+            return this.Ok(new
             {
                 message = "Test without authentication",
                 statusCode = (int)response.StatusCode,
                 isSuccess = response.IsSuccessStatusCode,
                 response = responseContent,
-                headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(",", h.Value))
+                headers = response.Headers.ToDictionary(h => h.Key, h => string.Join(",", h.Value)),
             });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return this.StatusCode(500, new { error = ex.Message });
         }
     }
 
     [HttpGet("health")]
-    public async Task<ActionResult> HealthCheck()
+    public Task<ActionResult> HealthCheck()
     {
         var config = new
         {
-            hasHuggingFaceKey = !string.IsNullOrEmpty(_configuration["HuggingFace:ApiKey"]),
+            hasHuggingFaceKey = !string.IsNullOrEmpty(this.configuration["HuggingFace:ApiKey"]),
             environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
-            timestamp = DateTime.UtcNow
+            timestamp = DateTime.UtcNow,
         };
 
-        return Ok(new
+        return Task.FromResult<ActionResult>(this.Ok(new
         {
             status = "healthy",
             message = "Debug controller is responding",
@@ -294,8 +294,8 @@ public class DebugController : ControllerBase
             "GET /api/Debug/test-modern-huggingface",
             "GET /api/Debug/test-huggingface-service",
             "GET /api/Debug/direct-huggingface-test",
-            "GET /api/Debug/test-no-auth"
-        }
-        });
+            "GET /api/Debug/test-no-auth",
+            },
+        }));
     }
 }

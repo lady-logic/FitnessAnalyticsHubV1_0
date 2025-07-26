@@ -6,10 +6,10 @@ namespace AIAssistant.Infrastructure.Services;
 
 public class WorkoutAnalysisService : IWorkoutAnalysisService
 {
-    private readonly HuggingFaceService _huggingFaceService;
-    private readonly GoogleGeminiService _googleGeminiService;
-    private readonly ILogger<WorkoutAnalysisService> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly HuggingFaceService huggingFaceService;
+    private readonly GoogleGeminiService googleGeminiService;
+    private readonly ILogger<WorkoutAnalysisService> logger;
+    private readonly IConfiguration configuration;
 
     public WorkoutAnalysisService(
         HuggingFaceService huggingFaceService,
@@ -17,32 +17,32 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
         IConfiguration configuration,
         ILogger<WorkoutAnalysisService> logger)
     {
-        _huggingFaceService = huggingFaceService;
-        _googleGeminiService = googleGeminiService;
-        _configuration = configuration;
-        _logger = logger;
+        this.huggingFaceService = huggingFaceService;
+        this.googleGeminiService = googleGeminiService;
+        this.configuration = configuration;
+        this.logger = logger;
     }
 
-    // Generic method 
+    // Generic method
     public async Task<WorkoutAnalysisResponseDto> AnalyzeWorkoutsAsync(
         WorkoutAnalysisRequestDto request)
     {
-        var defaultProvider = _configuration["AI:DefaultProvider"] ?? "GoogleGemini";
-        return await AnalyzeWorkoutsWithProviderAsync(request, defaultProvider);
+        var defaultProvider = this.configuration["AI:DefaultProvider"] ?? "GoogleGemini";
+        return await this.AnalyzeWorkoutsWithProviderAsync(request, defaultProvider);
     }
 
     // HuggingFace specific method
     public async Task<WorkoutAnalysisResponseDto> AnalyzeHuggingFaceWorkoutsAsync(
         WorkoutAnalysisRequestDto request)
     {
-        return await AnalyzeWorkoutsWithProviderAsync(request, "HuggingFace");
+        return await this.AnalyzeWorkoutsWithProviderAsync(request, "HuggingFace");
     }
 
-    // NEW: Google Gemini specific method
+    // Google Gemini specific method
     public async Task<WorkoutAnalysisResponseDto> AnalyzeGoogleGeminiWorkoutsAsync(
         WorkoutAnalysisRequestDto request)
     {
-        return await AnalyzeWorkoutsWithProviderAsync(request, "GoogleGemini");
+        return await this.AnalyzeWorkoutsWithProviderAsync(request, "GoogleGemini");
     }
 
     // Core analysis method with provider selection
@@ -52,17 +52,18 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
     {
         try
         {
-            _logger.LogInformation("Analyzing workouts with {Provider} for {WorkoutCount} recent workouts, analysis type: {AnalysisType}",
+            this.logger.LogInformation(
+                "Analyzing workouts with {Provider} for {WorkoutCount} recent workouts, analysis type: {AnalysisType}",
                 provider, request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
-            var prompt = BuildAnalysisPrompt(request);
+            var prompt = this.BuildAnalysisPrompt(request);
 
             // Select the appropriate AI service
             IAIPromptService aiService = provider.ToLower() switch
             {
-                "huggingface" => _huggingFaceService,
-                "googlegemini" => _googleGeminiService,
-                _ => _huggingFaceService // Default fallback
+                "huggingface" => this.huggingFaceService,
+                "googlegemini" => this.googleGeminiService,
+                _ => this.huggingFaceService // Default fallback
             };
 
             // Call the appropriate AI method based on analysis type
@@ -74,20 +75,21 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
                 _ => await aiService.GetFitnessAnalysisAsync(prompt)
             };
 
-            var result = ParseAnalysisResponse(aiResponse, request.AnalysisType);
+            var result = this.ParseAnalysisResponse(aiResponse, request.AnalysisType);
             result.Provider = provider; // Add provider info to response
 
-            _logger.LogInformation("Successfully generated workout analysis with {Provider}: {InsightCount} insights and {RecommendationCount} recommendations",
+            this.logger.LogInformation(
+                "Successfully generated workout analysis with {Provider}: {InsightCount} insights and {RecommendationCount} recommendations",
                 provider, result.KeyInsights?.Count ?? 0, result.Recommendations?.Count ?? 0);
 
             return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error analyzing workouts with {Provider}", provider);
+            this.logger.LogError(ex, "Error analyzing workouts with {Provider}", provider);
 
             // Provider-specific fallback
-            return GetFallbackAnalysis(request, provider);
+            return this.GetFallbackAnalysis(request, provider);
         }
     }
 
@@ -100,19 +102,18 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
 
         var workoutsData = string.Join("\n", request.RecentWorkouts.Select(w =>
             $"Date: {w.Date:yyyy-MM-dd}, Type: {w.ActivityType}, Distance: {w.Distance}m, " +
-            $"Duration: {TimeSpan.FromSeconds(w.Duration):hh\\:mm\\:ss}, Calories: {w.Calories}"
-        ));
+            $"Duration: {TimeSpan.FromSeconds(w.Duration):hh\\:mm\\:ss}, Calories: {w.Calories}"));
 
         var athleteContext = request.AthleteProfile != null ?
-            $"\nAthlete Level: {request.AthleteProfile.FitnessLevel}\nPrimary Goal: {request.AthleteProfile.PrimaryGoal}" : "";
+            $"\nAthlete Level: {request.AthleteProfile.FitnessLevel}\nPrimary Goal: {request.AthleteProfile.PrimaryGoal}" : string.Empty;
 
         // Spezifischer Prompt basierend auf Analyse-Typ
         var analysisPrompt = request.AnalysisType?.ToLower() switch
         {
-            "health" => BuildHealthAnalysisPrompt(workoutsData, athleteContext),
-            "performance" => BuildPerformanceAnalysisPrompt(workoutsData, athleteContext),
-            "trends" => BuildTrendsAnalysisPrompt(workoutsData, athleteContext),
-            _ => BuildGeneralAnalysisPrompt(workoutsData, athleteContext, request.AnalysisType ?? "General")
+            "health" => this.BuildHealthAnalysisPrompt(workoutsData, athleteContext),
+            "performance" => this.BuildPerformanceAnalysisPrompt(workoutsData, athleteContext),
+            "trends" => this.BuildTrendsAnalysisPrompt(workoutsData, athleteContext),
+            _ => this.BuildGeneralAnalysisPrompt(workoutsData, athleteContext, request.AnalysisType ?? "General")
         };
 
         return analysisPrompt;
@@ -237,10 +238,10 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
     {
         var response = new WorkoutAnalysisResponseDto
         {
-            Analysis = ExtractAnalysisSection(aiResponse),
-            KeyInsights = ExtractKeyInsights(aiResponse),
-            Recommendations = ExtractRecommendations(aiResponse),
-            GeneratedAt = DateTime.UtcNow
+            Analysis = this.ExtractAnalysisSection(aiResponse),
+            KeyInsights = this.ExtractKeyInsights(aiResponse),
+            Recommendations = this.ExtractRecommendations(aiResponse),
+            GeneratedAt = DateTime.UtcNow,
         };
 
         return response;
@@ -249,30 +250,38 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
     private string ExtractAnalysisSection(string aiResponse)
     {
         if (string.IsNullOrWhiteSpace(aiResponse))
-            return GetDefaultAnalysis();
+        {
+            return this.GetDefaultAnalysis();
+        }
 
         // Versuche erst strukturierte Extraktion
-        var structuredAnalysis = TryExtractStructuredAnalysis(aiResponse);
+        var structuredAnalysis = this.TryExtractStructuredAnalysis(aiResponse);
         if (!string.IsNullOrEmpty(structuredAnalysis))
-            return LimitAnalysisLength(structuredAnalysis);
+        {
+            return this.LimitAnalysisLength(structuredAnalysis);
+        }
 
         // Fallback: Freie Text-Extraktion
-        var fallbackAnalysis = ExtractFallbackAnalysis(aiResponse);
-        return LimitAnalysisLength(fallbackAnalysis);
+        var fallbackAnalysis = this.ExtractFallbackAnalysis(aiResponse);
+        return this.LimitAnalysisLength(fallbackAnalysis);
     }
 
     private string TryExtractStructuredAnalysis(string aiResponse)
     {
-        var analysisHeaders = GetAnalysisHeaders();
+        var analysisHeaders = this.GetAnalysisHeaders();
 
         foreach (var header in analysisHeaders)
         {
             if (!aiResponse.Contains(header, StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
-            var analysisSection = ExtractSectionContent(aiResponse, header);
-            if (IsValidAnalysis(analysisSection))
+            var analysisSection = this.ExtractSectionContent(aiResponse, header);
+            if (this.IsValidAnalysis(analysisSection))
+            {
                 return analysisSection;
+            }
         }
 
         return string.Empty;
@@ -282,9 +291,11 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
     {
         var analysisParts = aiResponse.Split(header, StringSplitOptions.RemoveEmptyEntries);
         if (analysisParts.Length <= 1)
+        {
             return string.Empty;
+        }
 
-        var stopMarkers = GetStopMarkers();
+        var stopMarkers = this.GetStopMarkers();
         var analysisSection = analysisParts[1].Split(stopMarkers, StringSplitOptions.RemoveEmptyEntries)[0];
 
         return analysisSection.Trim();
@@ -294,32 +305,40 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
     {
         var lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
         var analysisLines = new List<string>();
-        var stopMarkers = GetStopMarkers();
+        var stopMarkers = this.GetStopMarkers();
 
         foreach (var line in lines)
         {
             var cleanLine = line.Trim();
             if (string.IsNullOrWhiteSpace(cleanLine))
+            {
                 continue;
+            }
 
-            if (ShouldStopAtLine(cleanLine, stopMarkers))
+            if (this.ShouldStopAtLine(cleanLine, stopMarkers))
+            {
                 break;
+            }
 
             analysisLines.Add(cleanLine);
 
             if (analysisLines.Count >= 5)
+            {
                 break;
+            }
         }
 
         return analysisLines.Any()
             ? string.Join(" ", analysisLines)
-            : GetDefaultAnalysis();
+            : this.GetDefaultAnalysis();
     }
 
     private string LimitAnalysisLength(string analysis)
     {
         if (analysis.Length <= 400)
+        {
             return analysis;
+        }
 
         var sentences = analysis.Split('.', StringSplitOptions.RemoveEmptyEntries);
         return string.Join(". ", sentences.Take(4)) + ".";
@@ -343,40 +362,46 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
     private string[] GetAnalysisHeaders()
     {
-        return new[] {
+        return new[]
+        {
         "ANALYSE:", "GESUNDHEITSANALYSE:", "LEISTUNGSANALYSE:", "TRENDANALYSE:",
-        "ANALYSIS:", "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:"
-    };
+        "ANALYSIS:", "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:",
+        };
     }
 
     private string[] GetStopMarkers()
     {
-        return new[] {
+        return new[]
+        {
         "WICHTIGE ERKENNTNISSE:", "EMPFEHLUNGEN:",
-        "KEY INSIGHTS:", "RECOMMENDATIONS:"
-    };
+        "KEY INSIGHTS:", "RECOMMENDATIONS:",
+        };
     }
 
     private List<string>? ExtractKeyInsights(string aiResponse)
     {
-        return ExtractListSection(aiResponse, new[] { "WICHTIGE ERKENNTNISSE:", "KEY INSIGHTS:", "INSIGHTS:", "ERKENNTNISSE:" });
+        return this.ExtractListSection(aiResponse, new[] { "WICHTIGE ERKENNTNISSE:", "KEY INSIGHTS:", "INSIGHTS:", "ERKENNTNISSE:" });
     }
 
     private List<string>? ExtractRecommendations(string aiResponse)
     {
-        return ExtractListSection(aiResponse, new[] { "EMPFEHLUNGEN:", "RECOMMENDATIONS:", "ADVICE:", "RATSCHLÄGE:" });
+        return this.ExtractListSection(aiResponse, new[] { "EMPFEHLUNGEN:", "RECOMMENDATIONS:", "ADVICE:", "RATSCHLÄGE:" });
     }
 
     private List<string>? ExtractListSection(string aiResponse, string[] sectionHeaders)
     {
         if (string.IsNullOrWhiteSpace(aiResponse))
+        {
             return null;
+        }
 
         foreach (var header in sectionHeaders)
         {
-            var extractedItems = TryExtractFromHeader(aiResponse, header);
+            var extractedItems = this.TryExtractFromHeader(aiResponse, header);
             if (extractedItems?.Any() == true)
+            {
                 return extractedItems;
+            }
         }
 
         return null;
@@ -385,13 +410,17 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
     private List<string>? TryExtractFromHeader(string aiResponse, string header)
     {
         if (!aiResponse.Contains(header, StringComparison.OrdinalIgnoreCase))
+        {
             return null;
+        }
 
-        var sectionContent = ExtractSectionUntilNextHeader(aiResponse, header);
+        var sectionContent = this.ExtractSectionUntilNextHeader(aiResponse, header);
         if (string.IsNullOrEmpty(sectionContent))
+        {
             return null;
+        }
 
-        return ParseItemsFromSection(sectionContent);
+        return this.ParseItemsFromSection(sectionContent);
     }
 
     private string ExtractSectionUntilNextHeader(string aiResponse, string currentHeader)
@@ -399,21 +428,25 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
         var headerIndex = aiResponse.IndexOf(currentHeader, StringComparison.OrdinalIgnoreCase);
         var section = aiResponse.Substring(headerIndex + currentHeader.Length);
 
-        var nextHeaderIndex = FindNextHeaderIndex(section, currentHeader);
+        var nextHeaderIndex = this.FindNextHeaderIndex(section, currentHeader);
         if (nextHeaderIndex > 0)
+        {
             section = section.Substring(0, nextHeaderIndex);
+        }
 
         return section;
     }
 
     private int FindNextHeaderIndex(string section, string currentHeader)
     {
-        var allHeaders = GetAllSectionHeaders();
+        var allHeaders = this.GetAllSectionHeaders();
 
         foreach (var nextHeader in allHeaders)
         {
             if (nextHeader == currentHeader)
+            {
                 continue;
+            }
 
             if (section.Contains(nextHeader, StringComparison.OrdinalIgnoreCase))
             {
@@ -431,14 +464,16 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
         foreach (var line in lines)
         {
-            var cleanedItem = CleanLineItem(line);
+            var cleanedItem = this.CleanLineItem(line);
 
-            if (IsValidListItem(cleanedItem))
+            if (this.IsValidListItem(cleanedItem))
             {
                 items.Add(cleanedItem);
 
                 if (items.Count >= 5) // Maximal 5 Items
+                {
                     break;
+                }
             }
         }
 
@@ -461,12 +496,13 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
     private string[] GetAllSectionHeaders()
     {
-        return new[] {
+        return new[]
+        {
         "ANALYSE:", "WICHTIGE ERKENNTNISSE:", "EMPFEHLUNGEN:", "RATSCHLÄGE:",
         "GESUNDHEITSANALYSE:", "LEISTUNGSANALYSE:", "TRENDANALYSE:",
         "ANALYSIS:", "KEY INSIGHTS:", "RECOMMENDATIONS:", "ADVICE:",
-        "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:"
-    };
+        "HEALTH ANALYSIS:", "PERFORMANCE ANALYSIS:", "TRENDS ANALYSIS:",
+        };
     }
 
     private WorkoutAnalysisResponseDto GetFallbackAnalysis(WorkoutAnalysisRequestDto request, string provider = "Unknown")
@@ -507,28 +543,28 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
                 $"{workoutCount} Trainingseinheiten ohne Übertrainingsindikatoren absolviert",
                 $"Durchschnittlicher Kalorienverbrauch von {avgCalories:F0} deutet auf angemessene Intensität hin",
                 "Trainingshäufigkeit unterstützt gute Herz-Kreislauf-Gesundheit",
-                "Keine bedenklichen Gesundheitsmuster in den Trainingsdaten erkannt"
+                "Keine bedenklichen Gesundheitsmuster in den Trainingsdaten erkannt",
             },
             "performance" => new List<string>
             {
                 $"{totalDistance:F1}km Gesamtdistanz über {workoutCount} Einheiten erreicht",
                 "Trainingskonsistenz zeigt starkes Engagement für Leistungsziele",
                 $"Durchschnittliche Trainingsintensität von {avgCalories:F0} Kalorien ist leistungsorientiert",
-                "Trainingsvielfalt unterstützt vielseitige sportliche Entwicklung"
+                "Trainingsvielfalt unterstützt vielseitige sportliche Entwicklung",
             },
             "trends" => new List<string>
             {
                 $"Trainingshäufigkeit von {workoutCount} Einheiten zeigt konsistente Gewohnheitsbildung",
                 "Distanz- und Dauertrends deuten auf Anwendung progressiver Überlastung hin",
                 "Kalorienverbrauchsmuster deuten auf effektives Trainingsintensitätsmanagement hin",
-                "Gesamttrajektorie deutet auf anhaltende Fitnessverbesserung hin"
+                "Gesamttrajektorie deutet auf anhaltende Fitnessverbesserung hin",
             },
             _ => new List<string>
             {
                 $"{workoutCount} Trainingseinheiten mit Gesamtdistanz von {totalDistance:F1}km absolviert",
                 "Trainingskonsistenz zeigt Engagement für Fitnessziele",
                 "Leistungsmetriken deuten auf stetige Verbesserungstrajektorie hin",
-                "Trainingsintensität und -häufigkeit scheinen gut ausgewogen"
+                "Trainingsintensität und -häufigkeit scheinen gut ausgewogen",
             }
         };
 
@@ -539,28 +575,28 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
                 "Aktuellen Trainingsplan fortsetzen, um Gesundheitsvorteile zu erhalten",
                 "Regenerationszeichen überwachen und Intensität bei Müdigkeit anpassen",
                 "Ausreichend Schlaf und Ernährung sicherstellen, um Trainingsbelastung zu unterstützen",
-                "Mobilitätsarbeit hinzufügen, um Verletzungen vorzubeugen"
+                "Mobilitätsarbeit hinzufügen, um Verletzungen vorzubeugen",
             },
             "performance" => new List<string>
             {
                 "Trainingsintensität schrittweise um 5-10% für Leistungssteigerungen erhöhen",
                 "Intervalltraining hinzufügen, um Geschwindigkeits- und Kraftentwicklung zu fördern",
                 "Leistungstests in Betracht ziehen, um spezifische Verbesserungen zu verfolgen",
-                "Sportspezifische Übungen für gezielte Fertigkeitsentwicklung integrieren"
+                "Sportspezifische Übungen für gezielte Fertigkeitsentwicklung integrieren",
             },
             "trends" => new List<string>
             {
                 "Aktuelle Trainingshäufigkeit für anhaltende positive Trends beibehalten",
                 "Progressive Steigerungen in Distanz und Dauer planen",
                 "Wöchentliche Trends verfolgen, um optimale Trainingsmuster zu identifizieren",
-                "Monatliche Ziele basierend auf aktueller Fortschrittsrate setzen"
+                "Monatliche Ziele basierend auf aktueller Fortschrittsrate setzen",
             },
             _ => new List<string>
             {
                 "Mit aktuellem Trainingsplan und -intensität fortfahren",
                 "Trainingsschwierigkeit alle 2-3 Wochen schrittweise um 5-10% erhöhen",
                 "Ausreichende Erholung zwischen intensiven Trainingseinheiten sicherstellen",
-                "Trainingsvielfalt für ausgewogene Entwicklung hinzufügen"
+                "Trainingsvielfalt für ausgewogene Entwicklung hinzufügen",
             }
         };
 
@@ -570,7 +606,7 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
             KeyInsights = insights,
             Recommendations = recommendations,
             GeneratedAt = DateTime.UtcNow,
-            Provider = provider
+            Provider = provider,
         };
     }
 }

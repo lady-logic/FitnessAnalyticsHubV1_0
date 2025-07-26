@@ -5,7 +5,7 @@
         public ActivityNotFoundException(int activityId)
             : base($"Activity with ID {activityId} not found")
         {
-            ActivityId = activityId;
+            this.ActivityId = activityId;
         }
 
         public int ActivityId { get; }

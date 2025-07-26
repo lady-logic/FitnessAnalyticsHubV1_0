@@ -1,38 +1,38 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+using AIAssistant.Tests.Helpers;
 using FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
-using AIAssistant.Tests.Helpers;
 
 namespace AIAssistant.Tests.Infrastructure.Services;
 
 public class GoogleGeminiServiceTests : IDisposable
 {
-    private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
-    private readonly HttpClient _httpClient;
-    private readonly Mock<IConfiguration> _mockConfiguration;
-    private readonly Mock<ILogger<GoogleGeminiService>> _mockLogger;
-    private readonly GoogleGeminiService _service;
+    private readonly Mock<HttpMessageHandler> mockHttpMessageHandler;
+    private readonly HttpClient httpClient;
+    private readonly Mock<IConfiguration> mockConfiguration;
+    private readonly Mock<ILogger<GoogleGeminiService>> mockLogger;
+    private readonly GoogleGeminiService service;
 
     public GoogleGeminiServiceTests()
     {
-        _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-        _httpClient = new HttpClient(_mockHttpMessageHandler.Object)
+        this.mockHttpMessageHandler = new Mock<HttpMessageHandler>();
+        this.httpClient = new HttpClient(this.mockHttpMessageHandler.Object)
         {
-            BaseAddress = new Uri("https://generativelanguage.googleapis.com/")
+            BaseAddress = new Uri("https://generativelanguage.googleapis.com/"),
         };
 
-        _mockConfiguration = MockSetup.CreateMockConfiguration();
-        _mockLogger = MockSetup.CreateMockLogger<GoogleGeminiService>();
+        this.mockConfiguration = MockSetup.CreateMockConfiguration();
+        this.mockLogger = MockSetup.CreateMockLogger<GoogleGeminiService>();
 
-        _service = new GoogleGeminiService(
-            _httpClient,
-            _mockConfiguration.Object,
-            _mockLogger.Object);
+        this.service = new GoogleGeminiService(
+            this.httpClient,
+            this.mockConfiguration.Object,
+            this.mockLogger.Object);
     }
 
     #region GetFitnessAnalysisAsync Tests
@@ -58,10 +58,10 @@ public class GoogleGeminiServiceTests : IDisposable
 2. **Mittelfristig:** Lange Läufe für Grundlagenausdauer
 3. **Langfristig:** Tempo-Läufe für Geschwindigkeitsentwicklung");
 
-        SetupHttpResponse(geminiResponse, HttpStatusCode.OK);
+        this.SetupHttpResponse(geminiResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -78,17 +78,17 @@ public class GoogleGeminiServiceTests : IDisposable
     {
         // Arrange
         var prompt = "Test fitness prompt";
-        SetupHttpResponse(null, HttpStatusCode.Unauthorized);
+        this.SetupHttpResponse(null, HttpStatusCode.Unauthorized);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
         MockSetup.AssertIsFallbackResponse(result);
         Assert.Contains("401", result);
 
-        MockSetup.VerifyLog(_mockLogger, LogLevel.Error, "UNAUTHORIZED");
+        MockSetup.VerifyLog(this.mockLogger, LogLevel.Error, "UNAUTHORIZED");
     }
 
     [Fact]
@@ -96,17 +96,17 @@ public class GoogleGeminiServiceTests : IDisposable
     {
         // Arrange
         var prompt = "Test fitness prompt";
-        SetupHttpResponse(null, HttpStatusCode.TooManyRequests);
+        this.SetupHttpResponse(null, HttpStatusCode.TooManyRequests);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
         MockSetup.AssertIsFallbackResponse(result);
         Assert.Contains("429", result);
 
-        MockSetup.VerifyLog(_mockLogger, LogLevel.Warning, "RATE LIMITED");
+        MockSetup.VerifyLog(this.mockLogger, LogLevel.Warning, "RATE LIMITED");
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public class GoogleGeminiServiceTests : IDisposable
         var prompt = "Test fitness prompt";
         var timeoutException = new TaskCanceledException("Timeout", new TimeoutException());
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -124,14 +124,14 @@ public class GoogleGeminiServiceTests : IDisposable
             .ThrowsAsync(timeoutException);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
         MockSetup.AssertIsFallbackResponse(result);
         Assert.Contains("timeout", result);
 
-        MockSetup.VerifyLog(_mockLogger, LogLevel.Warning, "timeout");
+        MockSetup.VerifyLog(this.mockLogger, LogLevel.Warning, "timeout");
     }
 
     #endregion
@@ -159,10 +159,10 @@ public class GoogleGeminiServiceTests : IDisposable
 2. **Prävention:** Integriere aktive Erholungstage
 3. **Langfristige Gesundheit:** Höre auf die Signale deines Körpers");
 
-        SetupHttpResponse(geminiResponse, HttpStatusCode.OK);
+        this.SetupHttpResponse(geminiResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await _service.GetHealthAnalysisAsync(prompt);
+        var result = await this.service.GetHealthAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -183,10 +183,10 @@ public class GoogleGeminiServiceTests : IDisposable
 
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(malformedResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(malformedResponse, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -194,7 +194,7 @@ public class GoogleGeminiServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetHealthAnalysisAsync(prompt);
+        var result = await this.service.GetHealthAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -223,10 +223,10 @@ Du trainierst für etwas Großartiges - einen Marathon! Diese Herausforderung wi
 ## 🎯 ZIEL IM BLICK
 Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt der Reise. Du schaffst das! 🏃‍♂️");
 
-        SetupHttpResponse(geminiResponse, HttpStatusCode.OK);
+        this.SetupHttpResponse(geminiResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await _service.GetMotivationAsync(prompt);
+        var result = await this.service.GetMotivationAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -243,7 +243,7 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
     {
         // Arrange
         var prompt = "Motivate me";
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -251,7 +251,7 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
             .ThrowsAsync(new HttpRequestException("Network error"));
 
         // Act
-        var result = await _service.GetMotivationAsync(prompt);
+        var result = await this.service.GetMotivationAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -271,9 +271,9 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
         var configWithoutKey = new Mock<IConfiguration>();
         configWithoutKey.Setup(c => c["GoogleAI:ApiKey"]).Returns((string?)null);
         var serviceWithoutKey = new GoogleGeminiService(
-            _httpClient,
+            this.httpClient,
             configWithoutKey.Object,
-            _mockLogger.Object);
+            this.mockLogger.Object);
 
         // Act
         var result = await serviceWithoutKey.GetFitnessAnalysisAsync("test");
@@ -281,8 +281,9 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
         // Assert
         Assert.NotNull(result);
         Assert.Contains("nicht verfügbar", result);
+
         // Prüfe, dass der Error-Log aufgerufen wurde
-        MockSetup.VerifyLog(_mockLogger, LogLevel.Error, "Error calling Google Gemini API");
+        MockSetup.VerifyLog(this.mockLogger, LogLevel.Error, "Error calling Google Gemini API");
     }
 
     [Fact]
@@ -296,7 +297,7 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
         var serviceWithNullKey = new GoogleGeminiService(
             httpClient,
             configWithNullKey.Object,
-            _mockLogger.Object);
+            this.mockLogger.Object);
 
         // Act
         var result = await serviceWithNullKey.GetHealthAnalysisAsync("test");
@@ -321,16 +322,16 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
         var prompt = $"Test {modelType} prompt";
         var response = MockSetup.CreateGoogleGeminiSuccessResponse($"Response for {modelType}");
 
-        SetupHttpResponse(response, HttpStatusCode.OK);
+        this.SetupHttpResponse(response, HttpStatusCode.OK);
 
         // Act
-        var result = await ExecuteServiceMethod(modelType, prompt);
+        var result = await this.ExecuteServiceMethod(modelType, prompt);
 
         // Assert
         Assert.NotNull(result);
 
         // Verify the correct model was used in the request
-        _mockHttpMessageHandler.Protected().Verify(
+        this.mockHttpMessageHandler.Protected().Verify(
             "SendAsync",
             Times.Once(),
             ItExpr.Is<HttpRequestMessage>(req =>
@@ -342,10 +343,10 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
     {
         return modelType switch
         {
-            "fitness" => await _service.GetFitnessAnalysisAsync(prompt),
-            "health" => await _service.GetHealthAnalysisAsync(prompt),
-            "motivation" => await _service.GetMotivationAsync(prompt),
-            "analysis" => await _service.GetFitnessAnalysisAsync(prompt), // Default to fitness for analysis
+            "fitness" => await this.service.GetFitnessAnalysisAsync(prompt),
+            "health" => await this.service.GetHealthAnalysisAsync(prompt),
+            "motivation" => await this.service.GetMotivationAsync(prompt),
+            "analysis" => await this.service.GetFitnessAnalysisAsync(prompt), // Default to fitness for analysis
             _ => throw new ArgumentException($"Unknown model type: {modelType}")
         };
     }
@@ -361,10 +362,10 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
         var prompt = "Test prompt";
         var emptyResponse = new { candidates = Array.Empty<object>() };
 
-        SetupHttpResponse(emptyResponse, HttpStatusCode.OK);
+        this.SetupHttpResponse(emptyResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -388,16 +389,16 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
                         parts = new[]
                         {
                             new { data = "no text property" }
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+            },
         };
 
-        SetupHttpResponse(responseWithoutText, HttpStatusCode.OK);
+        this.SetupHttpResponse(responseWithoutText, HttpStatusCode.OK);
 
         // Act
-        var result = await _service.GetMotivationAsync(prompt);
+        var result = await this.service.GetMotivationAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -415,20 +416,20 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
         var originalPrompt = "My 5K time is 25 minutes";
         var response = MockSetup.CreateGoogleGeminiSuccessResponse("Enhanced fitness response");
 
-        SetupHttpResponse(response, HttpStatusCode.OK);
+        this.SetupHttpResponse(response, HttpStatusCode.OK);
 
         // Act
-        await _service.GetFitnessAnalysisAsync(originalPrompt);
+        await this.service.GetFitnessAnalysisAsync(originalPrompt);
 
         // Assert
         // Verify that the request contains enhanced prompt structure
-        _mockHttpMessageHandler.Protected().Verify(
+        this.mockHttpMessageHandler.Protected().Verify(
             "SendAsync",
             Times.Once(),
             ItExpr.Is<HttpRequestMessage>(req =>
-                ExtractRequestContent(req).Contains("Fitnessexperte") &&
-                ExtractRequestContent(req).Contains("TRAININGSANALYSE") &&
-                ExtractRequestContent(req).Contains(originalPrompt)),
+                this.ExtractRequestContent(req).Contains("Fitnessexperte") &&
+                this.ExtractRequestContent(req).Contains("TRAININGSANALYSE") &&
+                this.ExtractRequestContent(req).Contains(originalPrompt)),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -439,19 +440,19 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
         var originalPrompt = "I feel tired after workouts";
         var response = MockSetup.CreateGoogleGeminiSuccessResponse("Enhanced health response");
 
-        SetupHttpResponse(response, HttpStatusCode.OK);
+        this.SetupHttpResponse(response, HttpStatusCode.OK);
 
         // Act
-        await _service.GetHealthAnalysisAsync(originalPrompt);
+        await this.service.GetHealthAnalysisAsync(originalPrompt);
 
         // Assert
-        _mockHttpMessageHandler.Protected().Verify(
+        this.mockHttpMessageHandler.Protected().Verify(
             "SendAsync",
             Times.Once(),
             ItExpr.Is<HttpRequestMessage>(req =>
-                ExtractRequestContent(req).Contains("Gesundheitsexperte") &&
-                ExtractRequestContent(req).Contains("GESUNDHEITSANALYSE") &&
-                ExtractRequestContent(req).Contains(originalPrompt)),
+                this.ExtractRequestContent(req).Contains("Gesundheitsexperte") &&
+                this.ExtractRequestContent(req).Contains("GESUNDHEITSANALYSE") &&
+                this.ExtractRequestContent(req).Contains(originalPrompt)),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -461,13 +462,13 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
         // Arrange
         var originalPrompt = "I need motivation to exercise";
         var response = MockSetup.CreateGoogleGeminiSuccessResponse("Enhanced motivation response");
-        SetupHttpResponse(response, HttpStatusCode.OK);
+        this.SetupHttpResponse(response, HttpStatusCode.OK);
 
         // Act
-        await _service.GetMotivationAsync(originalPrompt);
+        await this.service.GetMotivationAsync(originalPrompt);
 
-        // Assert 
-        _mockHttpMessageHandler.Protected().Verify(
+        // Assert
+        this.mockHttpMessageHandler.Protected().Verify(
             "SendAsync",
             Times.Once(),
             ItExpr.IsAny<HttpRequestMessage>(),
@@ -487,7 +488,7 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
             var jsonResponse = JsonSerializer.Serialize(responseObject);
             httpResponse = new HttpResponseMessage(statusCode)
             {
-                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
             };
         }
         else
@@ -495,7 +496,7 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
             httpResponse = new HttpResponseMessage(statusCode);
         }
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -505,7 +506,10 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
 
     private string ExtractRequestContent(HttpRequestMessage request)
     {
-        if (request.Content == null) return string.Empty;
+        if (request.Content == null)
+        {
+            return string.Empty;
+        }
 
         var content = request.Content.ReadAsStringAsync().Result;
         return content;
@@ -515,6 +519,6 @@ Der Marathon wartet auf dich! Vertraue dem Prozess und genieße jeden Schritt de
 
     public void Dispose()
     {
-        _httpClient?.Dispose();
+        this.httpClient?.Dispose();
     }
 }

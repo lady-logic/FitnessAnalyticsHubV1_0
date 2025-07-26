@@ -25,7 +25,6 @@ public static class InfrastructureHealthChecksExtension
         }
 
         // Weitere Infrastruktur-Checks...
-
         return builder;
     }
 }

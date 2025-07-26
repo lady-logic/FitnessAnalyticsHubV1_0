@@ -14,10 +14,10 @@ public static class GrpcMappingExtensions
         return new AIAssistant.Domain.Models.AthleteProfile
         {
             Id = Guid.NewGuid().ToString(),
-            Name = grpcProfile?.Name ?? "",
-            FitnessLevel = grpcProfile?.FitnessLevel ?? "",
-            PrimaryGoal = grpcProfile?.PrimaryGoal ?? "",
-            Preferences = new Dictionary<string, object>()
+            Name = grpcProfile?.Name ?? string.Empty,
+            FitnessLevel = grpcProfile?.FitnessLevel ?? string.Empty,
+            PrimaryGoal = grpcProfile?.PrimaryGoal ?? string.Empty,
+            Preferences = new Dictionary<string, object>(),
         };
     }
 
@@ -29,7 +29,7 @@ public static class GrpcMappingExtensions
             AthleteProfile = grpcRequest.AthleteProfile.ToAthleteProfileDto(),
             LastWorkout = null, // Erstmal null - wird nicht über gRPC übertragen
             UpcomingWorkoutType = null, // Erstmal null
-            IsStruggling = false // Default
+            IsStruggling = false, // Default
         };
     }
 
@@ -43,7 +43,7 @@ public static class GrpcMappingExtensions
                 .Select(w => w.ToWorkoutDataDto())
                 .ToList(),
             AthleteProfile = grpcRequest.AthleteProfile?.ToAthleteProfileDto() ?? new AthleteProfileDto(),
-            AdditionalContext = new Dictionary<string, object>()
+            AdditionalContext = new Dictionary<string, object>(),
         };
     }
 

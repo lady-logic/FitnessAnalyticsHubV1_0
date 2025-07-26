@@ -7,6 +7,8 @@
 public class GrpcJsonMotivationRequestDto
 {
     public GrpcJsonAthleteProfileDto? AthleteProfile { get; set; }
+
     public bool IsStruggling { get; set; } = false;
+
     public string? UpcomingWorkoutType { get; set; }
 }

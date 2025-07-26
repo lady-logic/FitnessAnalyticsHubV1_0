@@ -7,6 +7,8 @@
 public class GrpcJsonAthleteProfileDto
 {
     public string? Name { get; set; }
+
     public string? FitnessLevel { get; set; }
+
     public string? PrimaryGoal { get; set; }
 }

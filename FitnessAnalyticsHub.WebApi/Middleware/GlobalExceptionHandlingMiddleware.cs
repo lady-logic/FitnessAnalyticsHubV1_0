@@ -1,32 +1,32 @@
-﻿using System.Net;
-using System.Text.Json;
-using FitnessAnalyticsHub.Domain.Exceptions.Activities;
-using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
-using FitnessAnalyticsHub.Infrastructure.Exceptions;
-using FitnessAnalyticsHub.WebApi.Middleware.Models;
-
-namespace FitnessAnalyticsHub.WebApi.Middleware
+﻿namespace FitnessAnalyticsHub.WebApi.Middleware
 {
+    using System.Net;
+    using System.Text.Json;
+    using FitnessAnalyticsHub.Domain.Exceptions.Activities;
+    using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
+    using FitnessAnalyticsHub.Infrastructure.Exceptions;
+    using FitnessAnalyticsHub.WebApi.Middleware.Models;
+
     public class GlobalExceptionHandlingMiddleware
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+        private readonly RequestDelegate next;
+        private readonly ILogger<GlobalExceptionHandlingMiddleware> logger;
 
         public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
         {
-            _next = next;
-            _logger = logger;
+            this.next = next;
+            this.logger = logger;
         }
 
         public async Task InvokeAsync(HttpContext context)
         {
             try
             {
-                await _next(context);
+                await this.next(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "An unhandled exception occurred");
+                this.logger.LogError(ex, "An unhandled exception occurred");
                 await HandleExceptionAsync(context, ex);
             }
         }
@@ -43,7 +43,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "ActivityNotFound",
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.NotFound,
-                    Details = $"ActivityId: {ex.ActivityId}"
+                    Details = $"ActivityId: {ex.ActivityId}",
                 },
 
                 AthleteNotFoundException ex => new ErrorResponse
@@ -51,7 +51,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "AthleteNotFound",
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.NotFound,
-                    Details = $"AthleteId: {ex.AthleteId}"
+                    Details = $"AthleteId: {ex.AthleteId}",
                 },
 
                 // AI Assistant Exceptions
@@ -60,7 +60,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "AIAssistantApiError",
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.BadGateway,
-                    Details = $"AI Assistant API returned status code: {ex.StatusCode}"
+                    Details = $"AI Assistant API returned status code: {ex.StatusCode}",
                 },
 
                 // Strava Konfigurationsfehler
@@ -69,7 +69,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "StravaConfigurationError",
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.InternalServerError,
-                    Details = "Please check your Strava API configuration"
+                    Details = "Please check your Strava API configuration",
                 },
 
                 // Strava Autorisierungsfehler
@@ -78,7 +78,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "StravaAuthorizationError",
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.BadRequest,
-                    Details = "Authorization process failed"
+                    Details = "Authorization process failed",
                 },
 
                 // Ungültiger Strava Token
@@ -87,7 +87,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "InvalidStravaToken",
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.Unauthorized,
-                    Details = "Please check your Strava access token"
+                    Details = "Please check your Strava access token",
                 },
 
                 // Strava API Fehler
@@ -96,7 +96,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "StravaApiError",
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.BadGateway,
-                    Details = $"Strava API returned status code: {ex.StatusCode}"
+                    Details = $"Strava API returned status code: {ex.StatusCode}",
                 },
 
                 // Allgemeine Strava Service Fehler
@@ -105,7 +105,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "StravaServiceError",
                     Message = ex.Message,
                     StatusCode = (int)HttpStatusCode.BadRequest,
-                    Details = ex.InnerException?.Message
+                    Details = ex.InnerException?.Message,
                 },
 
                 // Fallback für alle anderen Exceptions
@@ -114,7 +114,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
                     Type = "InternalServerError",
                     Message = "An error occurred while processing your request.",
                     StatusCode = (int)HttpStatusCode.InternalServerError,
-                    Details = exception.Message
+                    Details = exception.Message,
                 }
             };
 
@@ -122,7 +122,7 @@ namespace FitnessAnalyticsHub.WebApi.Middleware
 
             var jsonResponse = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
             {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             });
 
             await response.WriteAsync(jsonResponse);

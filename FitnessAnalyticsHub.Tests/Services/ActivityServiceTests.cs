@@ -15,11 +15,11 @@ namespace FitnessAnalyticsHub.Tests.Services;
 
 public class ActivityServiceTests
 {
-    private readonly ApplicationDbContext _context;
-    private readonly Mock<IStravaService> _mockStravaService;
-    private readonly Mock<IAIAssistantClientService> _mockAiAssistantClient;
-    private readonly IMapper _mapper;
-    private readonly ActivityService _activityService;
+    private readonly ApplicationDbContext context;
+    private readonly Mock<IStravaService> mockStravaService;
+    private readonly Mock<IAIAssistantClientService> mockAiAssistantClient;
+    private readonly IMapper mapper;
+    private readonly ActivityService activityService;
 
     public ActivityServiceTests()
     {
@@ -28,27 +28,27 @@ public class ActivityServiceTests
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Eindeutiger Name pro Test
             .Options;
 
-        _context = new ApplicationDbContext(options);
-        _mockStravaService = new Mock<IStravaService>();
-        _mockAiAssistantClient = new Mock<IAIAssistantClientService>();
+        this.context = new ApplicationDbContext(options);
+        this.mockStravaService = new Mock<IStravaService>();
+        this.mockAiAssistantClient = new Mock<IAIAssistantClientService>();
 
         // Konfiguriere AutoMapper mit dem tatsächlichen Mappingprofil
         var mapperConfig = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
-        _mapper = mapperConfig.CreateMapper();
+        this.mapper = mapperConfig.CreateMapper();
 
         // Service erstellen
-        _activityService = new ActivityService(
-            _context,
-            _mockStravaService.Object,
-            _mapper);
+        this.activityService = new ActivityService(
+            this.context,
+            this.mockStravaService.Object,
+            this.mapper);
     }
 
     public void Dispose()
     {
-        _context.Dispose();
+        this.context.Dispose();
     }
 
     [Fact]
@@ -62,7 +62,7 @@ public class ActivityServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
         var activity = new Activity
@@ -77,16 +77,16 @@ public class ActivityServiceTests
             StartDate = DateTime.Now.AddDays(-1),
             StartDateLocal = DateTime.Now.AddDays(-1),
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
         // Daten in InMemory Database einfügen
-        await _context.Athletes.AddAsync(athlete);
-        await _context.Activities.AddAsync(activity);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.Activities.AddAsync(activity);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _activityService.GetActivityByIdAsync(1, It.IsAny<CancellationToken>());
+        var result = await this.activityService.GetActivityByIdAsync(1, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.NotNull(result);
@@ -104,7 +104,7 @@ public class ActivityServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
-            () => _activityService.GetActivityByIdAsync(999, CancellationToken.None));
+            () => this.activityService.GetActivityByIdAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.ActivityId);
     }
@@ -120,7 +120,7 @@ public class ActivityServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
         var activities = new List<Activity>
@@ -135,7 +135,7 @@ public class ActivityServiceTests
             StartDate = DateTime.Now.AddDays(-2),
             StartDateLocal = DateTime.Now.AddDays(-2),
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         },
         new Activity
         {
@@ -147,16 +147,16 @@ public class ActivityServiceTests
             StartDate = DateTime.Now.AddDays(-1),
             StartDateLocal = DateTime.Now.AddDays(-1),
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
-        }
+            UpdatedAt = DateTime.Now,
+        },
     };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.Activities.AddRangeAsync(activities);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.Activities.AddRangeAsync(activities);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _activityService.GetActivitiesByAthleteIdAsync(1, CancellationToken.None);
+        var result = await this.activityService.GetActivitiesByAthleteIdAsync(1, CancellationToken.None);
 
         // Assert
         var resultList = result.ToList();
@@ -177,11 +177,11 @@ public class ActivityServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.SaveChangesAsync();
 
         var createDto = new CreateActivityDto
         {
@@ -191,11 +191,11 @@ public class ActivityServiceTests
             MovingTimeSeconds = 1800,
             ElapsedTimeSeconds = 1900,
             SportType = "Run",
-            StartDate = DateTime.Now
+            StartDate = DateTime.Now,
         };
 
         // Act
-        var result = await _activityService.CreateActivityAsync(createDto, CancellationToken.None);
+        var result = await this.activityService.CreateActivityAsync(createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -204,7 +204,7 @@ public class ActivityServiceTests
         Assert.True(result.Id > 0);
 
         // Verify in database
-        var activityInDb = await _context.Activities.FindAsync(result.Id);
+        var activityInDb = await this.context.Activities.FindAsync(result.Id);
         Assert.NotNull(activityInDb);
         Assert.Equal("Test Run", activityInDb.Name);
     }
@@ -220,7 +220,7 @@ public class ActivityServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
         var activity = new Activity
@@ -233,25 +233,25 @@ public class ActivityServiceTests
             StartDate = DateTime.Now,
             StartDateLocal = DateTime.Now,
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.Activities.AddAsync(activity);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.Activities.AddAsync(activity);
+        await this.context.SaveChangesAsync();
 
         var updateDto = new UpdateActivityDto
         {
             Id = 1,
             Name = "Updated Name",
-            Distance = 6000
+            Distance = 6000,
         };
 
         // Act
-        await _activityService.UpdateActivityAsync(updateDto, CancellationToken.None);
+        await this.activityService.UpdateActivityAsync(updateDto, CancellationToken.None);
 
         // Assert
-        var updatedActivity = await _context.Activities.FindAsync(1);
+        var updatedActivity = await this.context.Activities.FindAsync(1);
         Assert.NotNull(updatedActivity);
         Assert.Equal("Updated Name", updatedActivity.Name);
         Assert.Equal(6000, updatedActivity.Distance);
@@ -265,12 +265,12 @@ public class ActivityServiceTests
         {
             Id = 999,
             Name = "Updated Name",
-            Distance = 6000
+            Distance = 6000,
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
-            () => _activityService.UpdateActivityAsync(updateDto, CancellationToken.None));
+            () => this.activityService.UpdateActivityAsync(updateDto, CancellationToken.None));
 
         Assert.Equal(999, exception.ActivityId);
     }
@@ -286,7 +286,7 @@ public class ActivityServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
         var activity = new Activity
@@ -298,18 +298,18 @@ public class ActivityServiceTests
             StartDate = DateTime.Now,
             StartDateLocal = DateTime.Now,
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.Activities.AddAsync(activity);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.Activities.AddAsync(activity);
+        await this.context.SaveChangesAsync();
 
         // Act
-        await _activityService.DeleteActivityAsync(1, CancellationToken.None);
+        await this.activityService.DeleteActivityAsync(1, CancellationToken.None);
 
         // Assert
-        var deletedActivity = await _context.Activities.FindAsync(1);
+        var deletedActivity = await this.context.Activities.FindAsync(1);
         Assert.Null(deletedActivity);
     }
 
@@ -320,7 +320,7 @@ public class ActivityServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
-            () => _activityService.DeleteActivityAsync(999, CancellationToken.None));
+            () => this.activityService.DeleteActivityAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.ActivityId);
     }
@@ -336,7 +336,7 @@ public class ActivityServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
         var activities = new List<Activity>
@@ -354,7 +354,7 @@ public class ActivityServiceTests
             StartDate = new DateTime(2024, 1, 15), // Januar
             StartDateLocal = new DateTime(2024, 1, 15),
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         },
         new Activity
         {
@@ -369,7 +369,7 @@ public class ActivityServiceTests
             StartDate = new DateTime(2024, 2, 10), // Februar
             StartDateLocal = new DateTime(2024, 2, 10),
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         },
         new Activity
         {
@@ -384,16 +384,16 @@ public class ActivityServiceTests
             StartDate = new DateTime(2024, 1, 20), // Januar
             StartDateLocal = new DateTime(2024, 1, 20),
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
-        }
+            UpdatedAt = DateTime.Now,
+        },
     };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.Activities.AddRangeAsync(activities);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.Activities.AddRangeAsync(activities);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
+        var result = await this.activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -426,14 +426,14 @@ public class ActivityServiceTests
             LastName = "Mustermann",
             Email = "max@test.com",
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
+        var result = await this.activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);

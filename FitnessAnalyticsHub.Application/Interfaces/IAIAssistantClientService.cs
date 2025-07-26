@@ -1,7 +1,7 @@
-﻿using FitnessAnalyticsHub.Application.DTOs;
-
-namespace FitnessAnalyticsHub.Application.Interfaces
+﻿namespace FitnessAnalyticsHub.Application.Interfaces
 {
+    using FitnessAnalyticsHub.Application.DTOs;
+
     public interface IAIAssistantClientService
     {
         Task<AIMotivationResponseDto> GetMotivationAsync(AIMotivationRequestDto request, CancellationToken cancellationToken = default);

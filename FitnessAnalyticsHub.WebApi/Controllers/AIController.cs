@@ -8,15 +8,15 @@ namespace FitnessAnalyticsHub.WebApi.Controllers;
 [Route("api/[controller]")]
 public class AIController : ControllerBase
 {
-    private readonly IAIAssistantClientService _aiAssistant;
-    private readonly ILogger<AIController> _logger;
+    private readonly IAIAssistantClientService aiAssistant;
+    private readonly ILogger<AIController> logger;
 
     public AIController(
         IAIAssistantClientService aiAssistant,
         ILogger<AIController> logger)
     {
-        _aiAssistant = aiAssistant;
-        _logger = logger;
+        this.aiAssistant = aiAssistant;
+        this.logger = logger;
     }
 
     [HttpPost("motivation")]
@@ -24,14 +24,15 @@ public class AIController : ControllerBase
         AIMotivationRequestDto request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("AI motivation request for athlete: {AthleteName}",
+        this.logger.LogInformation(
+            "AI motivation request for athlete: {AthleteName}",
             request.AthleteProfile?.Name ?? "Unknown");
 
-        var result = await _aiAssistant.GetMotivationAsync(request, cancellationToken);
+        var result = await this.aiAssistant.GetMotivationAsync(request, cancellationToken);
 
-        _logger.LogInformation("AI motivation response generated from source: {Source}", result.Source);
+        this.logger.LogInformation("AI motivation response generated from source: {Source}", result.Source);
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     [HttpPost("analysis")]
@@ -39,27 +40,28 @@ public class AIController : ControllerBase
         AIWorkoutAnalysisRequestDto request,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("AI workout analysis request for {WorkoutCount} workouts, type: {AnalysisType}",
+        this.logger.LogInformation(
+            "AI workout analysis request for {WorkoutCount} workouts, type: {AnalysisType}",
             request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
-        var result = await _aiAssistant.GetWorkoutAnalysisAsync(request, cancellationToken);
+        var result = await this.aiAssistant.GetWorkoutAnalysisAsync(request, cancellationToken);
 
-        _logger.LogInformation("AI analysis response generated from source: {Source}", result.Source);
+        this.logger.LogInformation("AI analysis response generated from source: {Source}", result.Source);
 
-        return Ok(result);
+        return this.Ok(result);
     }
 
     [HttpGet("health")]
     public async Task<ActionResult<object>> GetAIHealth(CancellationToken cancellationToken)
     {
-        var isHealthy = await _aiAssistant.IsHealthyAsync(cancellationToken);
+        var isHealthy = await this.aiAssistant.IsHealthyAsync(cancellationToken);
 
-        return Ok(new
+        return this.Ok(new
         {
             isHealthy = isHealthy,
             service = "AIAssistant",
             timestamp = DateTime.UtcNow,
-            status = isHealthy ? "Available" : "Unavailable"
+            status = isHealthy ? "Available" : "Unavailable",
         });
     }
 }

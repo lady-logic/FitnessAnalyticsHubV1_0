@@ -1,28 +1,28 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿namespace AIAssistant._04_UI.API.Controllers;
 
-namespace AIAssistant._04_UI.API.Controllers;
+using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
 public class HuggingFaceTestController : ControllerBase
 {
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<HuggingFaceTestController> _logger;
+    private readonly IConfiguration configuration;
+    private readonly ILogger<HuggingFaceTestController> logger;
 
     public HuggingFaceTestController(IConfiguration configuration, ILogger<HuggingFaceTestController> logger)
     {
-        _configuration = configuration;
-        _logger = logger;
+        this.configuration = configuration;
+        this.logger = logger;
     }
 
     [HttpGet("test-token")]
     public async Task<ActionResult> TestToken()
     {
-        var apiKey = _configuration["HuggingFace:ApiKey"];
+        var apiKey = this.configuration["HuggingFace:ApiKey"];
 
         if (string.IsNullOrEmpty(apiKey))
         {
-            return BadRequest("No HuggingFace API key found");
+            return this.BadRequest("No HuggingFace API key found");
         }
 
         try
@@ -33,45 +33,45 @@ public class HuggingFaceTestController : ControllerBase
             httpClient.DefaultRequestHeaders.Clear();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
-            _logger.LogInformation("Testing HuggingFace token with whoami endpoint...");
+            this.logger.LogInformation("Testing HuggingFace token with whoami endpoint...");
             var whoamiResponse = await httpClient.GetAsync("https://huggingface.co/api/whoami");
             var whoamiContent = await whoamiResponse.Content.ReadAsStringAsync();
 
-            _logger.LogInformation("Whoami response: {Response}", whoamiContent);
+            this.logger.LogInformation("Whoami response: {Response}", whoamiContent);
 
             // Test 2: Liste verfügbare Models
-            _logger.LogInformation("Testing model list endpoint...");
+            this.logger.LogInformation("Testing model list endpoint...");
             var modelsResponse = await httpClient.GetAsync("https://huggingface.co/api/models?search=gpt2&limit=5");
             var modelsContent = await modelsResponse.Content.ReadAsStringAsync();
 
-            return Ok(new
+            return this.Ok(new
             {
                 tokenValidation = new
                 {
                     statusCode = (int)whoamiResponse.StatusCode,
                     isSuccess = whoamiResponse.IsSuccessStatusCode,
-                    response = whoamiContent
+                    response = whoamiContent,
                 },
                 availableModels = new
                 {
                     statusCode = (int)modelsResponse.StatusCode,
                     isSuccess = modelsResponse.IsSuccessStatusCode,
-                    response = modelsContent.Length > 1000 ? modelsContent.Substring(0, 1000) + "..." : modelsContent
+                    response = modelsContent.Length > 1000 ? modelsContent.Substring(0, 1000) + "..." : modelsContent,
                 },
-                apiKeyPreview = $"{apiKey.Substring(0, 10)}..."
+                apiKeyPreview = $"{apiKey.Substring(0, 10)}...",
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Token test failed");
-            return StatusCode(500, new { error = ex.Message });
+            this.logger.LogError(ex, "Token test failed");
+            return this.StatusCode(500, new { error = ex.Message });
         }
     }
 
     [HttpGet("test-simple-model")]
     public async Task<ActionResult> TestSimpleModel()
     {
-        var apiKey = _configuration["HuggingFace:ApiKey"];
+        var apiKey = this.configuration["HuggingFace:ApiKey"];
 
         try
         {
@@ -82,35 +82,35 @@ public class HuggingFaceTestController : ControllerBase
             var testUrl = "https://api-inference.huggingface.co/models/distilbert-base-uncased";
             var testPayload = new
             {
-                inputs = "Hello world"
+                inputs = "Hello world",
             };
 
             var json = System.Text.Json.JsonSerializer.Serialize(testPayload);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            _logger.LogInformation("Testing with DistilBERT model...");
+            this.logger.LogInformation("Testing with DistilBERT model...");
             var response = await httpClient.PostAsync(testUrl, content);
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            return Ok(new
+            return this.Ok(new
             {
                 model = "distilbert-base-uncased",
                 statusCode = (int)response.StatusCode,
                 isSuccess = response.IsSuccessStatusCode,
                 response = responseContent,
-                url = testUrl
+                url = testUrl,
             });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return this.StatusCode(500, new { error = ex.Message });
         }
     }
 
     [HttpGet("test-text-generation")]
     public async Task<ActionResult> TestTextGeneration()
     {
-        var apiKey = _configuration["HuggingFace:ApiKey"];
+        var apiKey = this.configuration["HuggingFace:ApiKey"];
 
         try
         {
@@ -123,7 +123,7 @@ public class HuggingFaceTestController : ControllerBase
                 "gpt2",
                 "distilgpt2",
                 "microsoft/DialoGPT-medium",
-                "EleutherAI/gpt-neo-125M"
+                "EleutherAI/gpt-neo-125M",
             };
 
             var results = new List<object>();
@@ -145,12 +145,12 @@ public class HuggingFaceTestController : ControllerBase
                         model = model,
                         statusCode = (int)response.StatusCode,
                         isSuccess = response.IsSuccessStatusCode,
-                        response = responseContent.Length > 200 ? responseContent.Substring(0, 200) + "..." : responseContent
+                        response = responseContent.Length > 200 ? responseContent.Substring(0, 200) + "..." : responseContent,
                     });
 
                     if (response.IsSuccessStatusCode)
                     {
-                        _logger.LogInformation("SUCCESS with model: {Model}", model);
+                        this.logger.LogInformation("SUCCESS with model: {Model}", model);
                         break; // Stoppe bei erstem funktionierenden Model
                     }
                 }
@@ -159,16 +159,16 @@ public class HuggingFaceTestController : ControllerBase
                     results.Add(new
                     {
                         model = model,
-                        error = ex.Message
+                        error = ex.Message,
                     });
                 }
             }
 
-            return Ok(new { testResults = results });
+            return this.Ok(new { testResults = results });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.Message });
+            return this.StatusCode(500, new { error = ex.Message });
         }
     }
 }

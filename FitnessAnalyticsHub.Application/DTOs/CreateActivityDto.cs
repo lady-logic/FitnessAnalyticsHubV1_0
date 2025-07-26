@@ -27,7 +27,7 @@ public class CreateActivityDto
     public double? AverageCadence { get; set; }
 
     [JsonIgnore] // Wird nur für die Antwort berechnet, nicht im Request erwartet
-    public string? CalculatedPace => Distance > 0 && MovingTimeSeconds > 0
-        ? $"{TimeSpan.FromSeconds(MovingTimeSeconds / Distance * 1000).Minutes}:{TimeSpan.FromSeconds(MovingTimeSeconds / Distance * 1000).Seconds:D2} min/km"
+    public string? CalculatedPace => this.Distance > 0 && this.MovingTimeSeconds > 0
+        ? $"{TimeSpan.FromSeconds(this.MovingTimeSeconds / this.Distance * 1000).Minutes}:{TimeSpan.FromSeconds(this.MovingTimeSeconds / this.Distance * 1000).Seconds:D2} min/km"
         : null;
 }

@@ -14,7 +14,7 @@ public static class AthleteProfileExtensions
             Name = domain.Name,
             FitnessLevel = domain.FitnessLevel,
             PrimaryGoal = domain.PrimaryGoal,
-            Preferences = domain.Preferences
+            Preferences = domain.Preferences,
         };
     }
 
@@ -27,7 +27,7 @@ public static class AthleteProfileExtensions
             Name = dto.Name,
             FitnessLevel = dto.FitnessLevel,
             PrimaryGoal = dto.PrimaryGoal,
-            Preferences = dto.Preferences
+            Preferences = dto.Preferences,
         };
     }
 
@@ -37,10 +37,10 @@ public static class AthleteProfileExtensions
         return new AthleteProfileDto
         {
             Id = Guid.NewGuid().ToString(),  // Neue ID generieren
-            Name = grpcProfile.Name ?? "",
+            Name = grpcProfile.Name ?? string.Empty,
             FitnessLevel = grpcProfile.FitnessLevel,
             PrimaryGoal = grpcProfile.PrimaryGoal,
-            Preferences = null  // gRPC-JSON hat keine Preferences
+            Preferences = null,  // gRPC-JSON hat keine Preferences
         };
     }
 
@@ -50,10 +50,10 @@ public static class AthleteProfileExtensions
         return new AthleteProfileDto
         {
             Id = Guid.NewGuid().ToString(),
-            Name = grpcProfile.Name ?? "",
-            FitnessLevel = grpcProfile.FitnessLevel ?? "",
-            PrimaryGoal = grpcProfile.PrimaryGoal ?? "",
-            Preferences = null // gRPC hat keine Preferences
+            Name = grpcProfile.Name ?? string.Empty,
+            FitnessLevel = grpcProfile.FitnessLevel ?? string.Empty,
+            PrimaryGoal = grpcProfile.PrimaryGoal ?? string.Empty,
+            Preferences = null, // gRPC hat keine Preferences
         };
     }
 }

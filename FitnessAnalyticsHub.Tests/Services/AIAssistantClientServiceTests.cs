@@ -12,29 +12,29 @@ namespace FitnessAnalyticsHub.Tests.Services;
 
 public class AIAssistantClientServiceTests : IDisposable
 {
-    private readonly Mock<ILogger<AIAssistantClientService>> _mockLogger;
-    private readonly Mock<IConfiguration> _mockConfiguration;
-    private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
-    private readonly HttpClient _httpClient;
-    private readonly AIAssistantClientService _service;
+    private readonly Mock<ILogger<AIAssistantClientService>> mockLogger;
+    private readonly Mock<IConfiguration> mockConfiguration;
+    private readonly Mock<HttpMessageHandler> mockHttpMessageHandler;
+    private readonly HttpClient httpClient;
+    private readonly AIAssistantClientService service;
 
     public AIAssistantClientServiceTests()
     {
-        _mockLogger = new Mock<ILogger<AIAssistantClientService>>();
-        _mockConfiguration = new Mock<IConfiguration>();
-        _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
+        this.mockLogger = new Mock<ILogger<AIAssistantClientService>>();
+        this.mockConfiguration = new Mock<IConfiguration>();
+        this.mockHttpMessageHandler = new Mock<HttpMessageHandler>();
 
         // Setup configuration mock
-        _mockConfiguration.Setup(x => x["AIAssistant:BaseUrl"])
+        this.mockConfiguration.Setup(x => x["AIAssistant:BaseUrl"])
             .Returns("http://localhost:5169");
 
         // Create HttpClient with mocked handler
-        _httpClient = new HttpClient(_mockHttpMessageHandler.Object)
+        this.httpClient = new HttpClient(this.mockHttpMessageHandler.Object)
         {
-            BaseAddress = new Uri("http://localhost:5169")
+            BaseAddress = new Uri("http://localhost:5169"),
         };
 
-        _service = new AIAssistantClientService(_httpClient, _mockLogger.Object, _mockConfiguration.Object);
+        this.service = new AIAssistantClientService(this.httpClient, this.mockLogger.Object, this.mockConfiguration.Object);
     }
 
     #region GetMotivationAsync Tests
@@ -49,7 +49,7 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 Name = "John Doe",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Weight Loss"
+                PrimaryGoal = "Weight Loss",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
@@ -59,11 +59,11 @@ public class AIAssistantClientServiceTests : IDisposable
                     ActivityType = "Run",
                     Distance = 5.0,
                     Duration = 1800,
-                    Calories = 350
-                }
+                    Calories = 350,
+                },
             },
             PreferredTone = "Encouraging",
-            ContextualInfo = "Feeling motivated today"
+            ContextualInfo = "Feeling motivated today",
         };
 
         var expectedApiResponse = new
@@ -74,17 +74,17 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 "Stay hydrated throughout the day",
                 "Focus on compound exercises",
-                "Track your progress weekly"
-            }
+                "Track your progress weekly",
+            },
         };
 
         var jsonResponse = JsonSerializer.Serialize(expectedApiResponse);
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.Is<HttpRequestMessage>(req =>
@@ -94,7 +94,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetMotivationAsync(request, CancellationToken.None);
+        var result = await this.service.GetMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -106,7 +106,7 @@ public class AIAssistantClientServiceTests : IDisposable
         Assert.True(DateTime.UtcNow.Subtract(result.GeneratedAt).TotalSeconds < 5);
 
         // Verify logging
-        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: John Doe");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: John Doe");
     }
 
     [Fact]
@@ -119,24 +119,25 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 Name = "Jane Smith",
                 FitnessLevel = "Beginner",
-                PrimaryGoal = "General Fitness"
-            }
+                PrimaryGoal = "General Fitness",
+            },
+
             // No recent workouts, preferred tone, or contextual info
         };
 
         var expectedApiResponse = new
         {
             motivationalMessage = "You're doing amazing, Jane! Every step counts on your fitness journey.",
-            quote = "A journey of a thousand miles begins with a single step."
+            quote = "A journey of a thousand miles begins with a single step.",
         };
 
         var jsonResponse = JsonSerializer.Serialize(expectedApiResponse);
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -144,7 +145,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetMotivationAsync(request, CancellationToken.None);
+        var result = await this.service.GetMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -160,21 +161,21 @@ public class AIAssistantClientServiceTests : IDisposable
         // Arrange
         var request = new AIMotivationRequestDto
         {
-            AthleteProfile = null
+            AthleteProfile = null,
         };
 
         var expectedApiResponse = new
         {
-            motivationalMessage = "Great work, Champion! Keep pushing forward!"
+            motivationalMessage = "Great work, Champion! Keep pushing forward!",
         };
 
         var jsonResponse = JsonSerializer.Serialize(expectedApiResponse);
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -182,12 +183,12 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetMotivationAsync(request, CancellationToken.None);
+        var result = await this.service.GetMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
         Assert.Contains("Champion", result.MotivationalMessage);
-        VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: Unknown");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting motivation for athlete: Unknown");
     }
 
     [Fact]
@@ -200,16 +201,16 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 Name = "Test User",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Endurance"
-            }
+                PrimaryGoal = "Endurance",
+            },
         };
 
         var httpResponse = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
         {
-            Content = new StringContent("Service temporarily unavailable", Encoding.UTF8, "text/plain")
+            Content = new StringContent("Service temporarily unavailable", Encoding.UTF8, "text/plain"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -217,7 +218,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetMotivationAsync(request, CancellationToken.None);
+        var result = await this.service.GetMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -228,7 +229,7 @@ public class AIAssistantClientServiceTests : IDisposable
         Assert.Equal("Fallback", result.Source);
 
         // Verify error logging
-        VerifyLogCalled(LogLevel.Error, "AIAssistant motivation request failed");
+        this.VerifyLogCalled(LogLevel.Error, "AIAssistant motivation request failed");
     }
 
     [Fact]
@@ -241,8 +242,8 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 Name = "Test User",
                 FitnessLevel = "Advanced",
-                PrimaryGoal = "Strength"
-            }
+                PrimaryGoal = "Strength",
+            },
         };
 
         // Response with missing required fields
@@ -250,10 +251,10 @@ public class AIAssistantClientServiceTests : IDisposable
         var jsonResponse = JsonSerializer.Serialize(malformedResponse);
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -261,7 +262,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetMotivationAsync(request, CancellationToken.None);
+        var result = await this.service.GetMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -285,7 +286,7 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 Name = "Mike Johnson",
                 FitnessLevel = "Advanced",
-                PrimaryGoal = "Performance Improvement"
+                PrimaryGoal = "Performance Improvement",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
@@ -295,7 +296,7 @@ public class AIAssistantClientServiceTests : IDisposable
                     ActivityType = "Run",
                     Distance = 10.0,
                     Duration = 2700,
-                    Calories = 650
+                    Calories = 650,
                 },
                 new AIWorkoutDataDto
                 {
@@ -303,11 +304,11 @@ public class AIAssistantClientServiceTests : IDisposable
                     ActivityType = "Ride",
                     Distance = 30.0,
                     Duration = 5400,
-                    Calories = 1200
-                }
+                    Calories = 1200,
+                },
             },
             AnalysisType = "Performance",
-            FocusAreas = new List<string> { "endurance", "pacing", "recovery" }
+            FocusAreas = new List<string> { "endurance", "pacing", "recovery" },
         };
 
         var expectedApiResponse = new
@@ -317,23 +318,23 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 "Average pace has improved by 15 seconds per kilometer",
                 "Heart rate zones indicate optimal training intensity",
-                "Recovery time between sessions is appropriate"
+                "Recovery time between sessions is appropriate",
             },
             recommendations = new[]
             {
                 "Continue current endurance base building",
                 "Add one tempo run per week",
-                "Consider incorporating strength training"
-            }
+                "Consider incorporating strength training",
+            },
         };
 
         var jsonResponse = JsonSerializer.Serialize(expectedApiResponse);
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.Is<HttpRequestMessage>(req =>
@@ -343,7 +344,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetWorkoutAnalysisAsync(request, CancellationToken.None);
+        var result = await this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -355,7 +356,7 @@ public class AIAssistantClientServiceTests : IDisposable
         Assert.Equal("AIAssistant-HuggingFace", result.Source);
 
         // Verify logging
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 2 workouts, type: Performance");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 2 workouts, type: Performance");
     }
 
     [Fact]
@@ -368,10 +369,10 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 Name = "New User",
                 FitnessLevel = "Beginner",
-                PrimaryGoal = "Get Started"
+                PrimaryGoal = "Get Started",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>(), // Empty list
-            AnalysisType = "General"
+            AnalysisType = "General",
         };
 
         var expectedApiResponse = new
@@ -380,22 +381,22 @@ public class AIAssistantClientServiceTests : IDisposable
             keyInsights = new[]
             {
                 "Starting with 3 workouts per week is ideal for beginners",
-                "Focus on form over intensity initially"
+                "Focus on form over intensity initially",
             },
             recommendations = new[]
             {
                 "Begin with 20-30 minute walks",
-                "Add bodyweight exercises 2x per week"
-            }
+                "Add bodyweight exercises 2x per week",
+            },
         };
 
         var jsonResponse = JsonSerializer.Serialize(expectedApiResponse);
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -403,7 +404,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetWorkoutAnalysisAsync(request, CancellationToken.None);
+        var result = await this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -412,7 +413,7 @@ public class AIAssistantClientServiceTests : IDisposable
         Assert.Equal(2, result.Recommendations.Count);
 
         // Verify logging
-        VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts, type: General");
+        this.VerifyLogCalled(LogLevel.Information, "Requesting workout analysis for 0 workouts, type: General");
     }
 
     [Fact]
@@ -425,7 +426,7 @@ public class AIAssistantClientServiceTests : IDisposable
             {
                 Name = "Test User",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Endurance"
+                PrimaryGoal = "Endurance",
             },
             RecentWorkouts = new List<AIWorkoutDataDto>
             {
@@ -435,18 +436,18 @@ public class AIAssistantClientServiceTests : IDisposable
                     ActivityType = "Run",
                     Distance = 5.0,
                     Duration = 1800,
-                    Calories = 400
-                }
+                    Calories = 400,
+                },
             },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         var httpResponse = new HttpResponseMessage(HttpStatusCode.InternalServerError)
         {
-            Content = new StringContent("Internal server error", Encoding.UTF8, "text/plain")
+            Content = new StringContent("Internal server error", Encoding.UTF8, "text/plain"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -454,7 +455,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetWorkoutAnalysisAsync(request, CancellationToken.None);
+        var result = await this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -467,7 +468,7 @@ public class AIAssistantClientServiceTests : IDisposable
         Assert.Contains("Continue current training schedule", result.Recommendations);
 
         // Verify error logging
-        VerifyLogCalled(LogLevel.Error, "AIAssistant workout analysis request failed");
+        this.VerifyLogCalled(LogLevel.Error, "AIAssistant workout analysis request failed");
     }
 
     [Fact]
@@ -485,26 +486,26 @@ public class AIAssistantClientServiceTests : IDisposable
                     ActivityType = "Run",
                     Distance = 5.0,
                     Duration = 1800,
-                    Calories = 400
-                }
+                    Calories = 400,
+                },
             },
-            AnalysisType = "General"
+            AnalysisType = "General",
         };
 
         var expectedApiResponse = new
         {
             analysis = "Your workout data shows good progress.",
             keyInsights = new[] { "Consistent training patterns observed" },
-            recommendations = new[] { "Keep up the good work" }
+            recommendations = new[] { "Keep up the good work" },
         };
 
         var jsonResponse = JsonSerializer.Serialize(expectedApiResponse);
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -512,7 +513,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act & Assert - Should not throw exception
-        var result = await _service.GetWorkoutAnalysisAsync(request, CancellationToken.None);
+        var result = await this.service.GetWorkoutAnalysisAsync(request, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal("Your workout data shows good progress.", result.Analysis);
@@ -528,10 +529,10 @@ public class AIAssistantClientServiceTests : IDisposable
         // Arrange
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent("{\"status\":\"healthy\"}", Encoding.UTF8, "application/json")
+            Content = new StringContent("{\"status\":\"healthy\"}", Encoding.UTF8, "application/json"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.Is<HttpRequestMessage>(req =>
@@ -541,7 +542,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.IsHealthyAsync(CancellationToken.None);
+        var result = await this.service.IsHealthyAsync(CancellationToken.None);
 
         // Assert
         Assert.True(result);
@@ -553,10 +554,10 @@ public class AIAssistantClientServiceTests : IDisposable
         // Arrange
         var httpResponse = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
         {
-            Content = new StringContent("Service unavailable", Encoding.UTF8, "text/plain")
+            Content = new StringContent("Service unavailable", Encoding.UTF8, "text/plain"),
         };
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -564,7 +565,7 @@ public class AIAssistantClientServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.IsHealthyAsync(CancellationToken.None);
+        var result = await this.service.IsHealthyAsync(CancellationToken.None);
 
         // Assert
         Assert.False(result);
@@ -574,7 +575,7 @@ public class AIAssistantClientServiceTests : IDisposable
     public async Task IsHealthyAsync_WithException_ReturnsFalseAndLogsWarning()
     {
         // Arrange
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -582,11 +583,11 @@ public class AIAssistantClientServiceTests : IDisposable
             .ThrowsAsync(new HttpRequestException("Network error"));
 
         // Act
-        var result = await _service.IsHealthyAsync(CancellationToken.None);
+        var result = await this.service.IsHealthyAsync(CancellationToken.None);
 
         // Assert
         Assert.False(result);
-        VerifyLogCalled(LogLevel.Warning, "AIAssistant health check failed");
+        this.VerifyLogCalled(LogLevel.Warning, "AIAssistant health check failed");
     }
 
     #endregion
@@ -598,7 +599,7 @@ public class AIAssistantClientServiceTests : IDisposable
     {
         // Act & Assert
         await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetPerformanceTrendsAsync(1, "month", CancellationToken.None));
+            () => this.service.GetPerformanceTrendsAsync(1, "month", CancellationToken.None));
     }
 
     [Fact]
@@ -606,7 +607,7 @@ public class AIAssistantClientServiceTests : IDisposable
     {
         // Act & Assert
         await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetTrainingRecommendationsAsync(1, CancellationToken.None));
+            () => this.service.GetTrainingRecommendationsAsync(1, CancellationToken.None));
     }
 
     [Fact]
@@ -617,7 +618,7 @@ public class AIAssistantClientServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.AnalyzeHealthMetricsAsync(1, workouts, CancellationToken.None));
+            () => this.service.AnalyzeHealthMetricsAsync(1, workouts, CancellationToken.None));
     }
 
     [Fact]
@@ -628,7 +629,7 @@ public class AIAssistantClientServiceTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<NotImplementedException>(
-            () => _service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
+            () => this.service.GetGoogleGeminiWorkoutAnalysisAsync(request, CancellationToken.None));
     }
 
     #endregion
@@ -643,14 +644,14 @@ public class AIAssistantClientServiceTests : IDisposable
         customConfig.Setup(x => x["AIAssistant:BaseUrl"])
             .Returns("https://custom-ai-service.com");
 
-        var httpClient = new HttpClient(_mockHttpMessageHandler.Object);
+        var httpClient = new HttpClient(this.mockHttpMessageHandler.Object);
 
         // Act
-        var service = new AIAssistantClientService(httpClient, _mockLogger.Object, customConfig.Object);
+        var service = new AIAssistantClientService(httpClient, this.mockLogger.Object, customConfig.Object);
 
         // Assert
         Assert.Equal("https://custom-ai-service.com/", httpClient.BaseAddress?.ToString());
-        VerifyLogCalled(LogLevel.Information, "AIAssistantClientService initialized with base URL: https://custom-ai-service.com");
+        this.VerifyLogCalled(LogLevel.Information, "AIAssistantClientService initialized with base URL: https://custom-ai-service.com");
     }
 
     [Fact]
@@ -661,14 +662,14 @@ public class AIAssistantClientServiceTests : IDisposable
         nullConfig.Setup(x => x["AIAssistant:BaseUrl"])
             .Returns((string)null);
 
-        var httpClient = new HttpClient(_mockHttpMessageHandler.Object);
+        var httpClient = new HttpClient(this.mockHttpMessageHandler.Object);
 
         // Act
-        var service = new AIAssistantClientService(httpClient, _mockLogger.Object, nullConfig.Object);
+        var service = new AIAssistantClientService(httpClient, this.mockLogger.Object, nullConfig.Object);
 
         // Assert
         Assert.Equal("http://localhost:5169/", httpClient.BaseAddress?.ToString());
-        VerifyLogCalled(LogLevel.Information, "AIAssistantClientService initialized with base URL: http://localhost:5169");
+        this.VerifyLogCalled(LogLevel.Information, "AIAssistantClientService initialized with base URL: http://localhost:5169");
     }
 
     #endregion
@@ -677,7 +678,7 @@ public class AIAssistantClientServiceTests : IDisposable
 
     private void VerifyLogCalled(LogLevel logLevel, string message)
     {
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 logLevel,
                 It.IsAny<EventId>(),
@@ -693,7 +694,7 @@ public class AIAssistantClientServiceTests : IDisposable
 
     public void Dispose()
     {
-        _httpClient?.Dispose();
+        this.httpClient?.Dispose();
         GC.SuppressFinalize(this);
     }
 

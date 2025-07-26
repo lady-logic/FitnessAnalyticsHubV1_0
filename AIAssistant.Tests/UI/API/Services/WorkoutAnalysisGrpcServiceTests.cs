@@ -1,24 +1,24 @@
-﻿using AIAssistant.UI.API.Services;
-using AIAssistant.Application.Interfaces;
-using Microsoft.Extensions.Logging;
-using Moq;
-using AIAssistant.Application.DTOs;
-using Grpc.Core;
-using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
-
-namespace AIAssistant.Tests.UI.API.Services
+﻿namespace AIAssistant.Tests.UI.API.Services
 {
+    using AIAssistant.Application.DTOs;
+    using AIAssistant.Application.Interfaces;
+    using AIAssistant.UI.API.Services;
+    using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
+    using Grpc.Core;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+
     public class WorkoutAnalysisGrpcServiceTests
     {
-        private readonly Mock<IWorkoutAnalysisService> _mockWorkoutAnalysisService;
-        private readonly Mock<ILogger<WorkoutAnalysisGrpcService>> _mockLogger;
-        private readonly WorkoutAnalysisGrpcService _service;
+        private readonly Mock<IWorkoutAnalysisService> mockWorkoutAnalysisService;
+        private readonly Mock<ILogger<WorkoutAnalysisGrpcService>> mockLogger;
+        private readonly WorkoutAnalysisGrpcService service;
 
         public WorkoutAnalysisGrpcServiceTests()
         {
-            _mockWorkoutAnalysisService = new Mock<IWorkoutAnalysisService>();
-            _mockLogger = new Mock<ILogger<WorkoutAnalysisGrpcService>>();
-            _service = new WorkoutAnalysisGrpcService(_mockWorkoutAnalysisService.Object, _mockLogger.Object);
+            this.mockWorkoutAnalysisService = new Mock<IWorkoutAnalysisService>();
+            this.mockLogger = new Mock<ILogger<WorkoutAnalysisGrpcService>>();
+            this.service = new WorkoutAnalysisGrpcService(this.mockWorkoutAnalysisService.Object, this.mockLogger.Object);
         }
 
         #region GetWorkoutAnalysis Tests
@@ -30,7 +30,7 @@ namespace AIAssistant.Tests.UI.API.Services
             var grpcRequest = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
             {
                 PreferredAiProvider = "huggingface",
-                AnalysisType = "Performance"
+                AnalysisType = "Performance",
             };
             grpcRequest.RecentWorkouts.Add(new global::Fitnessanalyticshub.Workout
             {
@@ -38,7 +38,7 @@ namespace AIAssistant.Tests.UI.API.Services
                 ActivityType = "Run",
                 Distance = 5000,
                 Duration = 1800,
-                Calories = 350
+                Calories = 350,
             });
 
             var serviceResponse = new WorkoutAnalysisResponseDto
@@ -47,17 +47,17 @@ namespace AIAssistant.Tests.UI.API.Services
                 KeyInsights = new List<string> { "Consistent pace", "Good endurance" },
                 Recommendations = new List<string> { "Increase distance gradually" },
                 Provider = "HuggingFace",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.GetWorkoutAnalysis(grpcRequest, context);
+            var result = await this.service.GetWorkoutAnalysis(grpcRequest, context);
 
             // Assert
             Assert.Equal("Great running performance!", result.Analysis);
@@ -65,10 +65,10 @@ namespace AIAssistant.Tests.UI.API.Services
             Assert.Equal(1, result.Recommendations.Count);
             Assert.Equal("HuggingFace", result.Source);
 
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
                 Times.Once);
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
                 Times.Never);
         }
@@ -80,7 +80,7 @@ namespace AIAssistant.Tests.UI.API.Services
             var grpcRequest = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
             {
                 PreferredAiProvider = "googlegemini",
-                AnalysisType = "Health"
+                AnalysisType = "Health",
             };
 
             var serviceResponse = new WorkoutAnalysisResponseDto
@@ -89,26 +89,26 @@ namespace AIAssistant.Tests.UI.API.Services
                 KeyInsights = new List<string> { "Good recovery pattern" },
                 Recommendations = new List<string> { "Focus on hydration" },
                 Provider = "GoogleGemini",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.GetWorkoutAnalysis(grpcRequest, context);
+            var result = await this.service.GetWorkoutAnalysis(grpcRequest, context);
 
             // Assert
             Assert.Equal("Health analysis from GoogleGemini", result.Analysis);
             Assert.Equal("GoogleGemini", result.Source);
 
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
                 Times.Once);
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
                 Times.Never);
         }
@@ -126,20 +126,20 @@ namespace AIAssistant.Tests.UI.API.Services
             {
                 Analysis = "Default analysis",
                 Provider = "HuggingFace",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.GetWorkoutAnalysis(grpcRequest, context);
+            var result = await this.service.GetWorkoutAnalysis(grpcRequest, context);
 
             // Assert
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
                 Times.Once);
         }
@@ -150,7 +150,7 @@ namespace AIAssistant.Tests.UI.API.Services
             // Arrange
             var grpcRequest = new global::Fitnessanalyticshub.WorkoutAnalysisRequest();
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ThrowsAsync(new InvalidOperationException("Analysis service failed"));
 
@@ -158,7 +158,7 @@ namespace AIAssistant.Tests.UI.API.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<RpcException>(() =>
-                _service.GetWorkoutAnalysis(grpcRequest, context));
+                this.service.GetWorkoutAnalysis(grpcRequest, context));
 
             Assert.Equal(StatusCode.Internal, exception.StatusCode);
             Assert.Contains("Failed to generate workout analysis", exception.Status.Detail);
@@ -176,7 +176,7 @@ namespace AIAssistant.Tests.UI.API.Services
             var grpcRequest = new global::Fitnessanalyticshub.PerformanceTrendsRequest
             {
                 AthleteId = 123,
-                TimeFrame = "month"
+                TimeFrame = "month",
             };
 
             var serviceResponse = new WorkoutAnalysisResponseDto
@@ -185,17 +185,17 @@ namespace AIAssistant.Tests.UI.API.Services
                 KeyInsights = new List<string> { "Consistent training", "Progressive overload" },
                 Recommendations = new List<string> { "Maintain current routine" },
                 Provider = "HuggingFace",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.GetPerformanceTrends(grpcRequest, context);
+            var result = await this.service.GetPerformanceTrends(grpcRequest, context);
 
             // Assert
             Assert.Equal("Performance trends show improvement", result.Analysis);
@@ -203,7 +203,7 @@ namespace AIAssistant.Tests.UI.API.Services
             Assert.Equal(2, result.KeyInsights.Count);
 
             // Verify service was called with correct analysis type
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeHuggingFaceWorkoutsAsync(
                     It.Is<WorkoutAnalysisRequestDto>(req =>
                         req.AnalysisType == "Trends" &&
@@ -224,7 +224,7 @@ namespace AIAssistant.Tests.UI.API.Services
             // Arrange
             var grpcRequest = new global::Fitnessanalyticshub.TrainingRecommendationsRequest
             {
-                AthleteId = 456
+                AthleteId = 456,
             };
 
             var serviceResponse = new WorkoutAnalysisResponseDto
@@ -232,23 +232,23 @@ namespace AIAssistant.Tests.UI.API.Services
                 Analysis = "Training recommendations analysis",
                 Recommendations = new List<string> { "Add strength training", "Improve flexibility" },
                 Provider = "HuggingFace",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.GetTrainingRecommendations(grpcRequest, context);
+            var result = await this.service.GetTrainingRecommendations(grpcRequest, context);
 
             // Assert
             Assert.Equal("TrainingRecommendations", result.AnalysisType);
             Assert.Equal(2, result.Recommendations.Count);
 
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeHuggingFaceWorkoutsAsync(
                     It.Is<WorkoutAnalysisRequestDto>(req =>
                         req.AnalysisType == "Recommendations" &&
@@ -267,7 +267,7 @@ namespace AIAssistant.Tests.UI.API.Services
             // Arrange
             var grpcRequest = new global::Fitnessanalyticshub.HealthAnalysisRequest
             {
-                AthleteId = 789
+                AthleteId = 789,
             };
             grpcRequest.RecentWorkouts.Add(new global::Fitnessanalyticshub.Workout
             {
@@ -275,7 +275,7 @@ namespace AIAssistant.Tests.UI.API.Services
                 ActivityType = "Run",
                 Distance = 5000,
                 Duration = 1800,
-                Calories = 350
+                Calories = 350,
             });
 
             var serviceResponse = new WorkoutAnalysisResponseDto
@@ -283,23 +283,23 @@ namespace AIAssistant.Tests.UI.API.Services
                 Analysis = "Health metrics are within normal range",
                 KeyInsights = new List<string> { "Good cardiovascular health" },
                 Provider = "HuggingFace",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.AnalyzeHealthMetrics(grpcRequest, context);
+            var result = await this.service.AnalyzeHealthMetrics(grpcRequest, context);
 
             // Assert
             Assert.Equal("HealthMetrics", result.AnalysisType);
             Assert.Equal("Health metrics are within normal range", result.Analysis);
 
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeHuggingFaceWorkoutsAsync(
                     It.Is<WorkoutAnalysisRequestDto>(req =>
                         req.AnalysisType == "Health" &&
@@ -318,29 +318,29 @@ namespace AIAssistant.Tests.UI.API.Services
             // Arrange
             var grpcRequest = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
             {
-                AnalysisType = "Performance"
+                AnalysisType = "Performance",
             };
 
             var serviceResponse = new WorkoutAnalysisResponseDto
             {
                 Analysis = "GoogleGemini analysis result",
                 Provider = "GoogleGemini",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.AnalyzeGoogleGeminiWorkouts(grpcRequest, context);
+            var result = await this.service.AnalyzeGoogleGeminiWorkouts(grpcRequest, context);
 
             // Assert
             Assert.Equal("GoogleGemini", result.Source);
 
-            _mockWorkoutAnalysisService.Verify(
+            this.mockWorkoutAnalysisService.Verify(
                 s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
                 Times.Once);
         }
@@ -358,17 +358,17 @@ namespace AIAssistant.Tests.UI.API.Services
             var serviceResponse = new WorkoutAnalysisResponseDto
             {
                 Analysis = "Health check successful",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.CheckHealth(grpcRequest, context);
+            var result = await this.service.CheckHealth(grpcRequest, context);
 
             // Assert
             Assert.True(result.IsHealthy);
@@ -382,14 +382,14 @@ namespace AIAssistant.Tests.UI.API.Services
             // Arrange
             var grpcRequest = new global::Fitnessanalyticshub.HealthCheckRequest();
 
-            _mockWorkoutAnalysisService
+            this.mockWorkoutAnalysisService
                 .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
                 .ThrowsAsync(new Exception("Service is down"));
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.CheckHealth(grpcRequest, context);
+            var result = await this.service.CheckHealth(grpcRequest, context);
 
             // Assert
             Assert.False(result.IsHealthy);
@@ -405,9 +405,10 @@ namespace AIAssistant.Tests.UI.API.Services
         public void GetDemoWorkouts_ReturnsCorrectNumberOfWorkouts()
         {
             // Act - Using reflection to test private method
-            var method = typeof(WorkoutAnalysisGrpcService).GetMethod("GetDemoWorkouts",
+            var method = typeof(WorkoutAnalysisGrpcService).GetMethod(
+                "GetDemoWorkouts",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = method?.Invoke(_service, new object[] { 123, "week" }) as List<WorkoutDataDto>;
+            var result = method?.Invoke(this.service, new object[] { 123, "week" }) as List<WorkoutDataDto>;
 
             // Assert
             Assert.NotNull(result);
@@ -419,9 +420,10 @@ namespace AIAssistant.Tests.UI.API.Services
         public void GetDemoAthleteProfile_ReturnsValidProfile()
         {
             // Act - Using reflection to test private method
-            var method = typeof(WorkoutAnalysisGrpcService).GetMethod("GetDemoAthleteProfile",
+            var method = typeof(WorkoutAnalysisGrpcService).GetMethod(
+                "GetDemoAthleteProfile",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            var result = method?.Invoke(_service, new object[] { 123 }) as AthleteProfileDto;
+            var result = method?.Invoke(this.service, new object[] { 123 }) as AthleteProfileDto;
 
             // Assert
             Assert.NotNull(result);

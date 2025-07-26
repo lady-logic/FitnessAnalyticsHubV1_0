@@ -1,14 +1,15 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Mvc;
-
-namespace FitnessAnalyticsHub.Tests.Base
+﻿namespace FitnessAnalyticsHub.Tests.Base
 {
+    using System.Reflection;
+    using Microsoft.AspNetCore.Mvc;
+
     /// <summary>
     /// Base class for all controller tests that enforces architectural rules.
     /// Ensures controllers follow Clean Architecture principles.
     /// </summary>
     /// <typeparam name="TController">The controller type to test</typeparam>
-    public abstract class ControllerTestBase<TController> where TController : ControllerBase
+    public abstract class ControllerTestBase<TController>
+        where TController : ControllerBase
     {
         /// <summary>
         /// Verifies that the controller doesn't contain any try-catch blocks.
@@ -27,7 +28,9 @@ namespace FitnessAnalyticsHub.Tests.Base
                 // Skip inherited methods from ControllerBase
                 if (method.DeclaringType == typeof(ControllerBase) ||
                     method.DeclaringType == typeof(object))
+                {
                     continue;
+                }
 
                 var methodBody = method.GetMethodBody();
                 if (methodBody != null)
@@ -35,7 +38,8 @@ namespace FitnessAnalyticsHub.Tests.Base
                     // Check for try-catch patterns in IL code
                     var hasTryCatch = ContainsTryCatchBlock(method);
 
-                    Assert.False(hasTryCatch,
+                    Assert.False(
+                        hasTryCatch,
                         $"Controller method '{controllerType.Name}.{method.Name}' contains try-catch block. " +
                         "Controllers should not handle exceptions directly - let middleware handle them.");
                 }
@@ -56,7 +60,8 @@ namespace FitnessAnalyticsHub.Tests.Base
             // Act & Assert
             foreach (var method in actionMethods)
             {
-                Assert.True(method.ReturnType.IsAssignableFrom(typeof(Task)) ||
+                Assert.True(
+                    method.ReturnType.IsAssignableFrom(typeof(Task)) ||
                            method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>),
                     $"Action method '{controllerType.Name}.{method.Name}' should be async and return Task or Task<T>");
             }
@@ -79,7 +84,8 @@ namespace FitnessAnalyticsHub.Tests.Base
                     .Any(attr => attr.GetType().Name.StartsWith("Http") &&
                                 attr.GetType().Name.EndsWith("Attribute"));
 
-                Assert.True(hasHttpAttribute,
+                Assert.True(
+                    hasHttpAttribute,
                     $"Action method '{controllerType.Name}.{method.Name}' should have an HTTP method attribute (HttpGet, HttpPost, etc.)");
             }
         }
@@ -93,7 +99,10 @@ namespace FitnessAnalyticsHub.Tests.Base
             try
             {
                 var methodBody = method.GetMethodBody();
-                if (methodBody == null) return false;
+                if (methodBody == null)
+                {
+                    return false;
+                }
 
                 // Check for exception handling clauses (try-catch blocks)
                 var exceptionHandlingClauses = methodBody.ExceptionHandlingClauses;

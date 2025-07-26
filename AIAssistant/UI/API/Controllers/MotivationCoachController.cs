@@ -1,24 +1,24 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.UI.API.Controllers;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AIAssistant.UI.API.Controllers;
-
 [ApiController]
 [Route("api/[controller]")]
 public class MotivationCoachController : ControllerBase
 {
-    private readonly IMotivationCoachService _motivationCoachService;
-    private readonly ILogger<MotivationCoachController> _logger;
+    private readonly IMotivationCoachService motivationCoachService;
+    private readonly ILogger<MotivationCoachController> logger;
 
     public MotivationCoachController(
         IMotivationCoachService motivationCoachService,
         ILogger<MotivationCoachController> logger)
     {
-        _motivationCoachService = motivationCoachService;
-        _logger = logger;
+        this.motivationCoachService = motivationCoachService;
+        this.logger = logger;
     }
 
     [HttpPost("motivate")]
@@ -27,17 +27,18 @@ public class MotivationCoachController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Generating motivational message for athlete: {Name}",
+            this.logger.LogInformation(
+                "Generating motivational message for athlete: {Name}",
                 request.AthleteProfile.Name);
 
             // Nutze HuggingFace (alte OpenAI/Claude Methoden sind jetzt redirects)
-            var result = await _motivationCoachService.GetHuggingFaceMotivationalMessageAsync(request);
-            return Ok(result);
+            var result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(request);
+            return this.Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating motivational message");
-            return StatusCode(500, "An error occurred while generating motivational message");
+            this.logger.LogError(ex, "Error generating motivational message");
+            return this.StatusCode(500, "An error occurred while generating motivational message");
         }
     }
 
@@ -48,16 +49,17 @@ public class MotivationCoachController : ControllerBase
     {
         try
         {
-            _logger.LogInformation("Generating HuggingFace motivational message for athlete: {Name}",
+            this.logger.LogInformation(
+                "Generating HuggingFace motivational message for athlete: {Name}",
                 request.AthleteProfile.Name);
 
-            var result = await _motivationCoachService.GetHuggingFaceMotivationalMessageAsync(request);
-            return Ok(result);
+            var result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(request);
+            return this.Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating HuggingFace motivational message");
-            return StatusCode(500, "An error occurred while generating motivational message");
+            this.logger.LogError(ex, "Error generating HuggingFace motivational message");
+            return this.StatusCode(500, "An error occurred while generating motivational message");
         }
     }
 
@@ -74,28 +76,28 @@ public class MotivationCoachController : ControllerBase
                 {
                     Name = "Test User",
                     FitnessLevel = "Beginner",
-                    PrimaryGoal = "Health Check"
+                    PrimaryGoal = "Health Check",
                 },
-                IsStruggling = false
+                IsStruggling = false,
             };
 
-            var result = await _motivationCoachService.GetHuggingFaceMotivationalMessageAsync(testRequest);
+            var result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(testRequest);
 
-            return Ok(new
+            return this.Ok(new
             {
                 status = "healthy",
                 message = "HuggingFace service is responding",
-                timestamp = DateTime.UtcNow
+                timestamp = DateTime.UtcNow,
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Health check failed");
-            return StatusCode(503, new
+            this.logger.LogError(ex, "Health check failed");
+            return this.StatusCode(503, new
             {
                 status = "unhealthy",
                 message = ex.Message,
-                timestamp = DateTime.UtcNow
+                timestamp = DateTime.UtcNow,
             });
         }
     }

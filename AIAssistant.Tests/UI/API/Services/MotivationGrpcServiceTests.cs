@@ -1,24 +1,24 @@
-﻿using AIAssistant.Application.DTOs;
-using AIAssistant.Application.Interfaces;
-using AIAssistant.Applications.DTOs;
-using FitnessAnalyticsHub.AIAssistant.UI.API.Services;
-using Grpc.Core;
-using Microsoft.Extensions.Logging;
-using Moq;
-
-namespace AIAssistant.Tests.UI.API.Services
+﻿namespace AIAssistant.Tests.UI.API.Services
 {
+    using AIAssistant.Application.DTOs;
+    using AIAssistant.Application.Interfaces;
+    using AIAssistant.Applications.DTOs;
+    using FitnessAnalyticsHub.AIAssistant.UI.API.Services;
+    using Grpc.Core;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+
     public class MotivationGrpcServiceTests
     {
-        private readonly Mock<IMotivationCoachService> _mockMotivationService;
-        private readonly Mock<ILogger<MotivationGrpcService>> _mockLogger;
-        private readonly MotivationGrpcService _service;
+        private readonly Mock<IMotivationCoachService> mockMotivationService;
+        private readonly Mock<ILogger<MotivationGrpcService>> mockLogger;
+        private readonly MotivationGrpcService service;
 
         public MotivationGrpcServiceTests()
         {
-            _mockMotivationService = new Mock<IMotivationCoachService>();
-            _mockLogger = new Mock<ILogger<MotivationGrpcService>>();
-            _service = new MotivationGrpcService(_mockMotivationService.Object, _mockLogger.Object);
+            this.mockMotivationService = new Mock<IMotivationCoachService>();
+            this.mockLogger = new Mock<ILogger<MotivationGrpcService>>();
+            this.service = new MotivationGrpcService(this.mockMotivationService.Object, this.mockLogger.Object);
         }
 
         #region GetMotivation Tests
@@ -33,8 +33,8 @@ namespace AIAssistant.Tests.UI.API.Services
                 {
                     Name = "Test Athlete",
                     FitnessLevel = "Intermediate",
-                    PrimaryGoal = "Weight Loss"
-                }
+                    PrimaryGoal = "Weight Loss",
+                },
             };
 
             var serviceResponse = new MotivationResponseDto
@@ -45,19 +45,19 @@ namespace AIAssistant.Tests.UI.API.Services
             {
                 "Set realistic daily goals",
                 "Track your progress weekly",
-                "Celebrate small victories"
+                "Celebrate small victories",
             },
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockMotivationService
+            this.mockMotivationService
                 .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.GetMotivation(grpcRequest, context);
+            var result = await this.service.GetMotivation(grpcRequest, context);
 
             // Assert
             Assert.NotNull(result);
@@ -76,14 +76,14 @@ namespace AIAssistant.Tests.UI.API.Services
             // Arrange
             var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
             {
-                AthleteProfile = null // Dies wird eine NullReferenceException in der Extension verursachen
+                AthleteProfile = null, // Dies wird eine NullReferenceException in der Extension verursachen
             };
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<RpcException>(() =>
-                _service.GetMotivation(grpcRequest, context));
+                this.service.GetMotivation(grpcRequest, context));
 
             // Das erwartete Verhalten: RpcException mit Internal Status
             Assert.Equal(StatusCode.Internal, exception.StatusCode);
@@ -91,7 +91,7 @@ namespace AIAssistant.Tests.UI.API.Services
             Assert.Contains("Object reference not set to an instance of an object", exception.Status.Detail);
 
             // Verify error was logged
-            _mockLogger.Verify(
+            this.mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
@@ -109,8 +109,8 @@ namespace AIAssistant.Tests.UI.API.Services
             {
                 AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
                 {
-                    Name = "Test User"
-                }
+                    Name = "Test User",
+                },
             };
 
             var serviceResponse = new MotivationResponseDto
@@ -118,22 +118,22 @@ namespace AIAssistant.Tests.UI.API.Services
                 MotivationalMessage = null, // Null value test
                 Quote = null,
                 ActionableTips = null,
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockMotivationService
+            this.mockMotivationService
                 .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await _service.GetMotivation(grpcRequest, context);
+            var result = await this.service.GetMotivation(grpcRequest, context);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal("", result.MotivationalMessage); // Should be empty string, not null
-            Assert.Equal("", result.Quote);
+            Assert.Equal(string.Empty, result.MotivationalMessage); // Should be empty string, not null
+            Assert.Equal(string.Empty, result.Quote);
             Assert.Equal(0, result.ActionableTips.Count); // Should be empty collection
         }
 
@@ -147,27 +147,27 @@ namespace AIAssistant.Tests.UI.API.Services
                 {
                     Name = "Mapping Test User",
                     FitnessLevel = "Advanced",
-                    PrimaryGoal = "Marathon Training"
-                }
+                    PrimaryGoal = "Marathon Training",
+                },
             };
 
             var serviceResponse = new MotivationResponseDto
             {
                 MotivationalMessage = "Test message",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockMotivationService
+            this.mockMotivationService
                 .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            await _service.GetMotivation(grpcRequest, context);
+            await this.service.GetMotivation(grpcRequest, context);
 
             // Assert - Verify the service was called with correct mapped data
-            _mockMotivationService.Verify(
+            this.mockMotivationService.Verify(
                 s => s.GetHuggingFaceMotivationalMessageAsync(
                     It.Is<MotivationRequestDto>(req =>
                         req.AthleteProfile.Name == "Mapping Test User" &&
@@ -184,11 +184,11 @@ namespace AIAssistant.Tests.UI.API.Services
             {
                 AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
                 {
-                    Name = "Error Test User"
-                }
+                    Name = "Error Test User",
+                },
             };
 
-            _mockMotivationService
+            this.mockMotivationService
                 .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
                 .ThrowsAsync(new InvalidOperationException("Service is down"));
 
@@ -196,14 +196,14 @@ namespace AIAssistant.Tests.UI.API.Services
 
             // Act & Assert
             var exception = await Assert.ThrowsAsync<RpcException>(() =>
-                _service.GetMotivation(grpcRequest, context));
+                this.service.GetMotivation(grpcRequest, context));
 
             Assert.Equal(StatusCode.Internal, exception.StatusCode);
             Assert.Contains("Failed to generate motivation", exception.Status.Detail);
             Assert.Contains("Service is down", exception.Status.Detail);
 
             // Verify error was logged
-            _mockLogger.Verify(
+            this.mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Error,
                     It.IsAny<EventId>(),
@@ -221,27 +221,27 @@ namespace AIAssistant.Tests.UI.API.Services
             {
                 AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
                 {
-                    Name = "Logging Test User"
-                }
+                    Name = "Logging Test User",
+                },
             };
 
             var serviceResponse = new MotivationResponseDto
             {
                 MotivationalMessage = "Test message",
-                GeneratedAt = DateTime.UtcNow
+                GeneratedAt = DateTime.UtcNow,
             };
 
-            _mockMotivationService
+            this.mockMotivationService
                 .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
                 .ReturnsAsync(serviceResponse);
 
             var context = new Mock<ServerCallContext>().Object;
 
             // Act
-            await _service.GetMotivation(grpcRequest, context);
+            await this.service.GetMotivation(grpcRequest, context);
 
             // Assert - Verify request logging
-            _mockLogger.Verify(
+            this.mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Information,
                     It.IsAny<EventId>(),
@@ -251,7 +251,7 @@ namespace AIAssistant.Tests.UI.API.Services
                 Times.Once);
 
             // Verify success logging
-            _mockLogger.Verify(
+            this.mockLogger.Verify(
                 x => x.Log(
                     LogLevel.Information,
                     It.IsAny<EventId>(),

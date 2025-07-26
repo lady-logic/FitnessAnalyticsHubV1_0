@@ -11,32 +11,32 @@ namespace AIAssistant.Tests.Infrastructure.Services;
 
 public class HuggingFaceServiceTests : IDisposable
 {
-    private readonly Mock<IHttpClientFactory> _mockHttpClientFactory;
-    private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
-    private readonly HttpClient _httpClient;
-    private readonly Mock<IConfiguration> _mockConfiguration;
-    private readonly Mock<ILogger<HuggingFaceService>> _mockLogger;
-    private readonly HuggingFaceService _service;
+    private readonly Mock<IHttpClientFactory> mockHttpClientFactory;
+    private readonly Mock<HttpMessageHandler> mockHttpMessageHandler;
+    private readonly HttpClient httpClient;
+    private readonly Mock<IConfiguration> mockConfiguration;
+    private readonly Mock<ILogger<HuggingFaceService>> mockLogger;
+    private readonly HuggingFaceService service;
 
     public HuggingFaceServiceTests()
     {
-        _mockHttpClientFactory = new Mock<IHttpClientFactory>();
-        _mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-        _httpClient = new HttpClient(_mockHttpMessageHandler.Object);
-        _mockConfiguration = new Mock<IConfiguration>();
-        _mockLogger = new Mock<ILogger<HuggingFaceService>>();
+        this.mockHttpClientFactory = new Mock<IHttpClientFactory>();
+        this.mockHttpMessageHandler = new Mock<HttpMessageHandler>();
+        this.httpClient = new HttpClient(this.mockHttpMessageHandler.Object);
+        this.mockConfiguration = new Mock<IConfiguration>();
+        this.mockLogger = new Mock<ILogger<HuggingFaceService>>();
 
         // Setup Configuration
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"])
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"])
                          .Returns("test_api_key");
 
-        _mockHttpClientFactory.Setup(f => f.CreateClient(It.IsAny<string>()))
-                             .Returns(_httpClient);
+        this.mockHttpClientFactory.Setup(f => f.CreateClient(It.IsAny<string>()))
+                             .Returns(this.httpClient);
 
-        _service = new HuggingFaceService(
-            _httpClient,
-            _mockConfiguration.Object,
-            _mockLogger.Object);
+        this.service = new HuggingFaceService(
+            this.httpClient,
+            this.mockConfiguration.Object,
+            this.mockLogger.Object);
     }
 
     #region GetFitnessAnalysisAsync Tests
@@ -54,16 +54,16 @@ public class HuggingFaceServiceTests : IDisposable
                 {
                     message = new
                     {
-                        content = "Your 5K time of 25:30 shows solid fitness. Focus on interval training to improve pace."
-                    }
-                }
-            }
+                        content = "Your 5K time of 25:30 shows solid fitness. Focus on interval training to improve pace.",
+                    },
+                },
+            },
         };
 
-        SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
+        this.SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -76,10 +76,10 @@ public class HuggingFaceServiceTests : IDisposable
     {
         // Arrange
         var prompt = "Test prompt";
-        SetupHttpResponse(null, HttpStatusCode.Unauthorized);
+        this.SetupHttpResponse(null, HttpStatusCode.Unauthorized);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -92,7 +92,7 @@ public class HuggingFaceServiceTests : IDisposable
     {
         // Arrange
         var prompt = "Test prompt";
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -100,7 +100,7 @@ public class HuggingFaceServiceTests : IDisposable
             .ThrowsAsync(new TaskCanceledException("Timeout", new TimeoutException()));
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -125,16 +125,16 @@ public class HuggingFaceServiceTests : IDisposable
                 {
                     message = new
                     {
-                        content = "You've got this! Every workout makes you stronger. Push through today!"
-                    }
-                }
-            }
+                        content = "You've got this! Every workout makes you stronger. Push through today!",
+                    },
+                },
+            },
         };
 
-        SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
+        this.SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await _service.GetMotivationAsync(prompt);
+        var result = await this.service.GetMotivationAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -147,10 +147,10 @@ public class HuggingFaceServiceTests : IDisposable
     {
         // Arrange
         var prompt = "Motivate me";
-        SetupHttpResponse(null, HttpStatusCode.TooManyRequests);
+        this.SetupHttpResponse(null, HttpStatusCode.TooManyRequests);
 
         // Act
-        var result = await _service.GetMotivationAsync(prompt);
+        var result = await this.service.GetMotivationAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -176,16 +176,16 @@ public class HuggingFaceServiceTests : IDisposable
                 {
                     message = new
                     {
-                        content = "Your training volume is high. Consider adding rest days to prevent overtraining."
-                    }
-                }
-            }
+                        content = "Your training volume is high. Consider adding rest days to prevent overtraining.",
+                    },
+                },
+            },
         };
 
-        SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
+        this.SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await _service.GetHealthAnalysisAsync(prompt);
+        var result = await this.service.GetHealthAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -205,10 +205,10 @@ public class HuggingFaceServiceTests : IDisposable
     {
         // Arrange
         var prompt = "Test prompt";
-        SetupHttpResponse(null, statusCode);
+        this.SetupHttpResponse(null, statusCode);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -224,9 +224,9 @@ public class HuggingFaceServiceTests : IDisposable
         var malformedResponse = "{ invalid json";
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = new StringContent(malformedResponse, Encoding.UTF8, "application/json")
+            Content = new StringContent(malformedResponse, Encoding.UTF8, "application/json"),
         };
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -234,7 +234,7 @@ public class HuggingFaceServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _service.GetFitnessAnalysisAsync(prompt);
+        var result = await this.service.GetFitnessAnalysisAsync(prompt);
 
         // Assert
         Assert.NotNull(result);
@@ -255,12 +255,12 @@ public class HuggingFaceServiceTests : IDisposable
 
         // Act
         var serviceWithoutKey = new HuggingFaceService(
-            _httpClient,
+            this.httpClient,
             mockConfigNoKey.Object,
-            _mockLogger.Object);
+            this.mockLogger.Object);
 
         // Assert
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
@@ -283,7 +283,7 @@ public class HuggingFaceServiceTests : IDisposable
             var jsonResponse = JsonSerializer.Serialize(responseObject);
             httpResponse = new HttpResponseMessage(statusCode)
             {
-                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json")
+                Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
             };
         }
         else
@@ -291,7 +291,7 @@ public class HuggingFaceServiceTests : IDisposable
             httpResponse = new HttpResponseMessage(statusCode);
         }
 
-        _mockHttpMessageHandler.Protected()
+        this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
                 ItExpr.IsAny<HttpRequestMessage>(),
@@ -303,6 +303,6 @@ public class HuggingFaceServiceTests : IDisposable
 
     public void Dispose()
     {
-        _httpClient?.Dispose();
+        this.httpClient?.Dispose();
     }
 }

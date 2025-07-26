@@ -11,23 +11,23 @@ namespace FitnessAnalyticsHub.Infrastructure.Services;
 
 public class StravaService : IStravaService
 {
-    private readonly HttpClient _httpClient;
-    private readonly StravaConfiguration _config;
-    private readonly string _clientId;
-    private readonly string _clientSecret;
-    private readonly string _redirectUrl;
+    private readonly HttpClient httpClient;
+    private readonly StravaConfiguration config;
+    private readonly string clientId;
+    private readonly string clientSecret;
+    private readonly string redirectUrl;
 
     public StravaService(IHttpClientFactory httpClientFactory, IOptions<StravaConfiguration> config)
     {
-        _httpClient = httpClientFactory.CreateClient("StravaApi");
-        _config = config.Value;
-        _httpClient.BaseAddress = new Uri(_config.BaseUrl);
+        this.httpClient = httpClientFactory.CreateClient("StravaApi");
+        this.config = config.Value;
+        this.httpClient.BaseAddress = new Uri(this.config.BaseUrl);
     }
 
     public Task<string> GetAuthorizationUrlAsync()
     {
-        string authUrl = $"{_config.AuthorizeUrl}?client_id={_config.ClientId}" +
-                         $"&redirect_uri={Uri.EscapeDataString(_config.RedirectUrl)}" +
+        string authUrl = $"{this.config.AuthorizeUrl}?client_id={this.config.ClientId}" +
+                         $"&redirect_uri={Uri.EscapeDataString(this.config.RedirectUrl)}" +
                          $"&response_type=code" +
                          $"&scope=read_all,activity:read_all" +
                          $"&approval_prompt=force";
@@ -39,13 +39,13 @@ public class StravaService : IStravaService
     {
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            { "client_id", _config.ClientId },
-            { "client_secret", _config.ClientSecret },
+            { "client_id", this.config.ClientId },
+            { "client_secret", this.config.ClientSecret },
             { "code", code },
-            { "grant_type", "authorization_code" }
+            { "grant_type", "authorization_code" },
         });
 
-        var response = await _httpClient.PostAsync(_config.TokenUrl, content);
+        var response = await this.httpClient.PostAsync(this.config.TokenUrl, content);
         response.EnsureSuccessStatusCode();
 
         var responseContent = await response.Content.ReadAsStringAsync();
@@ -57,19 +57,21 @@ public class StravaService : IStravaService
             AccessToken = tokenResponse.AccessToken,
             ExpiresAt = tokenResponse.ExpiresAt,
             ExpiresIn = tokenResponse.ExpiresIn,
-            RefreshToken = tokenResponse.RefreshToken
+            RefreshToken = tokenResponse.RefreshToken,
         };
     }
 
     public async Task<Athlete> GetAthleteProfileAsync(string accessToken)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
+        {
             throw new InvalidStravaTokenException("Access token cannot be null or empty");
+        }
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "athlete");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        var response = await _httpClient.SendAsync(request);
+        var response = await this.httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -86,7 +88,7 @@ public class StravaService : IStravaService
             Country = athleteProfile.Country,
             ProfilePictureUrl = athleteProfile.Profile,
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
     }
 
@@ -94,16 +96,18 @@ public class StravaService : IStravaService
     {
         // Token-Validierung
         if (string.IsNullOrWhiteSpace(accessToken))
+        {
             throw new InvalidStravaTokenException("Access token cannot be null or empty");
+        }
 
         Console.WriteLine($"Requesting activities with token: {accessToken?.Substring(0, 10)}...");
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"athlete/activities?page={page}&per_page={perPage}");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        Console.WriteLine($"Request URL: {_httpClient.BaseAddress}{request.RequestUri}");
+        Console.WriteLine($"Request URL: {this.httpClient.BaseAddress}{request.RequestUri}");
 
-        var response = await _httpClient.SendAsync(request);
+        var response = await this.httpClient.SendAsync(request);
 
         Console.WriteLine($"Response Status: {response.StatusCode}");
         Console.WriteLine($"Response Headers:");
@@ -117,16 +121,24 @@ public class StravaService : IStravaService
 
         // Spezifische HTTP-Status-Behandlung
         if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
             throw new InvalidStravaTokenException("Access token is invalid or expired");
+        }
 
         if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
             throw new StravaApiException("Access forbidden - insufficient permissions", (int)response.StatusCode);
+        }
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
+        {
             throw new StravaApiException("Rate limit exceeded - too many requests", (int)response.StatusCode);
+        }
 
         if (!response.IsSuccessStatusCode)
+        {
             throw new StravaApiException($"Strava API error: {response.ReasonPhrase}", (int)response.StatusCode);
+        }
 
         var stravaActivities = JsonSerializer.Deserialize<List<StravaActivity>>(content);
 
@@ -144,7 +156,7 @@ public class StravaService : IStravaService
         using var request = new HttpRequestMessage(HttpMethod.Get, $"activities/{activityId}");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        var response = await _httpClient.SendAsync(request);
+        var response = await this.httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
         var content = await response.Content.ReadAsStringAsync();
@@ -158,16 +170,16 @@ public class StravaService : IStravaService
         Console.WriteLine("=== STRAVA AUTO-IMPORT STARTING ===");
 
         // Frischen Token generieren
-        string accessToken = await GenerateFreshTokenAsync();
+        string accessToken = await this.GenerateFreshTokenAsync();
 
         // Athleten-Profil abrufen
         Console.WriteLine("Fetching your athlete profile...");
-        var athlete = await GetAthleteProfileAsync(accessToken);
+        var athlete = await this.GetAthleteProfileAsync(accessToken);
         Console.WriteLine($"✅ Profile loaded: {athlete.FirstName} {athlete.LastName}");
 
         // Alle Aktivitäten abrufen
         Console.WriteLine("Fetching your activities...");
-        var activities = await GetActivitiesAsync(accessToken);
+        var activities = await this.GetActivitiesAsync(accessToken);
         Console.WriteLine($"✅ Retrieved {activities.Count()} activities");
 
         Console.WriteLine("=== STRAVA AUTO-IMPORT COMPLETE ===");
@@ -175,10 +187,9 @@ public class StravaService : IStravaService
         return (athlete, activities);
     }
 
-
     private async Task<string> GenerateFreshTokenAsync()
     {
-        if (string.IsNullOrEmpty(_config.ClientId) || string.IsNullOrEmpty(_config.ClientSecret))
+        if (string.IsNullOrEmpty(this.config.ClientId) || string.IsNullOrEmpty(this.config.ClientSecret))
         {
             throw new StravaConfigurationException("ClientId and ClientSecret must be configured in User Secrets");
         }
@@ -187,8 +198,8 @@ public class StravaService : IStravaService
         Console.WriteLine("Step 1: Open this URL in your browser:");
 
         // Authorization URL generieren (mit korrektem Scope!)
-        var authUrl = $"{_config.AuthorizeUrl}?" +
-                     $"client_id={_config.ClientId}&" +
+        var authUrl = $"{this.config.AuthorizeUrl}?" +
+                     $"client_id={this.config.ClientId}&" +
                      $"response_type=code&" +
                      $"redirect_uri=http://localhost&" +
                      $"scope=activity:read_all&" +
@@ -211,7 +222,7 @@ public class StravaService : IStravaService
         Console.WriteLine("Exchanging code for access token...");
 
         // Token Exchange über bestehende Methode
-        var tokenInfo = await ExchangeCodeForTokenAsync(authCode);
+        var tokenInfo = await this.ExchangeCodeForTokenAsync(authCode);
 
         if (string.IsNullOrEmpty(tokenInfo.AccessToken))
         {
@@ -222,7 +233,6 @@ public class StravaService : IStravaService
 
         return tokenInfo.AccessToken;
     }
-
 
     private static Activity MapToActivity(StravaActivity stravaActivity)
     {
@@ -246,7 +256,7 @@ public class StravaService : IStravaService
             MaxPower = stravaActivity.MaxPower,
             AverageCadence = stravaActivity.AverageCadence,
             CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            UpdatedAt = DateTime.Now,
         };
     }
 

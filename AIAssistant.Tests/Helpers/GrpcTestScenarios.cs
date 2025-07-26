@@ -1,13 +1,13 @@
-﻿using AIAssistant.Application.DTOs;
-using Grpc.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AIAssistant.Tests.Helpers
+﻿namespace AIAssistant.Tests.Helpers
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using AIAssistant.Application.DTOs;
+    using Grpc.Core;
+
     public static class GrpcTestScenarios
     {
         /// <summary>
@@ -23,8 +23,8 @@ namespace AIAssistant.Tests.Helpers
                     {
                         Name = "New User",
                         FitnessLevel = "Beginner",
-                        PrimaryGoal = "Get Started"
-                    }
+                        PrimaryGoal = "Get Started",
+                    },
                 };
             }
 
@@ -38,9 +38,9 @@ namespace AIAssistant.Tests.Helpers
                 {
                     "Start with 15-20 minute walks",
                     "Set small, achievable goals",
-                    "Track your progress daily"
+                    "Track your progress daily",
                 },
-                    GeneratedAt = DateTime.UtcNow
+                    GeneratedAt = DateTime.UtcNow,
                 };
             }
         }
@@ -55,7 +55,7 @@ namespace AIAssistant.Tests.Helpers
                 var request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
                 {
                     PreferredAiProvider = "googlegemini",
-                    AnalysisType = "Performance"
+                    AnalysisType = "Performance",
                 };
 
                 // Hochintensive Workouts
@@ -65,7 +65,7 @@ namespace AIAssistant.Tests.Helpers
                     ActivityType = "Run",
                     Distance = 21100, // Halbmarathon
                     Duration = 5400,  // 1.5 Stunden
-                    Calories = 1400
+                    Calories = 1400,
                 });
 
                 return request;
@@ -80,16 +80,16 @@ namespace AIAssistant.Tests.Helpers
                 {
                     "Consistent pacing throughout the distance",
                     "High caloric expenditure indicates strong effort",
-                    "Recovery patterns suggest good fitness base"
+                    "Recovery patterns suggest good fitness base",
                 },
                     Recommendations = new List<string>
                 {
                     "Consider adding speed work to improve race times",
                     "Incorporate strength training for injury prevention",
-                    "Plan recovery weeks to prevent overtraining"
+                    "Plan recovery weeks to prevent overtraining",
                 },
                     Provider = "GoogleGemini",
-                    GeneratedAt = DateTime.UtcNow
+                    GeneratedAt = DateTime.UtcNow,
                 };
             }
         }

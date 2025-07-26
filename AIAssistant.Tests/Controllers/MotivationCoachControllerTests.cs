@@ -1,4 +1,6 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Tests.Controllers;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
 using AIAssistant.UI.API.Controllers;
@@ -7,19 +9,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace AIAssistant.Tests.Controllers;
-
 public class MotivationCoachControllerTests
 {
-    private readonly Mock<IMotivationCoachService> _mockMotivationService;
-    private readonly Mock<ILogger<MotivationCoachController>> _mockLogger;
-    private readonly MotivationCoachController _controller;
+    private readonly Mock<IMotivationCoachService> mockMotivationService;
+    private readonly Mock<ILogger<MotivationCoachController>> mockLogger;
+    private readonly MotivationCoachController controller;
 
     public MotivationCoachControllerTests()
     {
-        _mockMotivationService = new Mock<IMotivationCoachService>();
-        _mockLogger = new Mock<ILogger<MotivationCoachController>>();
-        _controller = new MotivationCoachController(_mockMotivationService.Object, _mockLogger.Object);
+        this.mockMotivationService = new Mock<IMotivationCoachService>();
+        this.mockLogger = new Mock<ILogger<MotivationCoachController>>();
+        this.controller = new MotivationCoachController(this.mockMotivationService.Object, this.mockLogger.Object);
     }
 
     #region GetMotivation Tests
@@ -35,10 +35,10 @@ public class MotivationCoachControllerTests
                 Id = "1",
                 Name = "Test Athlete",
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Weight Loss"
+                PrimaryGoal = "Weight Loss",
             },
             IsStruggling = false,
-            UpcomingWorkoutType = "Running"
+            UpcomingWorkoutType = "Running",
         };
 
         var expectedResponse = new MotivationResponseDto
@@ -49,17 +49,17 @@ public class MotivationCoachControllerTests
             {
                 "Focus on consistency over perfection",
                 "Celebrate small victories",
-                "Stay hydrated during your runs"
+                "Stay hydrated during your runs",
             },
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetMotivation(request);
+        var result = await this.controller.GetMotivation(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -70,7 +70,7 @@ public class MotivationCoachControllerTests
         Assert.Equal(expectedResponse.ActionableTips.Count, response.ActionableTips?.Count);
 
         // Verify service was called
-        _mockMotivationService.Verify(
+        this.mockMotivationService.Verify(
             s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()),
             Times.Once);
     }
@@ -85,9 +85,9 @@ public class MotivationCoachControllerTests
             {
                 Name = "Struggling Athlete",
                 FitnessLevel = "Beginner",
-                PrimaryGoal = "General Fitness"
+                PrimaryGoal = "General Fitness",
             },
-            IsStruggling = true
+            IsStruggling = true,
         };
 
         var expectedResponse = new MotivationResponseDto
@@ -98,17 +98,17 @@ public class MotivationCoachControllerTests
             {
                 "Start with just 10 minutes of activity",
                 "Remember why you started",
-                "Ask for support when you need it"
+                "Ask for support when you need it",
             },
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetMotivation(request);
+        var result = await this.controller.GetMotivation(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -119,7 +119,7 @@ public class MotivationCoachControllerTests
         Assert.True(response.ActionableTips.Count > 0);
 
         // Verify the request was passed correctly
-        _mockMotivationService.Verify(
+        this.mockMotivationService.Verify(
             s => s.GetHuggingFaceMotivationalMessageAsync(
                 It.Is<MotivationRequestDto>(r => r.IsStruggling == true)),
             Times.Once);
@@ -135,16 +135,16 @@ public class MotivationCoachControllerTests
             {
                 Name = "Test Athlete",
                 FitnessLevel = "Advanced",
-                PrimaryGoal = "Performance"
-            }
+                PrimaryGoal = "Performance",
+            },
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ThrowsAsync(new Exception("Service unavailable"));
 
         // Act
-        var result = await _controller.GetMotivation(request);
+        var result = await this.controller.GetMotivation(request);
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
@@ -166,8 +166,8 @@ public class MotivationCoachControllerTests
             {
                 Name = "HuggingFace Test",
                 FitnessLevel = "Expert",
-                PrimaryGoal = "Competition"
-            }
+                PrimaryGoal = "Competition",
+            },
         };
 
         var expectedResponse = new MotivationResponseDto
@@ -178,17 +178,17 @@ public class MotivationCoachControllerTests
             {
                 "Visualize your competition success",
                 "Focus on technique perfection",
-                "Trust your training process"
+                "Trust your training process",
             },
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetHuggingFaceMotivation(request);
+        var result = await this.controller.GetHuggingFaceMotivation(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -209,15 +209,15 @@ public class MotivationCoachControllerTests
         var healthyResponse = new MotivationResponseDto
         {
             MotivationalMessage = "Health check passed!",
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ReturnsAsync(healthyResponse);
 
         // Act
-        var result = await _controller.HealthCheck();
+        var result = await this.controller.HealthCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -238,12 +238,12 @@ public class MotivationCoachControllerTests
     public async Task HealthCheck_WhenServiceThrowsException_Returns503()
     {
         // Arrange
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ThrowsAsync(new Exception("Service down"));
 
         // Act
-        var result = await _controller.HealthCheck();
+        var result = await this.controller.HealthCheck();
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result);
@@ -271,25 +271,25 @@ public class MotivationCoachControllerTests
             AthleteProfile = new AthleteProfileDto
             {
                 Name = "Logged Athlete",
-                FitnessLevel = "Intermediate"
-            }
+                FitnessLevel = "Intermediate",
+            },
         };
 
         var response = new MotivationResponseDto
         {
             MotivationalMessage = "Test message",
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ReturnsAsync(response);
 
         // Act
-        await _controller.GetMotivation(request);
+        await this.controller.GetMotivation(request);
 
         // Assert
-        _mockLogger.Verify(
+        this.mockLogger.Verify(
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
@@ -310,11 +310,11 @@ public class MotivationCoachControllerTests
         var request = new MotivationRequestDto
         {
             AthleteProfile = null!,
-            IsStruggling = false
+            IsStruggling = false,
         };
 
         // Act
-        var result = await _controller.GetMotivation(request);
+        var result = await this.controller.GetMotivation(request);
 
         // Assert
         var objectResult = Assert.IsType<ObjectResult>(result.Result);
@@ -334,22 +334,22 @@ public class MotivationCoachControllerTests
             AthleteProfile = new AthleteProfileDto
             {
                 Name = invalidName!,
-                FitnessLevel = "Beginner"
-            }
+                FitnessLevel = "Beginner",
+            },
         };
 
         var response = new MotivationResponseDto
         {
             MotivationalMessage = "Every journey starts with a single step!",
-            GeneratedAt = DateTime.UtcNow
+            GeneratedAt = DateTime.UtcNow,
         };
 
-        _mockMotivationService
+        this.mockMotivationService
             .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
             .ReturnsAsync(response);
 
         // Act
-        var result = await _controller.GetMotivation(request);
+        var result = await this.controller.GetMotivation(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);

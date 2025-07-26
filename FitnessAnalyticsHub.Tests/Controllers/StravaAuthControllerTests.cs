@@ -11,13 +11,13 @@ namespace FitnessAnalyticsHub.Tests.Controllers;
 
 public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController>
 {
-    private readonly Mock<IStravaService> _mockStravaService;
-    private readonly StravaAuthController _controller;
+    private readonly Mock<IStravaService> mockStravaService;
+    private readonly StravaAuthController controller;
 
     public StravaAuthControllerTests()
     {
-        _mockStravaService = new Mock<IStravaService>();
-        _controller = new StravaAuthController(_mockStravaService.Object);
+        this.mockStravaService = new Mock<IStravaService>();
+        this.controller = new StravaAuthController(this.mockStravaService.Object);
     }
 
     #region Login Tests
@@ -28,31 +28,31 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         // Arrange
         var expectedAuthUrl = "https://www.strava.com/oauth/authorize?client_id=test_client&response_type=code&redirect_uri=http%3A//localhost/callback&scope=read_all,activity:read_all&approval_prompt=force";
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetAuthorizationUrlAsync())
             .ReturnsAsync(expectedAuthUrl);
 
         // Act
-        var result = await _controller.Login();
+        var result = await this.controller.Login();
 
         // Assert
         var redirectResult = Assert.IsType<RedirectResult>(result);
         Assert.Equal(expectedAuthUrl, redirectResult.Url);
 
         // Verify service was called
-        _mockStravaService.Verify(s => s.GetAuthorizationUrlAsync(), Times.Once);
+        this.mockStravaService.Verify(s => s.GetAuthorizationUrlAsync(), Times.Once);
     }
 
     [Fact]
     public async Task Login_WhenServiceThrowsException_ReturnsBadRequest()
     {
         // Arrange
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetAuthorizationUrlAsync())
             .ThrowsAsync(new StravaConfigurationException("Missing client configuration"));
 
         // Act
-        var result = await _controller.Login();
+        var result = await this.controller.Login();
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -64,12 +64,12 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
     public async Task Login_WhenServiceThrowsGenericException_ReturnsBadRequest()
     {
         // Arrange
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetAuthorizationUrlAsync())
             .ThrowsAsync(new Exception("Unexpected error"));
 
         // Act
-        var result = await _controller.Login();
+        var result = await this.controller.Login();
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -94,7 +94,7 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
             AccessToken = "test_access_token_12345",
             ExpiresAt = (int)DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds(),
             ExpiresIn = 21600,
-            RefreshToken = "test_refresh_token"
+            RefreshToken = "test_refresh_token",
         };
 
         var athlete = new Athlete
@@ -104,7 +104,7 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
             FirstName = "John",
             LastName = "Doe",
             Username = "johndoe_strava",
-            Email = "john@example.com"
+            Email = "john@example.com",
         };
 
         var activities = new List<Activity>
@@ -118,7 +118,7 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
                 Distance = 5000,
                 MovingTime = 1800,
                 StartDate = DateTime.UtcNow.AddDays(-1),
-                StartDateLocal = DateTime.Now.AddDays(-1)
+                StartDateLocal = DateTime.Now.AddDays(-1),
             },
             new Activity
             {
@@ -129,24 +129,24 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
                 Distance = 20000,
                 MovingTime = 3600,
                 StartDate = DateTime.UtcNow.AddDays(-2),
-                StartDateLocal = DateTime.Now.AddDays(-2)
-            }
+                StartDateLocal = DateTime.Now.AddDays(-2),
+            },
         };
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.ExchangeCodeForTokenAsync(authCode))
             .ReturnsAsync(tokenInfo);
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken))
             .ReturnsAsync(athlete);
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetActivitiesAsync(tokenInfo.AccessToken, 1, 5))
             .ReturnsAsync(activities);
 
         // Act
-        var result = await _controller.Callback(authCode, scope, error: null);
+        var result = await this.controller.Callback(authCode, scope, error: null);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -182,9 +182,9 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         Assert.Equal(scope, tokenInfoType.GetProperty("receivedScopes")?.GetValue(tokenInfoResponse));
 
         // Verify all services were called in correct order
-        _mockStravaService.Verify(s => s.ExchangeCodeForTokenAsync(authCode), Times.Once);
-        _mockStravaService.Verify(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken), Times.Once);
-        _mockStravaService.Verify(s => s.GetActivitiesAsync(tokenInfo.AccessToken, 1, 5), Times.Once);
+        this.mockStravaService.Verify(s => s.ExchangeCodeForTokenAsync(authCode), Times.Once);
+        this.mockStravaService.Verify(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken), Times.Once);
+        this.mockStravaService.Verify(s => s.GetActivitiesAsync(tokenInfo.AccessToken, 1, 5), Times.Once);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         var scope = "read";
 
         // Act
-        var result = await _controller.Callback(code, scope, error);
+        var result = await this.controller.Callback(code, scope, error);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -204,7 +204,7 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         Assert.Contains("access_denied", badRequestResult.Value?.ToString());
 
         // Verify no services were called
-        _mockStravaService.Verify(s => s.ExchangeCodeForTokenAsync(It.IsAny<string>()), Times.Never);
+        this.mockStravaService.Verify(s => s.ExchangeCodeForTokenAsync(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -216,26 +216,26 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         string? error = null;
 
         // Act
-        var result = await _controller.Callback(code, scope, error);
+        var result = await this.controller.Callback(code, scope, error);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("No authorization code received", badRequestResult.Value);
 
         // Verify no services were called
-        _mockStravaService.Verify(s => s.ExchangeCodeForTokenAsync(It.IsAny<string>()), Times.Never);
+        this.mockStravaService.Verify(s => s.ExchangeCodeForTokenAsync(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
     public async Task Callback_WithEmptyCode_ReturnsBadRequest()
     {
         // Arrange
-        var code = "";
+        var code = string.Empty;
         var scope = "read";
         string? error = null;
 
         // Act
-        var result = await _controller.Callback(code, scope, error);
+        var result = await this.controller.Callback(code, scope, error);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -252,25 +252,25 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         var tokenInfo = new TokenInfo
         {
             AccessToken = "test_token",
-            ExpiresAt = (int)DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds()
+            ExpiresAt = (int)DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds(),
         };
 
         var athlete = new Athlete
         {
             FirstName = "John",
-            LastName = "Doe"
+            LastName = "Doe",
         };
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.ExchangeCodeForTokenAsync(authCode))
             .ReturnsAsync(tokenInfo);
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken))
             .ReturnsAsync(athlete);
 
         // Act
-        var result = await _controller.Callback(authCode, scope, error: null);
+        var result = await this.controller.Callback(authCode, scope, error: null);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -279,9 +279,9 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         Assert.Contains("need 'read_all'", badRequestResult.Value?.ToString());
 
         // Verify token exchange and athlete profile were called, but not activities
-        _mockStravaService.Verify(s => s.ExchangeCodeForTokenAsync(authCode), Times.Once);
-        _mockStravaService.Verify(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken), Times.Once);
-        _mockStravaService.Verify(s => s.GetActivitiesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        this.mockStravaService.Verify(s => s.ExchangeCodeForTokenAsync(authCode), Times.Once);
+        this.mockStravaService.Verify(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken), Times.Once);
+        this.mockStravaService.Verify(s => s.GetActivitiesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -291,12 +291,12 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         var authCode = "invalid_code";
         var scope = "read,activity:read_all";
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.ExchangeCodeForTokenAsync(authCode))
             .ThrowsAsync(new StravaApiException("Invalid authorization code", 400));
 
         // Act
-        var result = await _controller.Callback(authCode, scope, error: null);
+        var result = await this.controller.Callback(authCode, scope, error: null);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -314,19 +314,19 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         var tokenInfo = new TokenInfo
         {
             AccessToken = "invalid_token",
-            ExpiresAt = (int)DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds()
+            ExpiresAt = (int)DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds(),
         };
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.ExchangeCodeForTokenAsync(authCode))
             .ReturnsAsync(tokenInfo);
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken))
             .ThrowsAsync(new InvalidStravaTokenException("Token expired"));
 
         // Act
-        var result = await _controller.Callback(authCode, scope, error: null);
+        var result = await this.controller.Callback(authCode, scope, error: null);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -344,30 +344,30 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         var tokenInfo = new TokenInfo
         {
             AccessToken = "test_token",
-            ExpiresAt = (int)DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds()
+            ExpiresAt = (int)DateTimeOffset.UtcNow.AddHours(6).ToUnixTimeSeconds(),
         };
 
         var athlete = new Athlete
         {
             FirstName = "John",
             LastName = "Doe",
-            Username = "johndoe"
+            Username = "johndoe",
         };
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.ExchangeCodeForTokenAsync(authCode))
             .ReturnsAsync(tokenInfo);
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken))
             .ReturnsAsync(athlete);
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetActivitiesAsync(tokenInfo.AccessToken, 1, 5))
             .ThrowsAsync(new StravaApiException("Rate limit exceeded", 429));
 
         // Act
-        var result = await _controller.Callback(authCode, scope, error: null);
+        var result = await this.controller.Callback(authCode, scope, error: null);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -395,7 +395,7 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
                 Distance = 5000,
                 MovingTime = 1800, // 30 minutes
                 StartDate = DateTime.UtcNow.AddDays(-1),
-                StartDateLocal = DateTime.Now.AddDays(-1)
+                StartDateLocal = DateTime.Now.AddDays(-1),
             },
             new Activity
             {
@@ -406,16 +406,16 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
                 Distance = 15000,
                 MovingTime = 2700, // 45 minutes
                 StartDate = DateTime.UtcNow.AddDays(-2),
-                StartDateLocal = DateTime.Now.AddDays(-2)
-            }
+                StartDateLocal = DateTime.Now.AddDays(-2),
+            },
         };
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetActivitiesAsync(accessToken, 1, 10))
             .ReturnsAsync(activities);
 
         // Act
-        var result = await _controller.TestActivities(accessToken);
+        var result = await this.controller.TestActivities(accessToken);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -435,24 +435,24 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         Assert.NotNull(activitiesData);
 
         // Verify service was called with correct parameters
-        _mockStravaService.Verify(s => s.GetActivitiesAsync(accessToken, 1, 10), Times.Once);
+        this.mockStravaService.Verify(s => s.GetActivitiesAsync(accessToken, 1, 10), Times.Once);
     }
 
     [Fact]
     public async Task TestActivities_WithEmptyToken_ReturnsBadRequest()
     {
         // Arrange
-        var accessToken = "";
+        var accessToken = string.Empty;
 
         // Act
-        var result = await _controller.TestActivities(accessToken);
+        var result = await this.controller.TestActivities(accessToken);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("Access token required", badRequestResult.Value);
 
         // Verify service was never called
-        _mockStravaService.Verify(s => s.GetActivitiesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Never);
+        this.mockStravaService.Verify(s => s.GetActivitiesAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()), Times.Never);
     }
 
     [Fact]
@@ -462,7 +462,7 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         string? accessToken = null;
 
         // Act
-        var result = await _controller.TestActivities(accessToken);
+        var result = await this.controller.TestActivities(accessToken);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -475,12 +475,12 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         // Arrange
         var accessToken = "invalid_token";
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetActivitiesAsync(accessToken, 1, 10))
             .ThrowsAsync(new InvalidStravaTokenException("Invalid access token"));
 
         // Act
-        var result = await _controller.TestActivities(accessToken);
+        var result = await this.controller.TestActivities(accessToken);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -495,12 +495,12 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         var accessToken = "valid_token";
         var emptyActivities = new List<Activity>();
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetActivitiesAsync(accessToken, 1, 10))
             .ReturnsAsync(emptyActivities);
 
         // Act
-        var result = await _controller.TestActivities(accessToken);
+        var result = await this.controller.TestActivities(accessToken);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -528,11 +528,11 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
         var tokenInfo = new TokenInfo { AccessToken = "test_token" };
         var athlete = new Athlete { FirstName = "Test", LastName = "User" };
 
-        _mockStravaService.Setup(s => s.ExchangeCodeForTokenAsync(authCode)).ReturnsAsync(tokenInfo);
-        _mockStravaService.Setup(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken)).ReturnsAsync(athlete);
+        this.mockStravaService.Setup(s => s.ExchangeCodeForTokenAsync(authCode)).ReturnsAsync(tokenInfo);
+        this.mockStravaService.Setup(s => s.GetAthleteProfileAsync(tokenInfo.AccessToken)).ReturnsAsync(athlete);
 
         // Act
-        var result = await _controller.Callback(authCode, insufficientScope, error: null);
+        var result = await this.controller.Callback(authCode, insufficientScope, error: null);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -553,16 +553,16 @@ public class StravaAuthControllerTests : ControllerTestBase<StravaAuthController
                 SportType = "Run",
                 Distance = 5000,
                 MovingTime = 3600, // 60 minutes
-                StartDate = DateTime.UtcNow
-            }
+                StartDate = DateTime.UtcNow,
+            },
         };
 
-        _mockStravaService
+        this.mockStravaService
             .Setup(s => s.GetActivitiesAsync(accessToken, 1, 10))
             .ReturnsAsync(activities);
 
         // Act
-        var result = await _controller.TestActivities(accessToken);
+        var result = await this.controller.TestActivities(accessToken);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);

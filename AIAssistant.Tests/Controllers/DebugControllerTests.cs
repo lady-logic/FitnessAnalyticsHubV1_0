@@ -1,4 +1,7 @@
-﻿using AIAssistant.Application.Interfaces;
+﻿namespace AIAssistant.Tests.Controllers;
+
+using System.Net;
+using AIAssistant.Application.Interfaces;
 using AIAssistant.Tests.Base;
 using AIAssistant.Tests.Helpers;
 using AIAssistant.UI.API.Controllers;
@@ -6,21 +9,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Net;
-
-namespace AIAssistant.Tests.Controllers;
 
 public class DebugControllerTests : AIAssistantControllerTestBase<DebugController>
 {
-    private readonly Mock<IConfiguration> _mockConfiguration;
-    private readonly Mock<ILogger<DebugController>> _mockLogger;
-    private readonly DebugController _controller;
+    private readonly Mock<IConfiguration> mockConfiguration;
+    private readonly Mock<ILogger<DebugController>> mockLogger;
+    private readonly DebugController controller;
 
     public DebugControllerTests()
     {
-        _mockConfiguration = MockSetup.CreateMockConfiguration();
-        _mockLogger = MockSetup.CreateMockLogger<DebugController>();
-        _controller = new DebugController(_mockConfiguration.Object, _mockLogger.Object);
+        this.mockConfiguration = MockSetup.CreateMockConfiguration();
+        this.mockLogger = MockSetup.CreateMockLogger<DebugController>();
+        this.controller = new DebugController(this.mockConfiguration.Object, this.mockLogger.Object);
     }
 
     #region ConfigCheck Tests
@@ -29,14 +29,14 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task ConfigCheck_WithValidConfiguration_ReturnsConfigurationInfo()
     {
         // Arrange
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_api_key_1234567890");
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_api_key_1234567890");
 
         var mockSection = new Mock<IConfigurationSection>();
         mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
-        _mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
+        this.mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
 
         // Act
-        var result = await _controller.ConfigCheck();
+        var result = await this.controller.ConfigCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -57,10 +57,10 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task ConfigCheck_WithMissingApiKey_ReturnsNoKeyInfo()
     {
         // Arrange
-        SetupMockConfiguration(null);
+        this.SetupMockConfiguration(null);
 
         // Act
-        var result = await _controller.ConfigCheck();
+        var result = await this.controller.ConfigCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -78,11 +78,11 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
 
     private void SetupMockConfiguration(string? apiKey = null)
     {
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns(apiKey);
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns(apiKey);
 
         var mockSection = new Mock<IConfigurationSection>();
         mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
-        _mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
+        this.mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
     }
     #endregion
 
@@ -92,10 +92,10 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task TestModernHuggingFace_WithValidApiKey_ReturnsTestResults()
     {
         // Arrange
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("valid_test_key");
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("valid_test_key");
 
         // Act
-        var result = await _controller.TestModernHuggingFace();
+        var result = await this.controller.TestModernHuggingFace();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -113,10 +113,10 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task TestModernHuggingFace_WithMissingApiKey_ReturnsBadRequest()
     {
         // Arrange
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
 
         // Act
-        var result = await _controller.TestModernHuggingFace();
+        var result = await this.controller.TestModernHuggingFace();
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -142,13 +142,13 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         httpContextMock.Setup(ctx => ctx.RequestServices)
                       .Returns(serviceProviderMock.Object);
 
-        _controller.ControllerContext = new ControllerContext
+        this.controller.ControllerContext = new ControllerContext
         {
-            HttpContext = httpContextMock.Object
+            HttpContext = httpContextMock.Object,
         };
 
         // Act
-        var result = await _controller.TestHuggingFaceService();
+        var result = await this.controller.TestHuggingFaceService();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -170,10 +170,10 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task DirectHuggingFaceTest_WithValidKey_ReturnsApiResponse()
     {
         // Arrange
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("valid_api_key");
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("valid_api_key");
 
         // Act
-        var result = await _controller.DirectHuggingFaceTest();
+        var result = await this.controller.DirectHuggingFaceTest();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -191,10 +191,10 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task DirectHuggingFaceTest_WithMissingKey_ReturnsBadRequest()
     {
         // Arrange
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
 
         // Act
-        var result = await _controller.DirectHuggingFaceTest();
+        var result = await this.controller.DirectHuggingFaceTest();
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -209,7 +209,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task TestWithoutAuth_ReturnsResponseWithoutAuthentication()
     {
         // Act
-        var result = await _controller.TestWithoutAuth();
+        var result = await this.controller.TestWithoutAuth();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -229,10 +229,10 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task HealthCheck_ReturnsHealthyStatus()
     {
         // Arrange
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_key");
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_key");
 
         // Act
-        var result = await _controller.HealthCheck();
+        var result = await this.controller.HealthCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -259,7 +259,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
                                  .Throws(new Exception("Configuration error"));
         var controllerWithFailingConfig = new DebugController(
             mockConfigThrowsException.Object,
-            _mockLogger.Object);
+            this.mockLogger.Object);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() => controllerWithFailingConfig.HealthCheck());
@@ -276,14 +276,14 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task ConfigCheck_WithDifferentKeyLengths_ReturnsCorrectInfo(string apiKey)
     {
         // Arrange
-        _mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns(apiKey);
+        this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns(apiKey);
 
         var mockSection = new Mock<IConfigurationSection>();
         mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
-        _mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
+        this.mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
 
         // Act
-        var result = await _controller.ConfigCheck();
+        var result = await this.controller.ConfigCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -316,13 +316,13 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         httpContextMock.Setup(ctx => ctx.RequestServices)
                       .Returns(serviceProviderMock.Object);
 
-        _controller.ControllerContext = new ControllerContext
+        this.controller.ControllerContext = new ControllerContext
         {
-            HttpContext = httpContextMock.Object
+            HttpContext = httpContextMock.Object,
         };
 
         // Act
-        var result = await _controller.TestHuggingFaceService();
+        var result = await this.controller.TestHuggingFaceService();
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result);

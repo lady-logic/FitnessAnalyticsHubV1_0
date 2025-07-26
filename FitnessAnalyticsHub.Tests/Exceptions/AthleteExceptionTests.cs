@@ -1,7 +1,7 @@
-﻿using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
-
-namespace FitnessAnalyticsHub.Tests.Exceptions
+﻿namespace FitnessAnalyticsHub.Tests.Exceptions
 {
+    using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
+
     public class AthleteExceptionTests
     {
         [Fact]

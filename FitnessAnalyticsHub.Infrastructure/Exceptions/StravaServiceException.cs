@@ -1,10 +1,11 @@
-﻿using System;
-
-namespace FitnessAnalyticsHub.Infrastructure.Exceptions
+﻿namespace FitnessAnalyticsHub.Infrastructure.Exceptions
 {
+    using System;
+
     public class StravaServiceException : Exception
     {
-        public StravaServiceException(string message) : base(message)
+        public StravaServiceException(string message)
+            : base(message)
         {
         }
 
@@ -21,16 +22,18 @@ namespace FitnessAnalyticsHub.Infrastructure.Exceptions
         {
         }
 
-        public InvalidStravaTokenException(string message) : base(message)
+        public InvalidStravaTokenException(string message)
+            : base(message)
         {
         }
     }
 
     public class StravaApiException : StravaServiceException
     {
-        public StravaApiException(string message, int statusCode) : base(message)
+        public StravaApiException(string message, int statusCode)
+            : base(message)
         {
-            StatusCode = statusCode;
+            this.StatusCode = statusCode;
         }
 
         public int StatusCode { get; }

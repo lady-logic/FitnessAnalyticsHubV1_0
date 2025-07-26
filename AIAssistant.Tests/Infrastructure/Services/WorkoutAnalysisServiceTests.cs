@@ -32,15 +32,15 @@ public class WorkoutAnalysisServiceTests
                     Distance = 5000,
                     Duration = 1800,
                     Calories = 300,
-                    Date = DateTime.Now.AddDays(-1)
-                }
+                    Date = DateTime.Now.AddDays(-1),
+                },
             },
             AthleteProfile = new AthleteProfileDto
             {
                 FitnessLevel = "Intermediate",
-                PrimaryGoal = "Endurance"
+                PrimaryGoal = "Endurance",
             },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
     }
 
@@ -48,8 +48,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WhenAIServiceFails_ReturnsFallbackAnalysis()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
 
         // Act - AI Services sind null, sollte Fallback triggern
         var result = await service.AnalyzeWorkoutsAsync(request);
@@ -69,8 +69,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithDifferentAnalysisTypes_GeneratesValidFallback(string analysisType)
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AnalysisType = analysisType;
 
         // Act
@@ -88,11 +88,11 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithNoWorkouts_ReturnsValidFallback()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
+        var service = this.CreateServiceWithMockConfig();
         var request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = null,
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act
@@ -108,15 +108,15 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithMultipleWorkouts_CalculatesCorrectStats()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
+        var service = this.CreateServiceWithMockConfig();
         var request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
             {
                 new WorkoutDataDto { Distance = 5000, Duration = 1800, Calories = 300 },
-                new WorkoutDataDto { Distance = 3000, Duration = 1200, Calories = 200 }
+                new WorkoutDataDto { Distance = 3000, Duration = 1200, Calories = 200 },
             },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act
@@ -135,8 +135,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsWithProviderAsync_SetsCorrectProvider(string provider)
     {
         // Arrange
-        var service = CreateServiceWithMockConfig(provider);
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig(provider);
+        var request = this.CreateTestRequest();
 
         // Act
         var result = await service.AnalyzeWorkoutsAsync(request);
@@ -149,8 +149,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeHuggingFaceWorkoutsAsync_ReturnsHuggingFaceProvider()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
 
         // Act
         var result = await service.AnalyzeHuggingFaceWorkoutsAsync(request);
@@ -163,8 +163,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeGoogleGeminiWorkoutsAsync_ReturnsGoogleGeminiProvider()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
 
         // Act
         var result = await service.AnalyzeGoogleGeminiWorkoutsAsync(request);
@@ -178,8 +178,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithNullAnalysisType_UsesDefaultAnalysis()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AnalysisType = null;
 
         // Act
@@ -195,9 +195,9 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithEmptyAnalysisType_UsesDefaultAnalysis()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
-        request.AnalysisType = "";
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
+        request.AnalysisType = string.Empty;
 
         // Act
         var result = await service.AnalyzeWorkoutsAsync(request);
@@ -216,8 +216,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithNullAthleteProfile_HandlesGracefully()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AthleteProfile = null;
 
         // Act
@@ -233,12 +233,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithEmptyAthleteProfile_HandlesGracefully()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AthleteProfile = new AthleteProfileDto
         {
-            FitnessLevel = "",
-            PrimaryGoal = ""
+            FitnessLevel = string.Empty,
+            PrimaryGoal = string.Empty,
         };
 
         // Act
@@ -253,12 +253,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithNullAthleteProfileProperties_HandlesGracefully()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AthleteProfile = new AthleteProfileDto
         {
             FitnessLevel = null,
-            PrimaryGoal = null
+            PrimaryGoal = null,
         };
 
         // Act
@@ -277,8 +277,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithEmptyWorkoutsList_ReturnsValidFallback()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.RecentWorkouts = new List<WorkoutDataDto>(); // Empty list
 
         // Act
@@ -294,7 +294,7 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithWorkoutsContainingNullValues_HandlesGracefully()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
+        var service = this.CreateServiceWithMockConfig();
         var request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
@@ -305,10 +305,10 @@ public class WorkoutAnalysisServiceTests
                 Distance = 0,
                 Duration = 0,
                 Calories = 0,
-                Date = DateTime.Now
-            }
+                Date = DateTime.Now,
+            },
         },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act
@@ -324,7 +324,7 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithLargeNumberOfWorkouts_HandlesCorrectly()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
+        var service = this.CreateServiceWithMockConfig();
         var workouts = new List<WorkoutDataDto>();
 
         // Create 10 workouts
@@ -336,14 +336,14 @@ public class WorkoutAnalysisServiceTests
                 Distance = 1000 * (i + 1),
                 Duration = 600 * (i + 1),
                 Calories = 100 * (i + 1),
-                Date = DateTime.Now.AddDays(-i)
+                Date = DateTime.Now.AddDays(-i),
             });
         }
 
         var request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = workouts,
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act
@@ -363,8 +363,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_HealthAnalysis_ContainsHealthSpecificInsights()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AnalysisType = "health";
 
         // Act
@@ -381,8 +381,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_PerformanceAnalysis_ContainsPerformanceSpecificInsights()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AnalysisType = "performance";
 
         // Act
@@ -399,8 +399,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_TrendsAnalysis_ContainsTrendsSpecificInsights()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AnalysisType = "trends";
 
         // Act
@@ -417,12 +417,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_AllAnalysisTypes_ContainValidRecommendations()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
+        var service = this.CreateServiceWithMockConfig();
         var analysisTypes = new[] { "health", "performance", "trends", "general", null };
 
         foreach (var analysisType in analysisTypes)
         {
-            var request = CreateTestRequest();
+            var request = this.CreateTestRequest();
             request.AnalysisType = analysisType;
 
             // Act
@@ -447,16 +447,16 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_CalculatesCorrectAverageCalories()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
+        var service = this.CreateServiceWithMockConfig();
         var request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
         {
             new WorkoutDataDto { Calories = 300 },
             new WorkoutDataDto { Calories = 200 },
-            new WorkoutDataDto { Calories = 400 }
+            new WorkoutDataDto { Calories = 400 },
         },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act
@@ -464,6 +464,7 @@ public class WorkoutAnalysisServiceTests
 
         // Assert
         Assert.NotNull(result);
+
         // Average should be 300
         Assert.True(result.Analysis.Contains("300") || result.KeyInsights.Any(i => i.Contains("300")));
     }
@@ -472,7 +473,7 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithZeroValues_HandlesGracefully()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
+        var service = this.CreateServiceWithMockConfig();
         var request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
@@ -482,10 +483,10 @@ public class WorkoutAnalysisServiceTests
                 Distance = 0,
                 Duration = 0,
                 Calories = 0,
-                ActivityType = "Rest Day"
-            }
+                ActivityType = "Rest Day",
+            },
         },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act
@@ -511,8 +512,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithDifferentCasing_HandlesCorrectly(string analysisType)
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AnalysisType = analysisType;
 
         // Act
@@ -528,8 +529,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithWhitespaceAnalysisType_HandlesCorrectly()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         request.AnalysisType = "  performance  ";
 
         // Act
@@ -548,8 +549,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_SetsGeneratedAtToCurrentTime()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
-        var request = CreateTestRequest();
+        var service = this.CreateServiceWithMockConfig();
+        var request = this.CreateTestRequest();
         var beforeTest = DateTime.UtcNow.AddSeconds(-1);
 
         // Act
@@ -564,7 +565,7 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithOldWorkoutDates_HandlesCorrectly()
     {
         // Arrange
-        var service = CreateServiceWithMockConfig();
+        var service = this.CreateServiceWithMockConfig();
         var request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
@@ -575,10 +576,10 @@ public class WorkoutAnalysisServiceTests
                 ActivityType = "Run",
                 Distance = 5000,
                 Duration = 1800,
-                Calories = 300
-            }
+                Calories = 300,
+            },
         },
-            AnalysisType = "Performance"
+            AnalysisType = "Performance",
         };
 
         // Act

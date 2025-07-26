@@ -1,39 +1,40 @@
-﻿using FitnessAnalyticsHub.Application.DTOs;
+﻿using System.Globalization;
+using System.Text;
+using System.Text.Json;
+using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
-using System.Text;
-using System.Text.Json;
 
 namespace FitnessAnalyticsHub.Infrastructure.Services;
 
 public class AIAssistantClientService : IAIAssistantClientService
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<AIAssistantClientService> _logger;
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient httpClient;
+    private readonly ILogger<AIAssistantClientService> logger;
+    private readonly IConfiguration configuration;
 
     public AIAssistantClientService(
         HttpClient httpClient,
         ILogger<AIAssistantClientService> logger,
         IConfiguration configuration)
     {
-        _httpClient = httpClient;
-        _logger = logger;
-        _configuration = configuration;
+        this.httpClient = httpClient;
+        this.logger = logger;
+        this.configuration = configuration;
 
         // AIAssistant Base URL aus Configuration
-        var aiAssistantUrl = _configuration["AIAssistant:BaseUrl"] ?? "http://localhost:5169";
-        _httpClient.BaseAddress = new Uri(aiAssistantUrl);
-        _httpClient.Timeout = TimeSpan.FromSeconds(30);
+        var aiAssistantUrl = this.configuration["AIAssistant:BaseUrl"] ?? "http://localhost:5169";
+        this.httpClient.BaseAddress = new Uri(aiAssistantUrl);
+        this.httpClient.Timeout = TimeSpan.FromSeconds(30);
 
-        _logger.LogInformation("AIAssistantClientService initialized with base URL: {BaseUrl}", aiAssistantUrl);
+        this.logger.LogInformation("AIAssistantClientService initialized with base URL: {BaseUrl}", aiAssistantUrl);
     }
 
     public async Task<AIMotivationResponseDto> GetMotivationAsync(AIMotivationRequestDto request, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Requesting motivation for athlete: {AthleteName}",
+        this.logger.LogInformation(
+            "Requesting motivation for athlete: {AthleteName}",
             request.AthleteProfile?.Name ?? "Unknown");
 
         // Konvertiere zu AIAssistant DTO Format
@@ -43,7 +44,7 @@ public class AIAssistantClientService : IAIAssistantClientService
             {
                 Name = request.AthleteProfile?.Name ?? "Champion",
                 FitnessLevel = request.AthleteProfile?.FitnessLevel ?? "Intermediate",
-                PrimaryGoal = request.AthleteProfile?.PrimaryGoal ?? "General Fitness"
+                PrimaryGoal = request.AthleteProfile?.PrimaryGoal ?? "General Fitness",
             },
             RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistantWorkout
             {
@@ -51,24 +52,25 @@ public class AIAssistantClientService : IAIAssistantClientService
                 ActivityType = w.ActivityType,
                 Distance = w.Distance,
                 Duration = w.Duration,
-                Calories = w.Calories
+                Calories = w.Calories,
             }).ToList() ?? new List<AIAssistantWorkout>(),
             PreferredTone = request.PreferredTone ?? "Encouraging",
-            ContextualInfo = request.ContextualInfo ?? ""
+            ContextualInfo = request.ContextualInfo ?? string.Empty,
         };
 
         var json = JsonSerializer.Serialize(aiRequest);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync("/api/MotivationCoach/motivate/huggingface", content, cancellationToken);
+        var response = await this.httpClient.PostAsync("/api/MotivationCoach/motivate/huggingface", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("AIAssistant motivation request failed: {StatusCode} - {Error}",
+            this.logger.LogError(
+                "AIAssistant motivation request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
-            return GetFallbackMotivation(request);
+            return this.GetFallbackMotivation(request);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -84,13 +86,14 @@ public class AIAssistantClientService : IAIAssistantClientService
                            tips.EnumerateArray().Select(t => t.GetString()).Where(s => s != null).Cast<string>().ToList() :
                            null,
             GeneratedAt = DateTime.UtcNow,
-            Source = "AIAssistant-HuggingFace"
+            Source = "AIAssistant-HuggingFace",
         };
     }
 
     public async Task<AIWorkoutAnalysisResponseDto> GetWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Requesting workout analysis for {WorkoutCount} workouts, type: {AnalysisType}",
+        this.logger.LogInformation(
+            "Requesting workout analysis for {WorkoutCount} workouts, type: {AnalysisType}",
             request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
         // Konvertiere zu AIAssistant DTO Format
@@ -100,33 +103,35 @@ public class AIAssistantClientService : IAIAssistantClientService
             {
                 Name = request.AthleteProfile.Name,
                 FitnessLevel = request.AthleteProfile.FitnessLevel,
-                PrimaryGoal = request.AthleteProfile.PrimaryGoal
-            } : null,
+                PrimaryGoal = request.AthleteProfile.PrimaryGoal,
+            }
+            : null,
             RecentWorkouts = request.RecentWorkouts?.Select(w => new AIAssistantWorkout
             {
                 Date = w.Date,
                 ActivityType = w.ActivityType,
                 Distance = w.Distance,
                 Duration = w.Duration,
-                Calories = w.Calories
+                Calories = w.Calories,
             }).ToList() ?? new List<AIAssistantWorkout>(),
             AnalysisType = request.AnalysisType ?? "Performance",
-            FocusAreas = request.FocusAreas ?? new List<string>()
+            FocusAreas = request.FocusAreas ?? new List<string>(),
         };
 
         var json = JsonSerializer.Serialize(aiRequest);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        //var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/huggingface", content, cancellationToken);
-        var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/googlegemini", content, cancellationToken);
+        // var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/huggingface", content, cancellationToken);
+        var response = await this.httpClient.PostAsync("/api/WorkoutAnalysis/analyze/googlegemini", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("AIAssistant workout analysis request failed: {StatusCode} - {Error}",
+            this.logger.LogError(
+                "AIAssistant workout analysis request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
 
-            return GetFallbackAnalysis(request);
+            return this.GetFallbackAnalysis(request);
         }
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -145,7 +150,7 @@ public class AIAssistantClientService : IAIAssistantClientService
                             recs.EnumerateArray().Select(r => r.GetString()).Where(s => s != null).Cast<string>().ToList() :
                             new List<string>(),
             GeneratedAt = DateTime.UtcNow,
-            Source = "AIAssistant-HuggingFace"
+            Source = "AIAssistant-HuggingFace",
         };
     }
 
@@ -153,12 +158,12 @@ public class AIAssistantClientService : IAIAssistantClientService
     {
         try
         {
-            var response = await _httpClient.GetAsync("/api/Debug/health", cancellationToken);
+            var response = await this.httpClient.GetAsync("/api/Debug/health", cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "AIAssistant health check failed");
+            this.logger.LogWarning(ex, "AIAssistant health check failed");
             return false;
         }
     }
@@ -175,10 +180,10 @@ public class AIAssistantClientService : IAIAssistantClientService
             {
                 "Set small, achievable goals for today",
                 "Focus on consistency over perfection",
-                "Celebrate every workout completed"
+                "Celebrate every workout completed",
             },
             GeneratedAt = DateTime.UtcNow,
-            Source = "Fallback"
+            Source = "Fallback",
         };
     }
 
@@ -196,17 +201,17 @@ public class AIAssistantClientService : IAIAssistantClientService
             $"Completed {workoutCount} workouts with strong consistency",
             $"Total distance of {totalDistance.ToString("F1", CultureInfo.InvariantCulture)}km demonstrates good endurance",
             "Training patterns indicate balanced workout approach",
-            "Performance metrics show steady improvement"
+            "Performance metrics show steady improvement",
         },
             Recommendations = new List<string>
         {
             "Continue current training schedule",
             "Gradually increase intensity by 5-10%",
             "Ensure adequate recovery between sessions",
-            "Consider adding workout variety"
+            "Consider adding workout variety",
         },
             GeneratedAt = DateTime.UtcNow,
-            Source = "Fallback"
+            Source = "Fallback",
         };
     }
 

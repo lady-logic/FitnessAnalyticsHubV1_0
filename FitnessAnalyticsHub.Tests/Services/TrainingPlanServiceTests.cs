@@ -12,9 +12,9 @@ namespace FitnessAnalyticsHub.Tests.Services;
 
 public class TrainingPlanServiceTests : IDisposable
 {
-    private readonly ApplicationDbContext _context;
-    private readonly IMapper _mapper;
-    private readonly TrainingPlanService _service;
+    private readonly ApplicationDbContext context;
+    private readonly IMapper mapper;
+    private readonly TrainingPlanService service;
 
     public TrainingPlanServiceTests()
     {
@@ -23,16 +23,16 @@ public class TrainingPlanServiceTests : IDisposable
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        this.context = new ApplicationDbContext(options);
 
         // AutoMapper konfigurieren
         var mapperConfig = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
-        _mapper = mapperConfig.CreateMapper();
+        this.mapper = mapperConfig.CreateMapper();
 
-        _service = new TrainingPlanService(_context, _mapper);
+        this.service = new TrainingPlanService(this.context, this.mapper);
     }
 
     #region Setup Helpers
@@ -46,11 +46,11 @@ public class TrainingPlanServiceTests : IDisposable
             LastName = "Athlete",
             Email = "test@example.com",
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
         };
 
-        await _context.Athletes.AddAsync(athlete);
-        await _context.SaveChangesAsync();
+        await this.context.Athletes.AddAsync(athlete);
+        await this.context.SaveChangesAsync();
         return athlete;
     }
 
@@ -68,11 +68,11 @@ public class TrainingPlanServiceTests : IDisposable
             StartDate = DateTime.UtcNow.AddDays(-1),
             StartDateLocal = DateTime.Now.AddDays(-1),
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
         };
 
-        await _context.Activities.AddAsync(activity);
-        await _context.SaveChangesAsync();
+        await this.context.Activities.AddAsync(activity);
+        await this.context.SaveChangesAsync();
         return activity;
     }
 
@@ -84,7 +84,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task GetTrainingPlanByIdAsync_WithValidId_ReturnsTrainingPlanWithRelatedData()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlan = new TrainingPlan
         {
@@ -97,7 +97,7 @@ public class TrainingPlanServiceTests : IDisposable
             Goal = TrainingGoal.RacePreparation,
             Notes = "Focus on building endurance",
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
         };
 
         var plannedActivity = new PlannedActivity
@@ -109,15 +109,15 @@ public class TrainingPlanServiceTests : IDisposable
             SportType = "Run",
             PlannedDate = DateTime.UtcNow.AddDays(7),
             PlannedDuration = 120, // 2 hours in minutes
-            PlannedDistance = 20.0
+            PlannedDistance = 20.0,
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.PlannedActivities.AddAsync(plannedActivity);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.PlannedActivities.AddAsync(plannedActivity);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _service.GetTrainingPlanByIdAsync(1, CancellationToken.None);
+        var result = await this.service.GetTrainingPlanByIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -125,6 +125,7 @@ public class TrainingPlanServiceTests : IDisposable
         Assert.Equal("Marathon Training", result.Name);
         Assert.Equal("16-week marathon preparation", result.Description);
         Assert.Equal(TrainingGoal.RacePreparation, result.Goal);
+
         // TODO: Add AthleteName mapping to MappingProfile
         // Assert.Equal("Test Athlete", result.AthleteName);
         Assert.Equal(athlete.Id, result.AthleteId);
@@ -145,8 +146,8 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task GetTrainingPlanByIdAsync_WithCompletedActivity_ReturnsTrainingPlanWithCompletedActivity()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
-        var completedActivity = await CreateTestActivityAsync(athlete.Id);
+        var athlete = await this.CreateTestAthleteAsync();
+        var completedActivity = await this.CreateTestActivityAsync(athlete.Id);
 
         var trainingPlan = new TrainingPlan
         {
@@ -155,7 +156,7 @@ public class TrainingPlanServiceTests : IDisposable
             Name = "Test Plan",
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
-            Goal = TrainingGoal.GeneralFitness
+            Goal = TrainingGoal.GeneralFitness,
         };
 
         var plannedActivity = new PlannedActivity
@@ -165,15 +166,15 @@ public class TrainingPlanServiceTests : IDisposable
             Title = "Morning Run",
             SportType = "Run",
             PlannedDate = DateTime.UtcNow.AddDays(1),
-            CompletedActivityId = completedActivity.Id // Link to completed activity
+            CompletedActivityId = completedActivity.Id, // Link to completed activity
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.PlannedActivities.AddAsync(plannedActivity);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.PlannedActivities.AddAsync(plannedActivity);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _service.GetTrainingPlanByIdAsync(1, CancellationToken.None);
+        var result = await this.service.GetTrainingPlanByIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -190,7 +191,7 @@ public class TrainingPlanServiceTests : IDisposable
         // Arrange - No training plan in database
 
         // Act
-        var result = await _service.GetTrainingPlanByIdAsync(999, CancellationToken.None);
+        var result = await this.service.GetTrainingPlanByIdAsync(999, CancellationToken.None);
 
         // Assert
         Assert.Null(result);
@@ -204,7 +205,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task GetTrainingPlansByAthleteIdAsync_WithValidAthleteId_ReturnsAllTrainingPlans()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlans = new List<TrainingPlan>
         {
@@ -215,7 +216,7 @@ public class TrainingPlanServiceTests : IDisposable
                 Name = "5K Training",
                 StartDate = DateTime.UtcNow.AddDays(-30),
                 EndDate = DateTime.UtcNow.AddDays(-1),
-                Goal = TrainingGoal.EnduranceImprovement
+                Goal = TrainingGoal.EnduranceImprovement,
             },
             new TrainingPlan
             {
@@ -224,15 +225,15 @@ public class TrainingPlanServiceTests : IDisposable
                 Name = "Marathon Training",
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddDays(112),
-                Goal = TrainingGoal.RacePreparation
-            }
+                Goal = TrainingGoal.RacePreparation,
+            },
         };
 
-        await _context.TrainingPlans.AddRangeAsync(trainingPlans);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddRangeAsync(trainingPlans);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _service.GetTrainingPlansByAthleteIdAsync(athlete.Id, CancellationToken.None);
+        var result = await this.service.GetTrainingPlansByAthleteIdAsync(athlete.Id, CancellationToken.None);
 
         // Assert
         var resultList = result.ToList();
@@ -240,7 +241,8 @@ public class TrainingPlanServiceTests : IDisposable
         Assert.Contains(resultList, tp => tp.Name == "5K Training");
         Assert.Contains(resultList, tp => tp.Name == "Marathon Training");
         Assert.All(resultList, tp => Assert.Equal(athlete.Id, tp.AthleteId));
-        // TODO: Add AthleteName mapping to MappingProfile  
+
+        // TODO: Add AthleteName mapping to MappingProfile
         // Assert.All(resultList, tp => Assert.Equal("Test Athlete", tp.AthleteName));
     }
 
@@ -248,10 +250,10 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task GetTrainingPlansByAthleteIdAsync_WithNoTrainingPlans_ReturnsEmptyList()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         // Act
-        var result = await _service.GetTrainingPlansByAthleteIdAsync(athlete.Id, CancellationToken.None);
+        var result = await this.service.GetTrainingPlansByAthleteIdAsync(athlete.Id, CancellationToken.None);
 
         // Assert
         Assert.Empty(result);
@@ -265,7 +267,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task CreateTrainingPlanAsync_WithValidData_CreatesTrainingPlan()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var createDto = new CreateTrainingPlanDto
         {
@@ -275,11 +277,11 @@ public class TrainingPlanServiceTests : IDisposable
             StartDate = DateTime.UtcNow.Date,
             EndDate = DateTime.UtcNow.Date.AddDays(60),
             Goal = TrainingGoal.WeightLoss,
-            Notes = "Focus on cardio"
+            Notes = "Focus on cardio",
         };
 
         // Act
-        var result = await _service.CreateTrainingPlanAsync(createDto, CancellationToken.None);
+        var result = await this.service.CreateTrainingPlanAsync(createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -299,7 +301,7 @@ public class TrainingPlanServiceTests : IDisposable
         // Assert.Equal("Test Athlete", result.AthleteName);
 
         // Verify in database
-        var trainingPlanInDb = await _context.TrainingPlans.FindAsync(result.Id);
+        var trainingPlanInDb = await this.context.TrainingPlans.FindAsync(result.Id);
         Assert.NotNull(trainingPlanInDb);
         Assert.Equal(createDto.Name, trainingPlanInDb.Name);
         Assert.Equal(athlete.Id, trainingPlanInDb.AthleteId);
@@ -316,7 +318,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task CreateTrainingPlanAsync_WithDifferentGoals_CreatesTrainingPlanSuccessfully(TrainingGoal goal)
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var createDto = new CreateTrainingPlanDto
         {
@@ -324,11 +326,11 @@ public class TrainingPlanServiceTests : IDisposable
             Name = $"Training for {goal}",
             StartDate = DateTime.UtcNow.Date,
             EndDate = DateTime.UtcNow.Date.AddDays(30),
-            Goal = goal
+            Goal = goal,
         };
 
         // Act
-        var result = await _service.CreateTrainingPlanAsync(createDto, CancellationToken.None);
+        var result = await this.service.CreateTrainingPlanAsync(createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -344,7 +346,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task UpdateTrainingPlanAsync_WithValidData_UpdatesTrainingPlan()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlan = new TrainingPlan
         {
@@ -357,11 +359,11 @@ public class TrainingPlanServiceTests : IDisposable
             Goal = TrainingGoal.GeneralFitness,
             Notes = "Original Notes",
             CreatedAt = DateTime.UtcNow.AddDays(-1),
-            UpdatedAt = DateTime.UtcNow.AddDays(-1)
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.SaveChangesAsync();
 
         var updateDto = new UpdateTrainingPlanDto
         {
@@ -371,16 +373,16 @@ public class TrainingPlanServiceTests : IDisposable
             StartDate = DateTime.UtcNow.Date.AddDays(1),
             EndDate = DateTime.UtcNow.Date.AddDays(90),
             Goal = TrainingGoal.RacePreparation,
-            Notes = "Updated Notes"
+            Notes = "Updated Notes",
         };
 
         // Act
-        await _service.UpdateTrainingPlanAsync(updateDto, CancellationToken.None);
+        await this.service.UpdateTrainingPlanAsync(updateDto, CancellationToken.None);
 
         // Assert
         // Reload from database to get fresh entity (not tracked)
-        _context.ChangeTracker.Clear(); // Clear tracking to ensure fresh load
-        var updatedTrainingPlan = await _context.TrainingPlans.FindAsync(1);
+        this.context.ChangeTracker.Clear(); // Clear tracking to ensure fresh load
+        var updatedTrainingPlan = await this.context.TrainingPlans.FindAsync(1);
         Assert.NotNull(updatedTrainingPlan);
         Assert.Equal(updateDto.Name, updatedTrainingPlan.Name);
         Assert.Equal(updateDto.Description, updatedTrainingPlan.Description);
@@ -401,12 +403,12 @@ public class TrainingPlanServiceTests : IDisposable
         var updateDto = new UpdateTrainingPlanDto
         {
             Id = 999,
-            Name = "Nonexistent Plan"
+            Name = "Nonexistent Plan",
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _service.UpdateTrainingPlanAsync(updateDto, CancellationToken.None));
+            () => this.service.UpdateTrainingPlanAsync(updateDto, CancellationToken.None));
 
         Assert.Contains("Training plan with ID 999 not found", exception.Message);
     }
@@ -419,7 +421,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task DeleteTrainingPlanAsync_WithValidId_DeletesTrainingPlan()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlan = new TrainingPlan
         {
@@ -428,17 +430,17 @@ public class TrainingPlanServiceTests : IDisposable
             Name = "Plan to Delete",
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
-            Goal = TrainingGoal.GeneralFitness
+            Goal = TrainingGoal.GeneralFitness,
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.SaveChangesAsync();
 
         // Act
-        await _service.DeleteTrainingPlanAsync(1, CancellationToken.None);
+        await this.service.DeleteTrainingPlanAsync(1, CancellationToken.None);
 
         // Assert
-        var deletedTrainingPlan = await _context.TrainingPlans.FindAsync(1);
+        var deletedTrainingPlan = await this.context.TrainingPlans.FindAsync(1);
         Assert.Null(deletedTrainingPlan);
     }
 
@@ -449,7 +451,7 @@ public class TrainingPlanServiceTests : IDisposable
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _service.DeleteTrainingPlanAsync(999, CancellationToken.None));
+            () => this.service.DeleteTrainingPlanAsync(999, CancellationToken.None));
 
         Assert.Contains("Training plan with ID 999 not found", exception.Message);
     }
@@ -458,7 +460,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task DeleteTrainingPlanAsync_WithPlannedActivities_DeletesTrainingPlanAndActivities()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlan = new TrainingPlan
         {
@@ -467,7 +469,7 @@ public class TrainingPlanServiceTests : IDisposable
             Name = "Plan with Activities",
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
-            Goal = TrainingGoal.GeneralFitness
+            Goal = TrainingGoal.GeneralFitness,
         };
 
         var plannedActivities = new List<PlannedActivity>
@@ -478,7 +480,7 @@ public class TrainingPlanServiceTests : IDisposable
                 TrainingPlanId = 1,
                 Title = "Activity 1",
                 SportType = "Run",
-                PlannedDate = DateTime.UtcNow.AddDays(1)
+                PlannedDate = DateTime.UtcNow.AddDays(1),
             },
             new PlannedActivity
             {
@@ -486,23 +488,23 @@ public class TrainingPlanServiceTests : IDisposable
                 TrainingPlanId = 1,
                 Title = "Activity 2",
                 SportType = "Ride",
-                PlannedDate = DateTime.UtcNow.AddDays(3)
-            }
+                PlannedDate = DateTime.UtcNow.AddDays(3),
+            },
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.PlannedActivities.AddRangeAsync(plannedActivities);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.PlannedActivities.AddRangeAsync(plannedActivities);
+        await this.context.SaveChangesAsync();
 
         // Act
-        await _service.DeleteTrainingPlanAsync(1, CancellationToken.None);
+        await this.service.DeleteTrainingPlanAsync(1, CancellationToken.None);
 
         // Assert
-        var deletedTrainingPlan = await _context.TrainingPlans.FindAsync(1);
+        var deletedTrainingPlan = await this.context.TrainingPlans.FindAsync(1);
         Assert.Null(deletedTrainingPlan);
 
         // Verify planned activities are also deleted (cascade delete)
-        var remainingPlannedActivities = await _context.PlannedActivities
+        var remainingPlannedActivities = await this.context.PlannedActivities
             .Where(pa => pa.TrainingPlanId == 1)
             .ToListAsync();
         Assert.Empty(remainingPlannedActivities);
@@ -516,7 +518,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task AddPlannedActivityAsync_WithValidData_AddsPlannedActivity()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlan = new TrainingPlan
         {
@@ -525,11 +527,11 @@ public class TrainingPlanServiceTests : IDisposable
             Name = "Test Plan",
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
-            Goal = TrainingGoal.GeneralFitness
+            Goal = TrainingGoal.GeneralFitness,
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.SaveChangesAsync();
 
         var createDto = new CreatePlannedActivityDto
         {
@@ -539,11 +541,11 @@ public class TrainingPlanServiceTests : IDisposable
             SportType = "Run",
             PlannedDate = DateTime.UtcNow.AddDays(7),
             PlannedDurationMinutes = 30,
-            PlannedDistance = 5.0
+            PlannedDistance = 5.0,
         };
 
         // Act
-        var result = await _service.AddPlannedActivityAsync(1, createDto, CancellationToken.None);
+        var result = await this.service.AddPlannedActivityAsync(1, createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -557,7 +559,7 @@ public class TrainingPlanServiceTests : IDisposable
         Assert.False(result.IsCompleted);
 
         // Verify in database
-        var plannedActivityInDb = await _context.PlannedActivities.FindAsync(result.Id);
+        var plannedActivityInDb = await this.context.PlannedActivities.FindAsync(result.Id);
         Assert.NotNull(plannedActivityInDb);
         Assert.Equal(1, plannedActivityInDb.TrainingPlanId);
         Assert.Equal(createDto.Title, plannedActivityInDb.Title);
@@ -572,12 +574,12 @@ public class TrainingPlanServiceTests : IDisposable
             TrainingPlanId = 999,
             Title = "Test Activity",
             SportType = "Run",
-            PlannedDate = DateTime.UtcNow.AddDays(1)
+            PlannedDate = DateTime.UtcNow.AddDays(1),
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _service.AddPlannedActivityAsync(999, createDto, CancellationToken.None));
+            () => this.service.AddPlannedActivityAsync(999, createDto, CancellationToken.None));
 
         Assert.Contains("Training plan with ID 999 not found", exception.Message);
     }
@@ -590,7 +592,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task UpdatePlannedActivityAsync_WithValidData_UpdatesPlannedActivity()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlan = new TrainingPlan
         {
@@ -599,7 +601,7 @@ public class TrainingPlanServiceTests : IDisposable
             Name = "Test Plan",
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
-            Goal = TrainingGoal.GeneralFitness
+            Goal = TrainingGoal.GeneralFitness,
         };
 
         var plannedActivity = new PlannedActivity
@@ -611,12 +613,12 @@ public class TrainingPlanServiceTests : IDisposable
             SportType = "Run",
             PlannedDate = DateTime.UtcNow.AddDays(1),
             PlannedDuration = 30,
-            PlannedDistance = 5.0
+            PlannedDistance = 5.0,
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.PlannedActivities.AddAsync(plannedActivity);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.PlannedActivities.AddAsync(plannedActivity);
+        await this.context.SaveChangesAsync();
 
         var updateDto = new UpdatePlannedActivityDto
         {
@@ -626,14 +628,14 @@ public class TrainingPlanServiceTests : IDisposable
             SportType = "Ride",
             PlannedDate = DateTime.UtcNow.AddDays(2),
             PlannedDurationMinutes = 60,
-            PlannedDistance = 10.0
+            PlannedDistance = 10.0,
         };
 
         // Act
-        await _service.UpdatePlannedActivityAsync(updateDto, CancellationToken.None);
+        await this.service.UpdatePlannedActivityAsync(updateDto, CancellationToken.None);
 
         // Assert
-        var updatedPlannedActivity = await _context.PlannedActivities.FindAsync(1);
+        var updatedPlannedActivity = await this.context.PlannedActivities.FindAsync(1);
         Assert.NotNull(updatedPlannedActivity);
         Assert.Equal(updateDto.Title, updatedPlannedActivity.Title);
         Assert.Equal(updateDto.Description, updatedPlannedActivity.Description);
@@ -650,12 +652,12 @@ public class TrainingPlanServiceTests : IDisposable
         var updateDto = new UpdatePlannedActivityDto
         {
             Id = 999,
-            Title = "Nonexistent Activity"
+            Title = "Nonexistent Activity",
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _service.UpdatePlannedActivityAsync(updateDto, CancellationToken.None));
+            () => this.service.UpdatePlannedActivityAsync(updateDto, CancellationToken.None));
 
         Assert.Contains("Planned activity with ID 999 not found", exception.Message);
     }
@@ -668,7 +670,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task DeletePlannedActivityAsync_WithValidId_DeletesPlannedActivity()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlan = new TrainingPlan
         {
@@ -677,7 +679,7 @@ public class TrainingPlanServiceTests : IDisposable
             Name = "Test Plan",
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
-            Goal = TrainingGoal.GeneralFitness
+            Goal = TrainingGoal.GeneralFitness,
         };
 
         var plannedActivity = new PlannedActivity
@@ -686,18 +688,18 @@ public class TrainingPlanServiceTests : IDisposable
             TrainingPlanId = 1,
             Title = "Activity to Delete",
             SportType = "Run",
-            PlannedDate = DateTime.UtcNow.AddDays(1)
+            PlannedDate = DateTime.UtcNow.AddDays(1),
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.PlannedActivities.AddAsync(plannedActivity);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.PlannedActivities.AddAsync(plannedActivity);
+        await this.context.SaveChangesAsync();
 
         // Act
-        await _service.DeletePlannedActivityAsync(1, CancellationToken.None);
+        await this.service.DeletePlannedActivityAsync(1, CancellationToken.None);
 
         // Assert
-        var deletedPlannedActivity = await _context.PlannedActivities.FindAsync(1);
+        var deletedPlannedActivity = await this.context.PlannedActivities.FindAsync(1);
         Assert.Null(deletedPlannedActivity);
     }
 
@@ -708,7 +710,7 @@ public class TrainingPlanServiceTests : IDisposable
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _service.DeletePlannedActivityAsync(999, CancellationToken.None));
+            () => this.service.DeletePlannedActivityAsync(999, CancellationToken.None));
 
         Assert.Contains("Planned activity with ID 999 not found", exception.Message);
     }
@@ -721,8 +723,8 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task MarkPlannedActivityAsCompletedAsync_WithValidIds_MarksActivityAsCompleted()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
-        var completedActivity = await CreateTestActivityAsync(athlete.Id);
+        var athlete = await this.CreateTestAthleteAsync();
+        var completedActivity = await this.CreateTestActivityAsync(athlete.Id);
 
         var trainingPlan = new TrainingPlan
         {
@@ -731,7 +733,7 @@ public class TrainingPlanServiceTests : IDisposable
             Name = "Test Plan",
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
-            Goal = TrainingGoal.GeneralFitness
+            Goal = TrainingGoal.GeneralFitness,
         };
 
         var plannedActivity = new PlannedActivity
@@ -740,15 +742,15 @@ public class TrainingPlanServiceTests : IDisposable
             TrainingPlanId = 1,
             Title = "Morning Run",
             SportType = "Run",
-            PlannedDate = DateTime.UtcNow.AddDays(1)
+            PlannedDate = DateTime.UtcNow.AddDays(1),
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.PlannedActivities.AddAsync(plannedActivity);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.PlannedActivities.AddAsync(plannedActivity);
+        await this.context.SaveChangesAsync();
 
         // Act
-        var result = await _service.MarkPlannedActivityAsCompletedAsync(1, completedActivity.Id, CancellationToken.None);
+        var result = await this.service.MarkPlannedActivityAsCompletedAsync(1, completedActivity.Id, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -759,7 +761,7 @@ public class TrainingPlanServiceTests : IDisposable
         Assert.Equal("Test Athlete", result.CompletedActivity.AthleteFullName);
 
         // Verify in database
-        var updatedPlannedActivity = await _context.PlannedActivities.FindAsync(1);
+        var updatedPlannedActivity = await this.context.PlannedActivities.FindAsync(1);
         Assert.NotNull(updatedPlannedActivity);
         Assert.Equal(completedActivity.Id, updatedPlannedActivity.CompletedActivityId);
     }
@@ -768,12 +770,12 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task MarkPlannedActivityAsCompletedAsync_WithInvalidPlannedActivityId_ThrowsException()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
-        var activity = await CreateTestActivityAsync(athlete.Id);
+        var athlete = await this.CreateTestAthleteAsync();
+        var activity = await this.CreateTestActivityAsync(athlete.Id);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _service.MarkPlannedActivityAsCompletedAsync(999, activity.Id, CancellationToken.None));
+            () => this.service.MarkPlannedActivityAsCompletedAsync(999, activity.Id, CancellationToken.None));
 
         Assert.Contains("Planned activity with ID 999 not found", exception.Message);
     }
@@ -782,7 +784,7 @@ public class TrainingPlanServiceTests : IDisposable
     public async Task MarkPlannedActivityAsCompletedAsync_WithInvalidActivityId_ThrowsException()
     {
         // Arrange
-        var athlete = await CreateTestAthleteAsync();
+        var athlete = await this.CreateTestAthleteAsync();
 
         var trainingPlan = new TrainingPlan
         {
@@ -791,7 +793,7 @@ public class TrainingPlanServiceTests : IDisposable
             Name = "Test Plan",
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddDays(30),
-            Goal = TrainingGoal.GeneralFitness
+            Goal = TrainingGoal.GeneralFitness,
         };
 
         var plannedActivity = new PlannedActivity
@@ -800,16 +802,16 @@ public class TrainingPlanServiceTests : IDisposable
             TrainingPlanId = 1,
             Title = "Morning Run",
             SportType = "Run",
-            PlannedDate = DateTime.UtcNow.AddDays(1)
+            PlannedDate = DateTime.UtcNow.AddDays(1),
         };
 
-        await _context.TrainingPlans.AddAsync(trainingPlan);
-        await _context.PlannedActivities.AddAsync(plannedActivity);
-        await _context.SaveChangesAsync();
+        await this.context.TrainingPlans.AddAsync(trainingPlan);
+        await this.context.PlannedActivities.AddAsync(plannedActivity);
+        await this.context.SaveChangesAsync();
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(
-            () => _service.MarkPlannedActivityAsCompletedAsync(1, 999, CancellationToken.None));
+            () => this.service.MarkPlannedActivityAsCompletedAsync(1, 999, CancellationToken.None));
 
         Assert.Contains("Activity with ID 999 not found", exception.Message);
     }
@@ -818,6 +820,6 @@ public class TrainingPlanServiceTests : IDisposable
 
     public void Dispose()
     {
-        _context.Dispose();
+        this.context.Dispose();
     }
 }

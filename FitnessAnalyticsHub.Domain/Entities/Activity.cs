@@ -8,8 +8,11 @@ public class Activity
 {
     [Required]
     public int Id { get; set; }
+
     public string? StravaId { get; set; }
+
     public int AthleteId { get; set; }
+
     [ForeignKey(nameof(AthleteId))]
     public virtual Athlete? Athlete { get; set; }
     [Required]
@@ -43,16 +46,16 @@ public class Activity
             try
             {
                 var distanceInKm = distance / 1000.0; // Strava gibt Meter zurück
-                Pace = Pace.FromDistanceAndDuration(distanceInKm, duration);
+                this.Pace = Pace.FromDistanceAndDuration(distanceInKm, duration);
             }
             catch (ArgumentException)
             {
-                Pace = null; // Falls Pace ungültig ist
+                this.Pace = null; // Falls Pace ungültig ist
             }
         }
         else
         {
-            Pace = null; // Keine gültige Distanz/Zeit
+            this.Pace = null; // Keine gültige Distanz/Zeit
         }
     }
 }

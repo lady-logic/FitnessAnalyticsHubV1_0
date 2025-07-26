@@ -8,5 +8,5 @@ public enum TrainingGoal
     StrengthImprovement,
     RacePreparation,
     Recovery,
-    Custom
+    Custom,
 }

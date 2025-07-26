@@ -8,64 +8,64 @@ namespace FitnessAnalyticsHub.WebApi.Controllers;
 [Route("api/[controller]")]
 public class ActivityController : ControllerBase
 {
-    private readonly IActivityService _activityService;
+    private readonly IActivityService activityService;
 
     public ActivityController(IActivityService activityService)
     {
-        _activityService = activityService;
+        this.activityService = activityService;
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<ActivityDto>> GetById(int id, CancellationToken cancellationToken)
     {
-        var activity = await _activityService.GetActivityByIdAsync(id, cancellationToken);
-        return Ok(activity);
+        var activity = await this.activityService.GetActivityByIdAsync(id, cancellationToken);
+        return this.Ok(activity);
     }
 
     [HttpGet("athlete/{athleteId}")]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetByAthleteId(int athleteId, CancellationToken cancellationToken)
     {
-        var activities = await _activityService.GetActivitiesByAthleteIdAsync(athleteId, cancellationToken);
-        return Ok(activities);
+        var activities = await this.activityService.GetActivitiesByAthleteIdAsync(athleteId, cancellationToken);
+        return this.Ok(activities);
     }
 
     [HttpPost]
     public async Task<ActionResult<ActivityDto>> Create(CreateActivityDto createActivityDto, CancellationToken cancellationToken)
     {
-        var activity = await _activityService.CreateActivityAsync(createActivityDto, cancellationToken);
-        return CreatedAtAction(nameof(GetById), new { id = activity.Id }, activity);
+        var activity = await this.activityService.CreateActivityAsync(createActivityDto, cancellationToken);
+        return this.CreatedAtAction(nameof(this.GetById), new { id = activity.Id }, activity);
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateActivityDto updateActivityDto, CancellationToken cancellationToken)
     {
         if (id != updateActivityDto.Id)
-            return BadRequest("ID in der URL stimmt nicht mit der ID im Körper überein.");
+        {
+            return this.BadRequest("ID in der URL stimmt nicht mit der ID im Körper überein.");
+        }
 
-
-        await _activityService.UpdateActivityAsync(updateActivityDto, cancellationToken);
-        return NoContent();
+        await this.activityService.UpdateActivityAsync(updateActivityDto, cancellationToken);
+        return this.NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
-        await _activityService.DeleteActivityAsync(id, cancellationToken);
-        return NoContent();
+        await this.activityService.DeleteActivityAsync(id, cancellationToken);
+        return this.NoContent();
     }
 
     [HttpPost("import-from-strava")]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> ImportFromStrava(CancellationToken cancellationToken)
     {
-        var activities = await _activityService.ImportActivitiesFromStravaAsync(cancellationToken);
-        return Ok(activities);
+        var activities = await this.activityService.ImportActivitiesFromStravaAsync(cancellationToken);
+        return this.Ok(activities);
     }
 
     [HttpGet("statistics/{athleteId}")]
     public async Task<ActionResult<ActivityStatisticsDto>> GetStatistics(int athleteId, CancellationToken cancellationToken)
     {
-        var statistics = await _activityService.GetAthleteActivityStatisticsAsync(athleteId, cancellationToken);
-        return Ok(statistics);
+        var statistics = await this.activityService.GetAthleteActivityStatisticsAsync(athleteId, cancellationToken);
+        return this.Ok(statistics);
     }
 }
-

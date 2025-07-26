@@ -1,8 +1,8 @@
-﻿using AIAssistant.UI.API.Controllers;
-using AIAssistant.Application.DTOs;
+﻿using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Tests.Base;
 using AIAssistant.Tests.Helpers;
+using AIAssistant.UI.API.Controllers;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -12,15 +12,15 @@ namespace AIAssistant.Tests.Controllers;
 
 public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<WorkoutAnalysisController>
 {
-    private readonly Mock<IWorkoutAnalysisService> _mockWorkoutAnalysisService;
-    private readonly Mock<ILogger<WorkoutAnalysisController>> _mockLogger;
-    private readonly WorkoutAnalysisController _controller;
+    private readonly Mock<IWorkoutAnalysisService> mockWorkoutAnalysisService;
+    private readonly Mock<ILogger<WorkoutAnalysisController>> mockLogger;
+    private readonly WorkoutAnalysisController controller;
 
     public WorkoutAnalysisControllerTests()
     {
-        _mockWorkoutAnalysisService = MockSetup.CreateMockWorkoutAnalysisService();
-        _mockLogger = MockSetup.CreateMockLogger<WorkoutAnalysisController>();
-        _controller = new WorkoutAnalysisController(_mockWorkoutAnalysisService.Object, _mockLogger.Object);
+        this.mockWorkoutAnalysisService = MockSetup.CreateMockWorkoutAnalysisService();
+        this.mockLogger = MockSetup.CreateMockLogger<WorkoutAnalysisController>();
+        this.controller = new WorkoutAnalysisController(this.mockWorkoutAnalysisService.Object, this.mockLogger.Object);
     }
 
     #region AnalyzeHuggingFaceWorkouts Tests
@@ -32,12 +32,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var request = CreateValidWorkoutAnalysisRequest();
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.AnalyzeHuggingFaceWorkouts(request);
+        var result = await this.controller.AnalyzeHuggingFaceWorkouts(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -48,7 +48,7 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         Assert.NotEmpty(response.KeyInsights!);
         Assert.NotEmpty(response.Recommendations!);
 
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
             Times.Once);
     }
@@ -59,12 +59,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         // Arrange
         var request = CreateValidWorkoutAnalysisRequest();
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ThrowsAsync(new Exception("HuggingFace service unavailable"));
 
         // Act
-        var result = await _controller.AnalyzeHuggingFaceWorkouts(request);
+        var result = await this.controller.AnalyzeHuggingFaceWorkouts(request);
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
@@ -79,15 +79,15 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var request = MockSetup.CreateTestWorkoutAnalysisRequest("Performance");
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        await _controller.AnalyzeHuggingFaceWorkouts(request);
+        await this.controller.AnalyzeHuggingFaceWorkouts(request);
 
         // Assert
-        MockSetup.VerifyLoggerCalledWithInformation(_mockLogger, "Performance", Times.Once());
+        MockSetup.VerifyLoggerCalledWithInformation(this.mockLogger, "Performance", Times.Once());
     }
 
     #endregion
@@ -101,12 +101,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var request = CreateValidWorkoutAnalysisRequest();
         var expectedResponse = CreateMockWorkoutAnalysisResponse("GoogleGemini");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.AnalyzeGoogleGeminiWorkouts(request);
+        var result = await this.controller.AnalyzeGoogleGeminiWorkouts(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -115,7 +115,7 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         Assert.Equal(expectedResponse.Analysis, response.Analysis);
         Assert.Equal("GoogleGemini", response.Provider);
 
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
             Times.Once);
     }
@@ -126,12 +126,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         // Arrange
         var request = CreateValidWorkoutAnalysisRequest();
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ThrowsAsync(new Exception("GoogleGemini service unavailable"));
 
         // Act
-        var result = await _controller.AnalyzeGoogleGeminiWorkouts(request);
+        var result = await this.controller.AnalyzeGoogleGeminiWorkouts(request);
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
@@ -151,12 +151,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var timeFrame = "month";
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.AnalyzePerformanceTrends(athleteId, timeFrame);
+        var result = await this.controller.AnalyzePerformanceTrends(athleteId, timeFrame);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -164,7 +164,7 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
 
         Assert.Equal(expectedResponse.Analysis, response.Analysis);
 
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.Is<WorkoutAnalysisRequestDto>(req =>
                 req.AnalysisType == "Trends" &&
                 req.AdditionalContext!.ContainsKey("athleteId") &&
@@ -182,15 +182,15 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var athleteId = 123;
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.AnalyzePerformanceTrends(athleteId, timeFrame);
+        var result = await this.controller.AnalyzePerformanceTrends(athleteId, timeFrame);
 
         // Assert
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.Is<WorkoutAnalysisRequestDto>(req =>
                 req.AdditionalContext!.ContainsKey("timeFrame") &&
                 req.AdditionalContext["timeFrame"].Equals(timeFrame))),
@@ -204,15 +204,15 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var athleteId = 123;
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act - Not providing timeFrame parameter should default to "month"
-        var result = await _controller.AnalyzePerformanceTrends(athleteId);
+        var result = await this.controller.AnalyzePerformanceTrends(athleteId);
 
         // Assert
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.Is<WorkoutAnalysisRequestDto>(req =>
                 req.AdditionalContext!.ContainsKey("timeFrame") &&
                 req.AdditionalContext["timeFrame"].Equals("month"))),
@@ -225,12 +225,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         // Arrange
         var athleteId = 123;
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ThrowsAsync(new Exception("Performance trends service error"));
 
         // Act
-        var result = await _controller.AnalyzePerformanceTrends(athleteId);
+        var result = await this.controller.AnalyzePerformanceTrends(athleteId);
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
@@ -249,12 +249,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var athleteId = 456;
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.GetTrainingRecommendations(athleteId);
+        var result = await this.controller.GetTrainingRecommendations(athleteId);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -262,7 +262,7 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
 
         Assert.Equal(expectedResponse.Analysis, response.Analysis);
 
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.Is<WorkoutAnalysisRequestDto>(req =>
                 req.AnalysisType == "Recommendations" &&
                 req.AdditionalContext!.ContainsKey("focus") &&
@@ -276,12 +276,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         // Arrange
         var athleteId = 456;
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ThrowsAsync(new Exception("Training recommendations service error"));
 
         // Act
-        var result = await _controller.GetTrainingRecommendations(athleteId);
+        var result = await this.controller.GetTrainingRecommendations(athleteId);
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
@@ -300,12 +300,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var request = CreateValidHealthAnalysisRequest();
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.AnalyzeHealthMetrics(request);
+        var result = await this.controller.AnalyzeHealthMetrics(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -313,7 +313,7 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
 
         Assert.Equal(expectedResponse.Analysis, response.Analysis);
 
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.Is<WorkoutAnalysisRequestDto>(req =>
                 req.AnalysisType == "Health" &&
                 req.AdditionalContext!.ContainsKey("focus") &&
@@ -327,12 +327,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         // Arrange
         var request = CreateValidHealthAnalysisRequest();
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ThrowsAsync(new Exception("Health metrics service error"));
 
         // Act
-        var result = await _controller.AnalyzeHealthMetrics(request);
+        var result = await this.controller.AnalyzeHealthMetrics(request);
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
@@ -351,12 +351,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
         expectedResponse.Analysis = "Health check successful";
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.HealthCheck();
+        var result = await this.controller.HealthCheck();
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
@@ -376,12 +376,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
     public async Task HealthCheck_WhenServiceThrowsException_ReturnsUnhealthyStatus()
     {
         // Arrange
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ThrowsAsync(new Exception("Service is down"));
 
         // Act
-        var result = await _controller.HealthCheck();
+        var result = await this.controller.HealthCheck();
 
         // Assert
         var statusCodeResult = Assert.IsType<ObjectResult>(result);
@@ -402,15 +402,15 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         // Arrange
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        await _controller.HealthCheck();
+        await this.controller.HealthCheck();
 
         // Assert
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.Is<WorkoutAnalysisRequestDto>(req =>
                 req.AnalysisType == "Health Check" &&
                 req.RecentWorkouts.Count == 1 &&
@@ -435,12 +435,12 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         request.AnalysisType = analysisType;
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.AnalyzeHuggingFaceWorkouts(request);
+        var result = await this.controller.AnalyzeHuggingFaceWorkouts(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -448,7 +448,7 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
 
         Assert.Equal(expectedResponse.Analysis, response.Analysis);
 
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.Is<WorkoutAnalysisRequestDto>(req =>
                 req.AnalysisType == analysisType)),
             Times.Once);
@@ -462,25 +462,25 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var athleteId = 123;
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(CreateMockWorkoutAnalysisResponse("GoogleGemini"));
 
         // Act
-        await _controller.AnalyzeHuggingFaceWorkouts(request);
-        await _controller.AnalyzeGoogleGeminiWorkouts(request);
-        await _controller.GetTrainingRecommendations(athleteId);
+        await this.controller.AnalyzeHuggingFaceWorkouts(request);
+        await this.controller.AnalyzeGoogleGeminiWorkouts(request);
+        await this.controller.GetTrainingRecommendations(athleteId);
 
         // Assert
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
             Times.Exactly(2)); // Once for direct call, once for training recommendations
 
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()),
             Times.Once);
     }
@@ -493,14 +493,14 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
     public async Task AllEndpoints_WhenServiceReturnsNull_HandleGracefully()
     {
         // Arrange
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync((WorkoutAnalysisResponseDto?)null);
 
         var request = CreateValidWorkoutAnalysisRequest();
 
         // Act & Assert - Should not throw null reference exceptions
-        var result = await _controller.AnalyzeHuggingFaceWorkouts(request);
+        var result = await this.controller.AnalyzeHuggingFaceWorkouts(request);
 
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Null(okResult.Value);
@@ -513,23 +513,23 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
         var request = new HealthAnalysisRequestDto
         {
             AthleteId = 123,
-            RecentWorkouts = new List<WorkoutDataDto>() // Empty list
+            RecentWorkouts = new List<WorkoutDataDto>(), // Empty list
         };
 
         var expectedResponse = CreateMockWorkoutAnalysisResponse("HuggingFace");
 
-        _mockWorkoutAnalysisService
+        this.mockWorkoutAnalysisService
             .Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await _controller.AnalyzeHealthMetrics(request);
+        var result = await this.controller.AnalyzeHealthMetrics(request);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.NotNull(okResult.Value);
 
-        _mockWorkoutAnalysisService.Verify(
+        this.mockWorkoutAnalysisService.Verify(
             s => s.AnalyzeHuggingFaceWorkoutsAsync(It.Is<WorkoutAnalysisRequestDto>(req =>
                 req.RecentWorkouts.Count == 0)),
             Times.Once);
@@ -558,16 +558,16 @@ public class WorkoutAnalysisControllerTests : AIAssistantControllerTestBase<Work
             {
                 "Insight 1",
                 "Insight 2",
-                "Insight 3"
+                "Insight 3",
             },
             Recommendations = new List<string>
             {
                 "Recommendation 1",
-                "Recommendation 2"
+                "Recommendation 2",
             },
             GeneratedAt = DateTime.UtcNow,
             Provider = provider,
-            RequestId = Guid.NewGuid().ToString()
+            RequestId = Guid.NewGuid().ToString(),
         };
     }
 

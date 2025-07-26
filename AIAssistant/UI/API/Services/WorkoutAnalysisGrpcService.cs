@@ -1,4 +1,6 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.UI.API.Services;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Extensions;
 using Fitnessanalyticshub;
@@ -6,19 +8,17 @@ using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Extensions;
 using Grpc.Core;
 
-namespace AIAssistant.UI.API.Services;
-
 public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
 {
-    private readonly IWorkoutAnalysisService _workoutAnalysisService;
-    private readonly ILogger<WorkoutAnalysisGrpcService> _logger;
+    private readonly IWorkoutAnalysisService workoutAnalysisService;
+    private readonly ILogger<WorkoutAnalysisGrpcService> logger;
 
     public WorkoutAnalysisGrpcService(
         IWorkoutAnalysisService workoutAnalysisService,
         ILogger<WorkoutAnalysisGrpcService> logger)
     {
-        _workoutAnalysisService = workoutAnalysisService;
-        _logger = logger;
+        this.workoutAnalysisService = workoutAnalysisService;
+        this.logger = logger;
     }
 
     public override async Task<WorkoutAnalysisResponse> GetWorkoutAnalysis(
@@ -27,7 +27,8 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
     {
         try
         {
-            _logger.LogInformation("gRPC: Received workout analysis request for {WorkoutCount} workouts",
+            this.logger.LogInformation(
+                "gRPC: Received workout analysis request for {WorkoutCount} workouts",
                 request.RecentWorkouts?.Count ?? 0);
 
             // Konvertiere gRPC Request zu Application DTO
@@ -41,17 +42,17 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
 
             if (aiProvider == "googlegemini")
             {
-                response = await _workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(analysisRequest);
+                response = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(analysisRequest);
             }
             else
             {
-                response = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+                response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
             }
 
             // Konvertiere zurück zu gRPC Response
             var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
-                Analysis = response.Analysis ?? "",
+                Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 Source = response.Provider ?? $"{aiProvider}-AI",
             };
@@ -68,15 +69,16 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 grpcResponse.Recommendations.AddRange(response.Recommendations);
             }
 
-            _logger.LogInformation("gRPC: Successfully generated workout analysis response using {Provider}", aiProvider);
+            this.logger.LogInformation("gRPC: Successfully generated workout analysis response using {Provider}", aiProvider);
             return grpcResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "gRPC: Error generating workout analysis");
+            this.logger.LogError(ex, "gRPC: Error generating workout analysis");
 
             // gRPC Exception werfen
-            throw new RpcException(new Status(StatusCode.Internal,
+            throw new RpcException(new Status(
+                StatusCode.Internal,
                 $"Failed to generate workout analysis: {ex.Message}"));
         }
     }
@@ -88,43 +90,50 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
     {
         try
         {
-            _logger.LogInformation("gRPC: Received performance trends request for athlete: {AthleteId}",
+            this.logger.LogInformation(
+                "gRPC: Received performance trends request for athlete: {AthleteId}",
                 request.AthleteId);
 
             // Konvertiere zu WorkoutAnalysisRequest
             var analysisRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Trends",
-                RecentWorkouts = GetDemoWorkouts(request.AthleteId, request.TimeFrame),
-                AthleteProfile = GetDemoAthleteProfile(request.AthleteId),
+                RecentWorkouts = this.GetDemoWorkouts(request.AthleteId, request.TimeFrame),
+                AthleteProfile = this.GetDemoAthleteProfile(request.AthleteId),
                 AdditionalContext = new Dictionary<string, object>
                 {
                     { "timeFrame", request.TimeFrame },
-                    { "athleteId", request.AthleteId }
-                }
+                    { "athleteId", request.AthleteId },
+                },
             };
 
-            var response = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+            var response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
 
             var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
-                Analysis = response.Analysis ?? "",
+                Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 Source = response.Provider ?? "HuggingFace-AI",
-                AnalysisType = "PerformanceTrends"
+                AnalysisType = "PerformanceTrends",
             };
 
             if (response.KeyInsights != null)
+            {
                 grpcResponse.KeyInsights.AddRange(response.KeyInsights);
+            }
+
             if (response.Recommendations != null)
+            {
                 grpcResponse.Recommendations.AddRange(response.Recommendations);
+            }
 
             return grpcResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "gRPC: Error getting performance trends");
-            throw new RpcException(new Status(StatusCode.Internal,
+            this.logger.LogError(ex, "gRPC: Error getting performance trends");
+            throw new RpcException(new Status(
+                StatusCode.Internal,
                 $"Failed to get performance trends: {ex.Message}"));
         }
     }
@@ -136,42 +145,49 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
     {
         try
         {
-            _logger.LogInformation("gRPC: Received training recommendations request for athlete: {AthleteId}",
+            this.logger.LogInformation(
+                "gRPC: Received training recommendations request for athlete: {AthleteId}",
                 request.AthleteId);
 
             var analysisRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Recommendations",
-                RecentWorkouts = GetDemoWorkouts(request.AthleteId, "week"),
-                AthleteProfile = GetDemoAthleteProfile(request.AthleteId),
+                RecentWorkouts = this.GetDemoWorkouts(request.AthleteId, "week"),
+                AthleteProfile = this.GetDemoAthleteProfile(request.AthleteId),
                 AdditionalContext = new Dictionary<string, object>
                 {
                     { "focus", "training_optimization" },
-                    { "athleteId", request.AthleteId }
-                }
+                    { "athleteId", request.AthleteId },
+                },
             };
 
-            var response = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+            var response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
 
             var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
-                Analysis = response.Analysis ?? "",
+                Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 Source = response.Provider ?? "HuggingFace-AI",
-                AnalysisType = "TrainingRecommendations"
+                AnalysisType = "TrainingRecommendations",
             };
 
             if (response.KeyInsights != null)
+            {
                 grpcResponse.KeyInsights.AddRange(response.KeyInsights);
+            }
+
             if (response.Recommendations != null)
+            {
                 grpcResponse.Recommendations.AddRange(response.Recommendations);
+            }
 
             return grpcResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "gRPC: Error getting training recommendations");
-            throw new RpcException(new Status(StatusCode.Internal,
+            this.logger.LogError(ex, "gRPC: Error getting training recommendations");
+            throw new RpcException(new Status(
+                StatusCode.Internal,
                 $"Failed to get training recommendations: {ex.Message}"));
         }
     }
@@ -183,7 +199,8 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
     {
         try
         {
-            _logger.LogInformation("gRPC: Received health metrics analysis request for athlete: {AthleteId}",
+            this.logger.LogInformation(
+                "gRPC: Received health metrics analysis request for athlete: {AthleteId}",
                 request.AthleteId);
 
             var analysisRequest = new WorkoutAnalysisRequestDto
@@ -192,36 +209,42 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 RecentWorkouts = request.RecentWorkouts
                     .Select(w => w.ToWorkoutDataDto())
                     .ToList(),
-                AthleteProfile = GetDemoAthleteProfile(request.AthleteId),
+                AthleteProfile = this.GetDemoAthleteProfile(request.AthleteId),
                 AdditionalContext = new Dictionary<string, object>
                 {
                     { "focus", "injury_prevention" },
                     { "health_analysis", true },
-                    { "athleteId", request.AthleteId }
-                }
+                    { "athleteId", request.AthleteId },
+                },
             };
 
-            var response = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+            var response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
 
             var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
-                Analysis = response.Analysis ?? "",
+                Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 Source = response.Provider ?? "HuggingFace-AI",
-                AnalysisType = "HealthMetrics"
+                AnalysisType = "HealthMetrics",
             };
 
             if (response.KeyInsights != null)
+            {
                 grpcResponse.KeyInsights.AddRange(response.KeyInsights);
+            }
+
             if (response.Recommendations != null)
+            {
                 grpcResponse.Recommendations.AddRange(response.Recommendations);
+            }
 
             return grpcResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "gRPC: Error analyzing health metrics");
-            throw new RpcException(new Status(StatusCode.Internal,
+            this.logger.LogError(ex, "gRPC: Error analyzing health metrics");
+            throw new RpcException(new Status(
+                StatusCode.Internal,
                 $"Failed to analyze health metrics: {ex.Message}"));
         }
     }
@@ -233,33 +256,40 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
     {
         try
         {
-            _logger.LogInformation("gRPC: Received GoogleGemini workout analysis request for {WorkoutCount} workouts",
+            this.logger.LogInformation(
+                "gRPC: Received GoogleGemini workout analysis request for {WorkoutCount} workouts",
                 request.RecentWorkouts?.Count ?? 0);
 
             var analysisRequest = request.ToWorkoutAnalysisRequestDto();
 
             // Zwinge GoogleGemini Service
-            var response = await _workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(analysisRequest);
+            var response = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(analysisRequest);
 
             var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
-                Analysis = response.Analysis ?? "",
+                Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                 Source = response.Provider ?? "GoogleGemini-AI",
             };
 
             if (response.KeyInsights != null)
+            {
                 grpcResponse.KeyInsights.AddRange(response.KeyInsights);
-            if (response.Recommendations != null)
-                grpcResponse.Recommendations.AddRange(response.Recommendations);
+            }
 
-            _logger.LogInformation("gRPC: Successfully generated GoogleGemini workout analysis response");
+            if (response.Recommendations != null)
+            {
+                grpcResponse.Recommendations.AddRange(response.Recommendations);
+            }
+
+            this.logger.LogInformation("gRPC: Successfully generated GoogleGemini workout analysis response");
             return grpcResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "gRPC: Error generating GoogleGemini workout analysis");
-            throw new RpcException(new Status(StatusCode.Internal,
+            this.logger.LogError(ex, "gRPC: Error generating GoogleGemini workout analysis");
+            throw new RpcException(new Status(
+                StatusCode.Internal,
                 $"Failed to generate GoogleGemini workout analysis: {ex.Message}"));
         }
     }
@@ -283,34 +313,34 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                         ActivityType = "Run",
                         Distance = 5.0,
                         Duration = 1800,
-                        Calories = 350
-                    }
+                        Calories = 350,
+                    },
                 },
                 AthleteProfile = new AthleteProfileDto
                 {
                     Name = "Test User",
                     FitnessLevel = "Intermediate",
-                    PrimaryGoal = "Health Check"
-                }
+                    PrimaryGoal = "Health Check",
+                },
             };
 
-            var result = await _workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(testRequest);
+            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(testRequest);
 
             return new HealthCheckResponse
             {
                 IsHealthy = !string.IsNullOrEmpty(result.Analysis),
                 Message = "Workout analysis service is responding",
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
             };
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "gRPC: Health check failed");
+            this.logger.LogError(ex, "gRPC: Health check failed");
             return new HealthCheckResponse
             {
                 IsHealthy = false,
                 Message = $"Health check failed: {ex.Message}",
-                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                Timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
             };
         }
     }
@@ -326,7 +356,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 Distance = 5.2,
                 Duration = 1800,
                 Calories = 350,
-                MetricsData = new Dictionary<string, double> { { "heartRate", 145 } }
+                MetricsData = new Dictionary<string, double> { { "heartRate", 145 } },
             },
             new WorkoutDataDto
             {
@@ -335,7 +365,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 Distance = 24.8,
                 Duration = 4500,
                 Calories = 890,
-                MetricsData = new Dictionary<string, double> { { "heartRate", 132 } }
+                MetricsData = new Dictionary<string, double> { { "heartRate", 132 } },
             },
             new WorkoutDataDto
             {
@@ -344,8 +374,8 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 Distance = 3.1,
                 Duration = 1080,
                 Calories = 245,
-                MetricsData = new Dictionary<string, double> { { "heartRate", 128 } }
-            }
+                MetricsData = new Dictionary<string, double> { { "heartRate", 128 } },
+            },
         };
     }
 
@@ -360,8 +390,8 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
             Preferences = new Dictionary<string, object>
             {
                 { "preferredActivities", new[] { "Run", "Ride" } },
-                { "trainingDays", 4 }
-            }
+                { "trainingDays", 4 },
+            },
         };
     }
 }

@@ -28,7 +28,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Fitness Analytics Hub API",
         Version = "v1",
-        Description = "Backend API für die FitnessAnalyticsHub-Anwendung"
+        Description = "Backend API für die FitnessAnalyticsHub-Anwendung",
     });
 });
 
@@ -38,11 +38,12 @@ builder.Services.AddApplication();
 // Register infrastructure services
 builder.Services.AddInfrastructure(builder.Configuration);
 
-//Add CORS for development
+// Add CORS for development
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-       builder => builder
+    options.AddPolicy(
+        "AllowAll",
+        builder => builder
             .AllowAnyOrigin()
             .AllowAnyMethod()
             .AllowAnyHeader());
@@ -120,14 +121,14 @@ app.UseAuthorization();
 // HealthChecks Endpoints
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
-    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
 });
 
 // Gruppierte HealthChecks nach Tags
 app.MapHealthChecks("/health/infrastructure", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("infrastructure"),
-    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
 });
 
 // Health UI Dashboard
