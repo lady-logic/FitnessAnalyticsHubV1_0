@@ -8,10 +8,10 @@
         public void AthleteNotFoundException_ShouldSetCorrectMessage_WhenCreatedWithAthleteId()
         {
             // Arrange
-            var athleteId = 123;
+            int athleteId = 123;
 
             // Act
-            var exception = new AthleteNotFoundException(athleteId);
+            AthleteNotFoundException exception = new AthleteNotFoundException(athleteId);
 
             // Assert
             Assert.Equal("Athlete with ID 123 not found", exception.Message);
@@ -22,7 +22,7 @@
         public void AthleteNotFoundException_ShouldInheritFromException()
         {
             // Arrange & Act
-            var exception = new AthleteNotFoundException(1);
+            AthleteNotFoundException exception = new AthleteNotFoundException(1);
 
             // Assert
             Assert.IsAssignableFrom<Exception>(exception);
@@ -32,10 +32,10 @@
         public void AthleteNotFoundException_ShouldHaveAthleteIdProperty()
         {
             // Arrange
-            var athleteId = 456;
+            int athleteId = 456;
 
             // Act
-            var exception = new AthleteNotFoundException(athleteId);
+            AthleteNotFoundException exception = new AthleteNotFoundException(athleteId);
 
             // Assert
             Assert.Equal(athleteId, exception.AthleteId);
@@ -48,7 +48,7 @@
         public void AthleteNotFoundException_ShouldWorkWithDifferentAthleteIds(int athleteId)
         {
             // Act
-            var exception = new AthleteNotFoundException(athleteId);
+            AthleteNotFoundException exception = new AthleteNotFoundException(athleteId);
 
             // Assert
             Assert.Equal(athleteId, exception.AthleteId);

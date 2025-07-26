@@ -29,13 +29,13 @@ public class MotivationGrpcService : MotivationService.MotivationServiceBase
                 request.AthleteProfile?.Name ?? "Unknown");
 
             // Konvertiere gRPC Request zu Application DTO
-            var motivationRequest = request.ToMotivationRequestDto();
+            global::AIAssistant.Applications.DTOs.MotivationRequestDto motivationRequest = request.ToMotivationRequestDto();
 
             // Rufe den HuggingFace Service auf!
-            var response = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(motivationRequest);
+            global::AIAssistant.Application.DTOs.MotivationResponseDto response = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(motivationRequest, context.CancellationToken);
 
             // Konvertiere zurück zu gRPC Response
-            var grpcResponse = new MotivationResponse
+            MotivationResponse grpcResponse = new MotivationResponse
             {
                 MotivationalMessage = response.MotivationalMessage ?? string.Empty,
                 Quote = response.Quote ?? string.Empty,

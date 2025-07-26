@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Entity Framework -->
+    <PackageVersion Include="AsyncFixer" Version="1.6.0" />
     <PackageVersion Include="Google.Protobuf" Version="3.31.1" />
     <PackageVersion Include="Grpc.AspNetCore" Version="2.71.0" />
     <PackageVersion Include="Grpc.Net.Client" Version="2.71.0" />
@@ -42,7 +43,9 @@
     <PackageVersion Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="9.0.0" />
     <!-- Swagger -->
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-	  <!-- StyleCop -->
-	<PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
+    <!-- StyleCop -->
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.1.118" />
+	  <!-- Async Fixer -->
+	<PackageVersion Include="AsyncFixer" Version="1.6.0" />
   </ItemGroup>
 </Project>

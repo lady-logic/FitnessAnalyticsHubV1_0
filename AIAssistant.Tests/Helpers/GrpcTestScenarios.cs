@@ -52,7 +52,7 @@
         {
             public static global::Fitnessanalyticshub.WorkoutAnalysisRequest CreateAnalysisRequest()
             {
-                var request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
+                Fitnessanalyticshub.WorkoutAnalysisRequest request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
                 {
                     PreferredAiProvider = "googlegemini",
                     AnalysisType = "Performance",

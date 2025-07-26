@@ -43,11 +43,11 @@
         public async Task InvokeAsync_WithActivityNotFoundException_ShouldReturn404()
         {
             // Arrange
-            var activityId = 123;
-            var exception = new ActivityNotFoundException(activityId);
+            int activityId = 123;
+            ActivityNotFoundException exception = new ActivityNotFoundException(activityId);
 
             RequestDelegate next = (HttpContext context) => throw exception;
-            var middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
+            GlobalExceptionHandlingMiddleware middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
 
             // Act
             await middleware.InvokeAsync(this.httpContext);
@@ -57,12 +57,12 @@
             Assert.Equal("application/json", this.httpContext.Response.ContentType);
 
             this.httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
-            var responseBody = await new StreamReader(this.httpContext.Response.Body).ReadToEndAsync();
+            string responseBody = await new StreamReader(this.httpContext.Response.Body).ReadToEndAsync();
 
             Assert.False(string.IsNullOrEmpty(responseBody));
 
             // Prüfen ob es gültiges JSON ist
-            var errorResponse = JsonSerializer.Deserialize<JsonElement>(responseBody);
+            JsonElement errorResponse = JsonSerializer.Deserialize<JsonElement>(responseBody);
             Assert.True(errorResponse.ValueKind == JsonValueKind.Object);
         }
 
@@ -70,11 +70,11 @@
         public async Task InvokeAsync_WithAthleteNotFoundException_ShouldReturn404()
         {
             // Arrange
-            var athleteId = 456;
-            var exception = new AthleteNotFoundException(athleteId);
+            int athleteId = 456;
+            AthleteNotFoundException exception = new AthleteNotFoundException(athleteId);
 
             RequestDelegate next = (HttpContext context) => throw exception;
-            var middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
+            GlobalExceptionHandlingMiddleware middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
 
             // Act
             await middleware.InvokeAsync(this.httpContext);
@@ -87,10 +87,10 @@
         public async Task InvokeAsync_WithInvalidStravaTokenException_ShouldReturn401()
         {
             // Arrange
-            var exception = new InvalidStravaTokenException();
+            InvalidStravaTokenException exception = new InvalidStravaTokenException();
 
             RequestDelegate next = (HttpContext context) => throw exception;
-            var middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
+            GlobalExceptionHandlingMiddleware middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
 
             // Act
             await middleware.InvokeAsync(this.httpContext);
@@ -103,10 +103,10 @@
         public async Task InvokeAsync_WithStravaConfigurationException_ShouldReturn500()
         {
             // Arrange
-            var exception = new StravaConfigurationException("Missing config");
+            StravaConfigurationException exception = new StravaConfigurationException("Missing config");
 
             RequestDelegate next = (HttpContext context) => throw exception;
-            var middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
+            GlobalExceptionHandlingMiddleware middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
 
             // Act
             await middleware.InvokeAsync(this.httpContext);
@@ -119,10 +119,10 @@
         public async Task InvokeAsync_WithGenericException_ShouldReturn500()
         {
             // Arrange
-            var exception = new Exception("Generic error");
+            Exception exception = new Exception("Generic error");
 
             RequestDelegate next = (HttpContext context) => throw exception;
-            var middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
+            GlobalExceptionHandlingMiddleware middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
 
             // Act
             await middleware.InvokeAsync(this.httpContext);
@@ -135,13 +135,13 @@
         public async Task InvokeAsync_WithNoException_ShouldCallNext()
         {
             // Arrange
-            var nextCalled = false;
+            bool nextCalled = false;
             RequestDelegate next = (HttpContext context) =>
             {
                 nextCalled = true;
                 return Task.CompletedTask;
             };
-            var middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
+            GlobalExceptionHandlingMiddleware middleware = new GlobalExceptionHandlingMiddleware(next, this.mockLogger.Object);
 
             // Act
             await middleware.InvokeAsync(this.httpContext);

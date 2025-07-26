@@ -53,7 +53,7 @@
         public async Task GetAuthorizationUrlAsync_ShouldReturnCorrectUrl()
         {
             // Act
-            var result = await this.stravaService.GetAuthorizationUrlAsync();
+            string result = await this.stravaService.GetAuthorizationUrlAsync(CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -72,7 +72,7 @@
         public async Task ExchangeCodeForTokenAsync_WithValidCode_ShouldReturnTokenInfo()
         {
             // Arrange
-            var authCode = "test_auth_code";
+            string authCode = "test_auth_code";
             var tokenResponse = new
             {
                 token_type = "Bearer",
@@ -82,8 +82,8 @@
                 refresh_token = "test_refresh_token",
             };
 
-            var jsonResponse = JsonSerializer.Serialize(tokenResponse);
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            string jsonResponse = JsonSerializer.Serialize(tokenResponse);
+            HttpResponseMessage httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
             };
@@ -96,7 +96,7 @@
                 .ReturnsAsync(httpResponse);
 
             // Act
-            var result = await this.stravaService.ExchangeCodeForTokenAsync(authCode);
+            Domain.Models.TokenInfo result = await this.stravaService.ExchangeCodeForTokenAsync(authCode, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -108,11 +108,11 @@
         }
 
         [Fact]
-        public async Task ExchangeCodeForTokenAsync_WithHttpError_ShouldThrowException()
+        public Task ExchangeCodeForTokenAsync_WithHttpError_ShouldThrowException()
         {
             // Arrange
-            var authCode = "invalid_code";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
+            string authCode = "invalid_code";
+            HttpResponseMessage httpResponse = new HttpResponseMessage(HttpStatusCode.BadRequest);
 
             this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
@@ -122,8 +122,8 @@
                 .ReturnsAsync(httpResponse);
 
             // Act & Assert
-            await Assert.ThrowsAsync<HttpRequestException>(
-                () => this.stravaService.ExchangeCodeForTokenAsync(authCode));
+            return Assert.ThrowsAsync<HttpRequestException>(
+                () => this.stravaService.ExchangeCodeForTokenAsync(authCode, CancellationToken.None));
         }
 
         #endregion
@@ -134,7 +134,7 @@
         public async Task GetAthleteProfileAsync_WithValidToken_ShouldReturnAthlete()
         {
             // Arrange
-            var accessToken = "valid_token";
+            string accessToken = "valid_token";
             var athleteResponse = new
             {
                 id = 12345L,
@@ -148,8 +148,8 @@
                 email = "test@example.com",
             };
 
-            var jsonResponse = JsonSerializer.Serialize(athleteResponse);
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            string jsonResponse = JsonSerializer.Serialize(athleteResponse);
+            HttpResponseMessage httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
             };
@@ -164,7 +164,7 @@
                 .ReturnsAsync(httpResponse);
 
             // Act
-            var result = await this.stravaService.GetAthleteProfileAsync(accessToken);
+            Domain.Entities.Athlete result = await this.stravaService.GetAthleteProfileAsync(accessToken, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -181,8 +181,8 @@
         public async Task GetAthleteProfileAsync_WithNullToken_ShouldThrowInvalidStravaTokenException()
         {
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
-                () => this.stravaService.GetAthleteProfileAsync(null));
+            InvalidStravaTokenException exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
+                () => this.stravaService.GetAthleteProfileAsync(null, CancellationToken.None));
 
             Assert.Equal("Access token cannot be null or empty", exception.Message);
         }
@@ -191,8 +191,8 @@
         public async Task GetAthleteProfileAsync_WithEmptyToken_ShouldThrowInvalidStravaTokenException()
         {
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
-                () => this.stravaService.GetAthleteProfileAsync("   "));
+            InvalidStravaTokenException exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
+                () => this.stravaService.GetAthleteProfileAsync("   ", CancellationToken.None));
 
             Assert.Equal("Access token cannot be null or empty", exception.Message);
         }
@@ -205,7 +205,7 @@
         public async Task GetActivitiesAsync_WithValidToken_ShouldReturnActivities()
         {
             // Arrange
-            var accessToken = "valid_token";
+            string accessToken = "valid_token";
             var activitiesResponse = new[]
             {
                 new
@@ -250,8 +250,8 @@
                 },
             };
 
-            var jsonResponse = JsonSerializer.Serialize(activitiesResponse);
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            string jsonResponse = JsonSerializer.Serialize(activitiesResponse);
+            HttpResponseMessage httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),
             };
@@ -266,13 +266,13 @@
                 .ReturnsAsync(httpResponse);
 
             // Act
-            var result = await this.stravaService.GetActivitiesAsync(accessToken);
+            IEnumerable<Domain.Entities.Activity> result = await this.stravaService.GetActivitiesAsync(accessToken, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(2, result.Count());
 
-            var firstActivity = result.First();
+            Domain.Entities.Activity firstActivity = result.First();
             Assert.Equal("111", firstActivity.StravaId);
             Assert.Equal("Morning Run", firstActivity.Name);
             Assert.Equal(5000, firstActivity.Distance);
@@ -283,8 +283,8 @@
         public async Task GetActivitiesAsync_WithUnauthorizedResponse_ShouldThrowInvalidStravaTokenException()
         {
             // Arrange
-            var accessToken = "invalid_token";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.Unauthorized);
+            string accessToken = "invalid_token";
+            HttpResponseMessage httpResponse = new HttpResponseMessage(HttpStatusCode.Unauthorized);
 
             this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
@@ -294,8 +294,8 @@
                 .ReturnsAsync(httpResponse);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
-                () => this.stravaService.GetActivitiesAsync(accessToken));
+            InvalidStravaTokenException exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
+                () => this.stravaService.GetActivitiesAsync(accessToken, CancellationToken.None));
 
             Assert.Equal("Access token is invalid or expired", exception.Message);
         }
@@ -304,8 +304,8 @@
         public async Task GetActivitiesAsync_WithForbiddenResponse_ShouldThrowStravaApiException()
         {
             // Arrange
-            var accessToken = "valid_token";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.Forbidden);
+            string accessToken = "valid_token";
+            HttpResponseMessage httpResponse = new HttpResponseMessage(HttpStatusCode.Forbidden);
 
             this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
@@ -315,8 +315,8 @@
                 .ReturnsAsync(httpResponse);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<StravaApiException>(
-                () => this.stravaService.GetActivitiesAsync(accessToken));
+            StravaApiException exception = await Assert.ThrowsAsync<StravaApiException>(
+                () => this.stravaService.GetActivitiesAsync(accessToken, CancellationToken.None));
 
             Assert.Equal("Access forbidden - insufficient permissions", exception.Message);
             Assert.Equal(403, exception.StatusCode);
@@ -326,8 +326,8 @@
         public async Task GetActivitiesAsync_WithRateLimitResponse_ShouldThrowStravaApiException()
         {
             // Arrange
-            var accessToken = "valid_token";
-            var httpResponse = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            string accessToken = "valid_token";
+            HttpResponseMessage httpResponse = new HttpResponseMessage(HttpStatusCode.TooManyRequests);
 
             this.mockHttpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>(
@@ -337,8 +337,8 @@
                 .ReturnsAsync(httpResponse);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<StravaApiException>(
-                () => this.stravaService.GetActivitiesAsync(accessToken));
+            StravaApiException exception = await Assert.ThrowsAsync<StravaApiException>(
+                () => this.stravaService.GetActivitiesAsync(accessToken, CancellationToken.None));
 
             Assert.Equal("Rate limit exceeded - too many requests", exception.Message);
             Assert.Equal(429, exception.StatusCode);
@@ -348,8 +348,8 @@
         public async Task GetActivitiesAsync_WithNullToken_ShouldThrowInvalidStravaTokenException()
         {
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
-                () => this.stravaService.GetActivitiesAsync(null));
+            InvalidStravaTokenException exception = await Assert.ThrowsAsync<InvalidStravaTokenException>(
+                () => this.stravaService.GetActivitiesAsync(null, CancellationToken.None));
 
             Assert.Equal("Access token cannot be null or empty", exception.Message);
         }
@@ -362,20 +362,20 @@
         public async Task ImportMyActivitiesAsync_WithMissingConfiguration_ShouldThrowStravaConfigurationException()
         {
             // Arrange
-            var invalidConfig = new StravaConfiguration
+            StravaConfiguration invalidConfig = new StravaConfiguration
             {
                 ClientId = string.Empty, // Leer
                 ClientSecret = "test_secret",
             };
 
-            var mockInvalidOptions = new Mock<IOptions<StravaConfiguration>>();
+            Mock<IOptions<StravaConfiguration>> mockInvalidOptions = new Mock<IOptions<StravaConfiguration>>();
             mockInvalidOptions.Setup(x => x.Value).Returns(invalidConfig);
 
-            var invalidStravaService = new StravaService(this.mockHttpClientFactory.Object, mockInvalidOptions.Object);
+            StravaService invalidStravaService = new StravaService(this.mockHttpClientFactory.Object, mockInvalidOptions.Object);
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<StravaConfigurationException>(
-                () => invalidStravaService.ImportMyActivitiesAsync());
+            StravaConfigurationException exception = await Assert.ThrowsAsync<StravaConfigurationException>(
+                () => invalidStravaService.ImportMyActivitiesAsync(CancellationToken.None));
 
             Assert.Contains("ClientId and ClientSecret must be configured", exception.Message);
         }

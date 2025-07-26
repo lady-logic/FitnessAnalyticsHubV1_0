@@ -16,9 +16,9 @@ public class HuggingFaceTestController : ControllerBase
     }
 
     [HttpGet("test-token")]
-    public async Task<ActionResult> TestToken()
+    public async Task<ActionResult> TestToken(CancellationToken cancellationToken)
     {
-        var apiKey = this.configuration["HuggingFace:ApiKey"];
+        string? apiKey = this.configuration["HuggingFace:ApiKey"];
 
         if (string.IsNullOrEmpty(apiKey))
         {
@@ -27,22 +27,22 @@ public class HuggingFaceTestController : ControllerBase
 
         try
         {
-            using var httpClient = new HttpClient();
+            using HttpClient httpClient = new HttpClient();
 
             // Test 1: Teste User Info (Token validation)
             httpClient.DefaultRequestHeaders.Clear();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
             this.logger.LogInformation("Testing HuggingFace token with whoami endpoint...");
-            var whoamiResponse = await httpClient.GetAsync("https://huggingface.co/api/whoami");
-            var whoamiContent = await whoamiResponse.Content.ReadAsStringAsync();
+            HttpResponseMessage whoamiResponse = await httpClient.GetAsync("https://huggingface.co/api/whoami", cancellationToken);
+            string whoamiContent = await whoamiResponse.Content.ReadAsStringAsync(cancellationToken);
 
             this.logger.LogInformation("Whoami response: {Response}", whoamiContent);
 
             // Test 2: Liste verfügbare Models
             this.logger.LogInformation("Testing model list endpoint...");
-            var modelsResponse = await httpClient.GetAsync("https://huggingface.co/api/models?search=gpt2&limit=5");
-            var modelsContent = await modelsResponse.Content.ReadAsStringAsync();
+            HttpResponseMessage modelsResponse = await httpClient.GetAsync("https://huggingface.co/api/models?search=gpt2&limit=5", cancellationToken);
+            string modelsContent = await modelsResponse.Content.ReadAsStringAsync(cancellationToken);
 
             return this.Ok(new
             {
@@ -69,28 +69,28 @@ public class HuggingFaceTestController : ControllerBase
     }
 
     [HttpGet("test-simple-model")]
-    public async Task<ActionResult> TestSimpleModel()
+    public async Task<ActionResult> TestSimpleModel(CancellationToken cancellationToken)
     {
-        var apiKey = this.configuration["HuggingFace:ApiKey"];
+        string? apiKey = this.configuration["HuggingFace:ApiKey"];
 
         try
         {
-            using var httpClient = new HttpClient();
+            using HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
             // Test mit dem einfachsten verfügbaren Model
-            var testUrl = "https://api-inference.huggingface.co/models/distilbert-base-uncased";
+            string testUrl = "https://api-inference.huggingface.co/models/distilbert-base-uncased";
             var testPayload = new
             {
                 inputs = "Hello world",
             };
 
-            var json = System.Text.Json.JsonSerializer.Serialize(testPayload);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            string json = System.Text.Json.JsonSerializer.Serialize(testPayload);
+            StringContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
             this.logger.LogInformation("Testing with DistilBERT model...");
-            var response = await httpClient.PostAsync(testUrl, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await httpClient.PostAsync(testUrl, content, cancellationToken);
+            string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
             return this.Ok(new
             {
@@ -108,17 +108,17 @@ public class HuggingFaceTestController : ControllerBase
     }
 
     [HttpGet("test-text-generation")]
-    public async Task<ActionResult> TestTextGeneration()
+    public async Task<ActionResult> TestTextGeneration(CancellationToken cancellationToken)
     {
-        var apiKey = this.configuration["HuggingFace:ApiKey"];
+        string? apiKey = this.configuration["HuggingFace:ApiKey"];
 
         try
         {
-            using var httpClient = new HttpClient();
+            using HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
             // Teste verschiedene Text-Generation Models
-            var modelsToTest = new[]
+            string[] modelsToTest = new[]
             {
                 "gpt2",
                 "distilgpt2",
@@ -126,19 +126,19 @@ public class HuggingFaceTestController : ControllerBase
                 "EleutherAI/gpt-neo-125M",
             };
 
-            var results = new List<object>();
+            List<object> results = new List<object>();
 
-            foreach (var model in modelsToTest)
+            foreach (string? model in modelsToTest)
             {
                 try
                 {
-                    var url = $"https://api-inference.huggingface.co/models/{model}";
+                    string url = $"https://api-inference.huggingface.co/models/{model}";
                     var payload = new { inputs = "Hello, I am" };
-                    var json = System.Text.Json.JsonSerializer.Serialize(payload);
-                    var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                    string json = System.Text.Json.JsonSerializer.Serialize(payload);
+                    StringContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-                    var response = await httpClient.PostAsync(url, content);
-                    var responseContent = await response.Content.ReadAsStringAsync();
+                    HttpResponseMessage response = await httpClient.PostAsync(url, content, cancellationToken);
+                    string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                     results.Add(new
                     {

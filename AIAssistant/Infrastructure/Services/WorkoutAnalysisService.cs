@@ -1,8 +1,8 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Infrastructure.Services;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
-
-namespace AIAssistant.Infrastructure.Services;
 
 public class WorkoutAnalysisService : IWorkoutAnalysisService
 {
@@ -24,31 +24,33 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
     }
 
     // Generic method
-    public async Task<WorkoutAnalysisResponseDto> AnalyzeWorkoutsAsync(
-        WorkoutAnalysisRequestDto request)
+    public Task<WorkoutAnalysisResponseDto> AnalyzeWorkoutsAsync(
+        WorkoutAnalysisRequestDto request,
+        CancellationToken cancellationToken)
     {
-        var defaultProvider = this.configuration["AI:DefaultProvider"] ?? "GoogleGemini";
-        return await this.AnalyzeWorkoutsWithProviderAsync(request, defaultProvider);
+        string defaultProvider = this.configuration["AI:DefaultProvider"] ?? "GoogleGemini";
+        return this.AnalyzeWorkoutsWithProviderAsync(request, defaultProvider, cancellationToken);
     }
 
     // HuggingFace specific method
-    public async Task<WorkoutAnalysisResponseDto> AnalyzeHuggingFaceWorkoutsAsync(
-        WorkoutAnalysisRequestDto request)
+    public Task<WorkoutAnalysisResponseDto> AnalyzeHuggingFaceWorkoutsAsync(
+        WorkoutAnalysisRequestDto request, CancellationToken cancellationToken)
     {
-        return await this.AnalyzeWorkoutsWithProviderAsync(request, "HuggingFace");
+        return this.AnalyzeWorkoutsWithProviderAsync(request, "HuggingFace", cancellationToken);
     }
 
     // Google Gemini specific method
-    public async Task<WorkoutAnalysisResponseDto> AnalyzeGoogleGeminiWorkoutsAsync(
-        WorkoutAnalysisRequestDto request)
+    public Task<WorkoutAnalysisResponseDto> AnalyzeGoogleGeminiWorkoutsAsync(
+        WorkoutAnalysisRequestDto request, CancellationToken cancellationToken)
     {
-        return await this.AnalyzeWorkoutsWithProviderAsync(request, "GoogleGemini");
+        return this.AnalyzeWorkoutsWithProviderAsync(request, "GoogleGemini", cancellationToken);
     }
 
     // Core analysis method with provider selection
     private async Task<WorkoutAnalysisResponseDto> AnalyzeWorkoutsWithProviderAsync(
         WorkoutAnalysisRequestDto request,
-        string provider)
+        string provider,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -56,7 +58,7 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
                 "Analyzing workouts with {Provider} for {WorkoutCount} recent workouts, analysis type: {AnalysisType}",
                 provider, request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
-            var prompt = this.BuildAnalysisPrompt(request);
+            string prompt = this.BuildAnalysisPrompt(request);
 
             // Select the appropriate AI service
             IAIPromptService aiService = provider.ToLower() switch
@@ -69,13 +71,13 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
             // Call the appropriate AI method based on analysis type
             string aiResponse = request.AnalysisType?.ToLower() switch
             {
-                "health" => await aiService.GetHealthAnalysisAsync(prompt),
-                "performance" => await aiService.GetFitnessAnalysisAsync(prompt),
-                "trends" => await aiService.GetFitnessAnalysisAsync(prompt),
-                _ => await aiService.GetFitnessAnalysisAsync(prompt)
+                "health" => await aiService.GetHealthAnalysisAsync(prompt, cancellationToken),
+                "performance" => await aiService.GetFitnessAnalysisAsync(prompt, cancellationToken),
+                "trends" => await aiService.GetFitnessAnalysisAsync(prompt, cancellationToken),
+                _ => await aiService.GetFitnessAnalysisAsync(prompt, cancellationToken)
             };
 
-            var result = this.ParseAnalysisResponse(aiResponse, request.AnalysisType);
+            WorkoutAnalysisResponseDto result = this.ParseAnalysisResponse(aiResponse, request.AnalysisType);
             result.Provider = provider; // Add provider info to response
 
             this.logger.LogInformation(
@@ -100,15 +102,15 @@ public class WorkoutAnalysisService : IWorkoutAnalysisService
             return "No recent workout data available for analysis. Please provide workout data to generate insights.";
         }
 
-        var workoutsData = string.Join("\n", request.RecentWorkouts.Select(w =>
+        string workoutsData = string.Join("\n", request.RecentWorkouts.Select(w =>
             $"Date: {w.Date:yyyy-MM-dd}, Type: {w.ActivityType}, Distance: {w.Distance}m, " +
             $"Duration: {TimeSpan.FromSeconds(w.Duration):hh\\:mm\\:ss}, Calories: {w.Calories}"));
 
-        var athleteContext = request.AthleteProfile != null ?
+        string athleteContext = request.AthleteProfile != null ?
             $"\nAthlete Level: {request.AthleteProfile.FitnessLevel}\nPrimary Goal: {request.AthleteProfile.PrimaryGoal}" : string.Empty;
 
         // Spezifischer Prompt basierend auf Analyse-Typ
-        var analysisPrompt = request.AnalysisType?.ToLower() switch
+        string analysisPrompt = request.AnalysisType?.ToLower() switch
         {
             "health" => this.BuildHealthAnalysisPrompt(workoutsData, athleteContext),
             "performance" => this.BuildPerformanceAnalysisPrompt(workoutsData, athleteContext),
@@ -236,7 +238,7 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
     private WorkoutAnalysisResponseDto ParseAnalysisResponse(string aiResponse, string? analysisType)
     {
-        var response = new WorkoutAnalysisResponseDto
+        WorkoutAnalysisResponseDto response = new WorkoutAnalysisResponseDto
         {
             Analysis = this.ExtractAnalysisSection(aiResponse),
             KeyInsights = this.ExtractKeyInsights(aiResponse),
@@ -255,29 +257,29 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
         }
 
         // Versuche erst strukturierte Extraktion
-        var structuredAnalysis = this.TryExtractStructuredAnalysis(aiResponse);
+        string structuredAnalysis = this.TryExtractStructuredAnalysis(aiResponse);
         if (!string.IsNullOrEmpty(structuredAnalysis))
         {
             return this.LimitAnalysisLength(structuredAnalysis);
         }
 
         // Fallback: Freie Text-Extraktion
-        var fallbackAnalysis = this.ExtractFallbackAnalysis(aiResponse);
+        string fallbackAnalysis = this.ExtractFallbackAnalysis(aiResponse);
         return this.LimitAnalysisLength(fallbackAnalysis);
     }
 
     private string TryExtractStructuredAnalysis(string aiResponse)
     {
-        var analysisHeaders = this.GetAnalysisHeaders();
+        string[] analysisHeaders = this.GetAnalysisHeaders();
 
-        foreach (var header in analysisHeaders)
+        foreach (string header in analysisHeaders)
         {
             if (!aiResponse.Contains(header, StringComparison.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            var analysisSection = this.ExtractSectionContent(aiResponse, header);
+            string analysisSection = this.ExtractSectionContent(aiResponse, header);
             if (this.IsValidAnalysis(analysisSection))
             {
                 return analysisSection;
@@ -289,27 +291,27 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
     private string ExtractSectionContent(string aiResponse, string header)
     {
-        var analysisParts = aiResponse.Split(header, StringSplitOptions.RemoveEmptyEntries);
+        string[] analysisParts = aiResponse.Split(header, StringSplitOptions.RemoveEmptyEntries);
         if (analysisParts.Length <= 1)
         {
             return string.Empty;
         }
 
-        var stopMarkers = this.GetStopMarkers();
-        var analysisSection = analysisParts[1].Split(stopMarkers, StringSplitOptions.RemoveEmptyEntries)[0];
+        string[] stopMarkers = this.GetStopMarkers();
+        string analysisSection = analysisParts[1].Split(stopMarkers, StringSplitOptions.RemoveEmptyEntries)[0];
 
         return analysisSection.Trim();
     }
 
     private string ExtractFallbackAnalysis(string aiResponse)
     {
-        var lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        var analysisLines = new List<string>();
-        var stopMarkers = this.GetStopMarkers();
+        string[] lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        List<string> analysisLines = new List<string>();
+        string[] stopMarkers = this.GetStopMarkers();
 
-        foreach (var line in lines)
+        foreach (string line in lines)
         {
-            var cleanLine = line.Trim();
+            string cleanLine = line.Trim();
             if (string.IsNullOrWhiteSpace(cleanLine))
             {
                 continue;
@@ -340,7 +342,7 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
             return analysis;
         }
 
-        var sentences = analysis.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        string[] sentences = analysis.Split('.', StringSplitOptions.RemoveEmptyEntries);
         return string.Join(". ", sentences.Take(4)) + ".";
     }
 
@@ -395,9 +397,9 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
             return null;
         }
 
-        foreach (var header in sectionHeaders)
+        foreach (string header in sectionHeaders)
         {
-            var extractedItems = this.TryExtractFromHeader(aiResponse, header);
+            List<string>? extractedItems = this.TryExtractFromHeader(aiResponse, header);
             if (extractedItems?.Any() == true)
             {
                 return extractedItems;
@@ -414,7 +416,7 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
             return null;
         }
 
-        var sectionContent = this.ExtractSectionUntilNextHeader(aiResponse, header);
+        string sectionContent = this.ExtractSectionUntilNextHeader(aiResponse, header);
         if (string.IsNullOrEmpty(sectionContent))
         {
             return null;
@@ -425,10 +427,10 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
     private string ExtractSectionUntilNextHeader(string aiResponse, string currentHeader)
     {
-        var headerIndex = aiResponse.IndexOf(currentHeader, StringComparison.OrdinalIgnoreCase);
-        var section = aiResponse.Substring(headerIndex + currentHeader.Length);
+        int headerIndex = aiResponse.IndexOf(currentHeader, StringComparison.OrdinalIgnoreCase);
+        string section = aiResponse.Substring(headerIndex + currentHeader.Length);
 
-        var nextHeaderIndex = this.FindNextHeaderIndex(section, currentHeader);
+        int nextHeaderIndex = this.FindNextHeaderIndex(section, currentHeader);
         if (nextHeaderIndex > 0)
         {
             section = section.Substring(0, nextHeaderIndex);
@@ -439,9 +441,9 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
     private int FindNextHeaderIndex(string section, string currentHeader)
     {
-        var allHeaders = this.GetAllSectionHeaders();
+        string[] allHeaders = this.GetAllSectionHeaders();
 
-        foreach (var nextHeader in allHeaders)
+        foreach (string nextHeader in allHeaders)
         {
             if (nextHeader == currentHeader)
             {
@@ -459,12 +461,12 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
     private List<string> ParseItemsFromSection(string sectionContent)
     {
-        var items = new List<string>();
-        var lines = sectionContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        List<string> items = new List<string>();
+        string[] lines = sectionContent.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        foreach (var line in lines)
+        foreach (string line in lines)
         {
-            var cleanedItem = this.CleanLineItem(line);
+            string cleanedItem = this.CleanLineItem(line);
 
             if (this.IsValidListItem(cleanedItem))
             {
@@ -507,15 +509,15 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
 
     private WorkoutAnalysisResponseDto GetFallbackAnalysis(WorkoutAnalysisRequestDto request, string provider = "Unknown")
     {
-        var workoutCount = request.RecentWorkouts?.Count ?? 0;
-        var totalDistance = request.RecentWorkouts?.Sum(w => w.Distance) ?? 0;
-        var totalDuration = request.RecentWorkouts?.Sum(w => w.Duration) ?? 0;
-        var avgCalories = request.RecentWorkouts?.Any() == true ?
+        int workoutCount = request.RecentWorkouts?.Count ?? 0;
+        double totalDistance = request.RecentWorkouts?.Sum(w => w.Distance) ?? 0;
+        int totalDuration = request.RecentWorkouts?.Sum(w => w.Duration) ?? 0;
+        double? avgCalories = request.RecentWorkouts?.Any() == true ?
             request.RecentWorkouts.Average(w => w.Calories) : 0;
 
-        var analysisType = request.AnalysisType ?? "Performance";
+        string analysisType = request.AnalysisType ?? "Performance";
 
-        var analysis = analysisType.ToLower() switch
+        string analysis = analysisType.ToLower() switch
         {
             "health" => $"Basierend auf Ihren {workoutCount} letzten Trainingseinheiten scheint Ihre Trainingsbelastung gut ausgewogen zu sein. " +
                        $"Die Gesamtdistanz von {totalDistance:F1}km über {TimeSpan.FromSeconds(totalDuration):h\\:mm} zeigt gutes Herz-Kreislauf-Engagement. " +
@@ -536,7 +538,7 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
                 $"Trainingsbelastung und Regenerationsbalance scheinen angemessen für kontinuierliche Verbesserung."
         };
 
-        var insights = analysisType.ToLower() switch
+        List<string> insights = analysisType.ToLower() switch
         {
             "health" => new List<string>
             {
@@ -568,7 +570,7 @@ Liefere praktische, umsetzbare Erkenntnisse für Fitnessverbesserung.";
             }
         };
 
-        var recommendations = analysisType.ToLower() switch
+        List<string> recommendations = analysisType.ToLower() switch
         {
             "health" => new List<string>
             {

@@ -1,12 +1,12 @@
-﻿using System.Globalization;
+﻿namespace FitnessAnalyticsHub.Infrastructure.Services;
+
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-
-namespace FitnessAnalyticsHub.Infrastructure.Services;
 
 public class AIAssistantClientService : IAIAssistantClientService
 {
@@ -24,21 +24,21 @@ public class AIAssistantClientService : IAIAssistantClientService
         this.configuration = configuration;
 
         // AIAssistant Base URL aus Configuration
-        var aiAssistantUrl = this.configuration["AIAssistant:BaseUrl"] ?? "http://localhost:5169";
+        string aiAssistantUrl = this.configuration["AIAssistant:BaseUrl"] ?? "http://localhost:5169";
         this.httpClient.BaseAddress = new Uri(aiAssistantUrl);
         this.httpClient.Timeout = TimeSpan.FromSeconds(30);
 
         this.logger.LogInformation("AIAssistantClientService initialized with base URL: {BaseUrl}", aiAssistantUrl);
     }
 
-    public async Task<AIMotivationResponseDto> GetMotivationAsync(AIMotivationRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<AIMotivationResponseDto> GetMotivationAsync(AIMotivationRequestDto request, CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
             "Requesting motivation for athlete: {AthleteName}",
             request.AthleteProfile?.Name ?? "Unknown");
 
         // Konvertiere zu AIAssistant DTO Format
-        var aiRequest = new AIAssistantMotivationRequest
+        AIAssistantMotivationRequest aiRequest = new AIAssistantMotivationRequest
         {
             AthleteProfile = new AIAssistantAthleteProfile
             {
@@ -58,14 +58,14 @@ public class AIAssistantClientService : IAIAssistantClientService
             ContextualInfo = request.ContextualInfo ?? string.Empty,
         };
 
-        var json = JsonSerializer.Serialize(aiRequest);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        string json = JsonSerializer.Serialize(aiRequest);
+        StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await this.httpClient.PostAsync("/api/MotivationCoach/motivate/huggingface", content, cancellationToken);
+        HttpResponseMessage response = await this.httpClient.PostAsync("/api/MotivationCoach/motivate/huggingface", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            string errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
             this.logger.LogError(
                 "AIAssistant motivation request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
@@ -73,15 +73,15 @@ public class AIAssistantClientService : IAIAssistantClientService
             return this.GetFallbackMotivation(request);
         }
 
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        var aiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+        string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        JsonElement aiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
 
         return new AIMotivationResponseDto
         {
-            MotivationalMessage = aiResponse.TryGetProperty("motivationalMessage", out var msgElement)
+            MotivationalMessage = aiResponse.TryGetProperty("motivationalMessage", out JsonElement msgElement)
             ? msgElement.GetString() : "Keep pushing forward! You're doing great!",
-            Quote = aiResponse.TryGetProperty("quote", out var quote) ? quote.GetString() : null,
-            ActionableTips = aiResponse.TryGetProperty("actionableTips", out var tips) &&
+            Quote = aiResponse.TryGetProperty("quote", out JsonElement quote) ? quote.GetString() : null,
+            ActionableTips = aiResponse.TryGetProperty("actionableTips", out JsonElement tips) &&
                            tips.ValueKind == JsonValueKind.Array ?
                            tips.EnumerateArray().Select(t => t.GetString()).Where(s => s != null).Cast<string>().ToList() :
                            null,
@@ -90,14 +90,14 @@ public class AIAssistantClientService : IAIAssistantClientService
         };
     }
 
-    public async Task<AIWorkoutAnalysisResponseDto> GetWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<AIWorkoutAnalysisResponseDto> GetWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
             "Requesting workout analysis for {WorkoutCount} workouts, type: {AnalysisType}",
             request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
         // Konvertiere zu AIAssistant DTO Format
-        var aiRequest = new AIAssistantWorkoutAnalysisRequest
+        AIAssistantWorkoutAnalysisRequest aiRequest = new AIAssistantWorkoutAnalysisRequest
         {
             AthleteProfile = request.AthleteProfile != null ? new AIAssistantAthleteProfile
             {
@@ -118,15 +118,15 @@ public class AIAssistantClientService : IAIAssistantClientService
             FocusAreas = request.FocusAreas ?? new List<string>(),
         };
 
-        var json = JsonSerializer.Serialize(aiRequest);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        string json = JsonSerializer.Serialize(aiRequest);
+        StringContent content = new StringContent(json, Encoding.UTF8, "application/json");
 
         // var response = await _httpClient.PostAsync("/api/WorkoutAnalysis/analyze/huggingface", content, cancellationToken);
-        var response = await this.httpClient.PostAsync("/api/WorkoutAnalysis/analyze/googlegemini", content, cancellationToken);
+        HttpResponseMessage response = await this.httpClient.PostAsync("/api/WorkoutAnalysis/analyze/googlegemini", content, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
+            string errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
             this.logger.LogError(
                 "AIAssistant workout analysis request failed: {StatusCode} - {Error}",
                 response.StatusCode, errorContent);
@@ -134,18 +134,18 @@ public class AIAssistantClientService : IAIAssistantClientService
             return this.GetFallbackAnalysis(request);
         }
 
-        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
-        var aiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
+        string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        JsonElement aiResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
 
         return new AIWorkoutAnalysisResponseDto
         {
-            Analysis = aiResponse.TryGetProperty("analysis", out var analysis) ? analysis.GetString() :
+            Analysis = aiResponse.TryGetProperty("analysis", out JsonElement analysis) ? analysis.GetString() :
                       "Your workouts show consistent progress. Keep up the great work!",
-            KeyInsights = aiResponse.TryGetProperty("keyInsights", out var insights) &&
+            KeyInsights = aiResponse.TryGetProperty("keyInsights", out JsonElement insights) &&
                         insights.ValueKind == JsonValueKind.Array ?
                         insights.EnumerateArray().Select(i => i.GetString()).Where(s => s != null).Cast<string>().ToList() :
                         new List<string>(),
-            Recommendations = aiResponse.TryGetProperty("recommendations", out var recs) &&
+            Recommendations = aiResponse.TryGetProperty("recommendations", out JsonElement recs) &&
                             recs.ValueKind == JsonValueKind.Array ?
                             recs.EnumerateArray().Select(r => r.GetString()).Where(s => s != null).Cast<string>().ToList() :
                             new List<string>(),
@@ -154,11 +154,11 @@ public class AIAssistantClientService : IAIAssistantClientService
         };
     }
 
-    public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken)
     {
         try
         {
-            var response = await this.httpClient.GetAsync("/api/Debug/health", cancellationToken);
+            HttpResponseMessage response = await this.httpClient.GetAsync("/api/Debug/health", cancellationToken);
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
@@ -170,7 +170,7 @@ public class AIAssistantClientService : IAIAssistantClientService
 
     private AIMotivationResponseDto GetFallbackMotivation(AIMotivationRequestDto request)
     {
-        var athleteName = request.AthleteProfile?.Name ?? "Champion";
+        string athleteName = request.AthleteProfile?.Name ?? "Champion";
         return new AIMotivationResponseDto
         {
             MotivationalMessage = $"Great work, {athleteName}! Your dedication to fitness is inspiring. " +
@@ -189,8 +189,8 @@ public class AIAssistantClientService : IAIAssistantClientService
 
     private AIWorkoutAnalysisResponseDto GetFallbackAnalysis(AIWorkoutAnalysisRequestDto request)
     {
-        var workoutCount = request.RecentWorkouts?.Count ?? 0;
-        var totalDistance = request.RecentWorkouts?.Sum(w => w.Distance) ?? 0;
+        int workoutCount = request.RecentWorkouts?.Count ?? 0;
+        double totalDistance = request.RecentWorkouts?.Sum(w => w.Distance) ?? 0;
 
         return new AIWorkoutAnalysisResponseDto
         {
@@ -215,22 +215,22 @@ public class AIAssistantClientService : IAIAssistantClientService
         };
     }
 
-    public Task<AIWorkoutAnalysisResponseDto> GetPerformanceTrendsAsync(int athleteId, string timeFrame = "month", CancellationToken cancellationToken = default)
+    public Task<AIWorkoutAnalysisResponseDto> GetPerformanceTrendsAsync(int athleteId, CancellationToken cancellationToken, string timeFrame = "month")
     {
         throw new NotImplementedException();
     }
 
-    public Task<AIWorkoutAnalysisResponseDto> GetTrainingRecommendationsAsync(int athleteId, CancellationToken cancellationToken = default)
+    public Task<AIWorkoutAnalysisResponseDto> GetTrainingRecommendationsAsync(int athleteId, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public Task<AIWorkoutAnalysisResponseDto> AnalyzeHealthMetricsAsync(int athleteId, List<AIWorkoutDataDto> recentWorkouts, CancellationToken cancellationToken = default)
+    public Task<AIWorkoutAnalysisResponseDto> AnalyzeHealthMetricsAsync(int athleteId, List<AIWorkoutDataDto> recentWorkouts, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }
 
-    public Task<AIWorkoutAnalysisResponseDto> GetGoogleGeminiWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken = default)
+    public Task<AIWorkoutAnalysisResponseDto> GetGoogleGeminiWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken)
     {
         throw new NotImplementedException();
     }

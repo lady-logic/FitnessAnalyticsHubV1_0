@@ -1,4 +1,6 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Tests.Infrastructure.Services;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Application.Interfaces;
 using AIAssistant.Applications.DTOs;
 using AIAssistant.Infrastructure.Services;
@@ -6,8 +8,6 @@ using AIAssistant.Tests.Helpers;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.Extensions.Logging;
 using Moq;
-
-namespace AIAssistant.Tests.Infrastructure.Services;
 
 public class MotivationCoachServiceTests
 {
@@ -28,15 +28,15 @@ public class MotivationCoachServiceTests
     public async Task GenerateMotivationAsync_WithValidRequest_ReturnsMotivationalResponse()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var aiResponse = CreateWellFormattedAIResponse();
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string aiResponse = CreateWellFormattedAIResponse();
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -54,8 +54,8 @@ public class MotivationCoachServiceTests
     public async Task GenerateMotivationAsync_WithStructuredAIResponse_ParsesCorrectly()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var structuredResponse = @"
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string structuredResponse = @"
 Great job on your fitness journey! You're making excellent progress and your dedication is truly inspiring.
 
 Quote: ""Success is not final, failure is not fatal: it is the courage to continue that counts.""
@@ -67,11 +67,11 @@ Tips:
 ";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(structuredResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Contains("Great job on your fitness journey", result.MotivationalMessage);
@@ -84,15 +84,15 @@ Tips:
     public async Task GenerateMotivationAsync_WithMinimalAIResponse_HandlesGracefully()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var minimalResponse = "Keep pushing forward! You've got this!";
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string minimalResponse = "Keep pushing forward! You've got this!";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(minimalResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Equal(minimalResponse, result.MotivationalMessage);
@@ -104,14 +104,14 @@ Tips:
     public async Task GenerateMotivationAsync_WhenAIServiceThrowsException_ReturnsFallbackResponse()
     {
         // Arrange
-        var request = CreateTestMotivationRequest("John");
+        MotivationRequestDto request = CreateTestMotivationRequest("John");
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ThrowsAsync(new Exception("AI service unavailable"));
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -130,14 +130,14 @@ Tips:
     public async Task GenerateMotivationAsync_WithEmptyAIResponse_ReturnsDefaultMessage(string emptyResponse)
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
+        MotivationRequestDto request = CreateTestMotivationRequest();
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(emptyResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Equal("You're doing great! Keep up the excellent work with your fitness journey.", result.MotivationalMessage);
@@ -153,21 +153,21 @@ Tips:
     public async Task GetHuggingFaceMotivationalMessageAsync_CallsGenerateMotivationAsync()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var aiResponse = "You're doing amazing! Keep it up!";
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string aiResponse = "You're doing amazing! Keep it up!";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await this.service.GetHuggingFaceMotivationalMessageAsync(request);
+        MotivationResponseDto result = await this.service.GetHuggingFaceMotivationalMessageAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(aiResponse, result.MotivationalMessage);
 
-        this.mockAIPromptService.Verify(s => s.GetMotivationAsync(It.IsAny<string>()), Times.Once);
+        this.mockAIPromptService.Verify(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None), Times.Once);
     }
 
     #endregion
@@ -178,7 +178,7 @@ Tips:
     public async Task GenerateMotivationAsync_BuildsPromptWithAthleteInfo()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = new AthleteProfileDto
             {
@@ -191,56 +191,64 @@ Tips:
 
         string capturedPrompt = string.Empty;
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
-            .Callback<string>(prompt => capturedPrompt = prompt)
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback(() => { /* Der Prompt wird in der Verify erfasst */ })
             .ReturnsAsync("Great job!");
 
         // Act
-        await this.service.GenerateMotivationAsync(request);
+        await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
-        Assert.Contains("Sarah", capturedPrompt);
-        Assert.Contains("Advanced", capturedPrompt);
-        Assert.Contains("Marathon Training", capturedPrompt);
-        Assert.Contains("struggling with motivation", capturedPrompt);
+        this.mockAIPromptService.Verify(
+            s => s.GetMotivationAsync(
+                It.Is<string>(prompt =>
+                    prompt.Contains("Sarah") &&
+                    prompt.Contains("Advanced") &&
+                    prompt.Contains("Marathon Training") &&
+                    prompt.Contains("struggling with motivation")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task GenerateMotivationAsync_WithLastWorkout_IncludesWorkoutInfo()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = CreateTestAthleteProfile(),
             LastWorkout = new WorkoutDataDto
             {
                 ActivityType = "Run",
                 Distance = 10,
-                Duration = 3600, // 1 hour
+                Duration = 3600,
                 Date = DateTime.Now.AddDays(-1),
             },
         };
 
-        string capturedPrompt = string.Empty;
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
-            .Callback<string>(prompt => capturedPrompt = prompt)
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("Great run!");
 
         // Act
-        await this.service.GenerateMotivationAsync(request);
+        await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
-        // Assert
-        Assert.Contains("Last workout: Run", capturedPrompt);
-        Assert.Contains("10km", capturedPrompt);
-        Assert.Contains("01:00:00", capturedPrompt); // Duration formatted
+        // Assert - Direkt über Verify prüfen
+        this.mockAIPromptService.Verify(
+            s => s.GetMotivationAsync(
+                It.Is<string>(prompt =>
+                    prompt.Contains("Last workout: Run") &&
+                    prompt.Contains("10km") &&
+                    prompt.Contains("01:00:00")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
     public async Task GenerateMotivationAsync_WithNullAthleteProfile_UsesDefaults()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = null,
             IsStruggling = false,
@@ -248,17 +256,17 @@ Tips:
 
         string capturedPrompt = string.Empty;
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
-            .Callback<string>(prompt => capturedPrompt = prompt)
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Callback<string, CancellationToken>((prompt, token) => capturedPrompt = prompt)
             .ReturnsAsync("Keep going!");
 
         // Act
-        await this.service.GenerateMotivationAsync(request);
+        await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
-        Assert.Contains("Champion", capturedPrompt); // Default name
-        Assert.Contains("Beginner", capturedPrompt); // Default fitness level
-        Assert.Contains("General Fitness", capturedPrompt); // Default goal
+        Assert.Contains("Champion", capturedPrompt);
+        Assert.Contains("Beginner", capturedPrompt);
+        Assert.Contains("General Fitness", capturedPrompt);
     }
 
     #endregion
@@ -269,8 +277,8 @@ Tips:
     public async Task ExtractQuote_WithQuoteLabel_ExtractsCorrectly()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var aiResponse = @"
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string aiResponse = @"
 Great work on your fitness journey!
 
 Quote: Success is not about being perfect, it's about being better than yesterday.
@@ -278,11 +286,11 @@ Quote: Success is not about being perfect, it's about being better than yesterda
 Keep pushing forward!";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Equal("Success is not about being perfect, it's about being better than yesterday.", result.Quote);
@@ -292,8 +300,8 @@ Keep pushing forward!";
     public async Task ExtractTips_WithNumberedList_ExtractsCorrectly()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var aiResponse = @"
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string aiResponse = @"
 Keep up the great work!
 
 Tips:
@@ -304,11 +312,11 @@ Tips:
 ";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result.ActionableTips);
@@ -322,8 +330,8 @@ Tips:
     public async Task ExtractTips_WithBulletPoints_ExtractsCorrectly()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var aiResponse = @"
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string aiResponse = @"
 Excellent progress!
 
 Actionable tips:
@@ -333,11 +341,11 @@ Actionable tips:
 ";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result.ActionableTips);
@@ -351,16 +359,16 @@ Actionable tips:
     public async Task ExtractMotivationalMessage_WithLongResponse_LimitsLength()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var longMessage = string.Join(". ", Enumerable.Repeat("This is a very long motivational sentence that goes on and on", 10));
-        var aiResponse = $"{longMessage}. Quote: \"Test quote\"";
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string longMessage = string.Join(". ", Enumerable.Repeat("This is a very long motivational sentence that goes on and on", 10));
+        string aiResponse = $"{longMessage}. Quote: \"Test quote\"";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.True(result.MotivationalMessage.Length <= 300); // Should be limited
@@ -375,17 +383,17 @@ Actionable tips:
     public async Task GetFallbackMotivation_GeneratesRandomMessages()
     {
         // Arrange
-        var request = CreateTestMotivationRequest("TestAthlete");
-        var messages = new HashSet<string>();
+        MotivationRequestDto request = CreateTestMotivationRequest("TestAthlete");
+        HashSet<string> messages = new HashSet<string>();
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ThrowsAsync(new Exception("Service down"));
 
         // Act - Generate multiple fallback messages
         for (int i = 0; i < 10; i++)
         {
-            var result = await this.service.GenerateMotivationAsync(request);
+            MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
             messages.Add(result.MotivationalMessage);
         }
 
@@ -398,14 +406,14 @@ Actionable tips:
     public async Task FallbackResponse_HasDefaultQuoteAndTips()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
+        MotivationRequestDto request = CreateTestMotivationRequest();
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ThrowsAsync(new Exception("Service unavailable"));
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Contains("Robert Collier", result.Quote!);
@@ -423,7 +431,7 @@ Actionable tips:
     public async Task GenerateMotivationAsync_WithSpecialCharactersInName_HandlesCorrectly()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = new AthleteProfileDto
             {
@@ -434,11 +442,11 @@ Actionable tips:
         };
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync("¡Excelente trabajo, María!");
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Contains("María", result.MotivationalMessage);
@@ -448,8 +456,8 @@ Actionable tips:
     public async Task ExtractTips_WithVeryShortTips_FiltersOut()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var aiResponse = @"
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string aiResponse = @"
 Tips:
 1. Go! 
 2. This tip is long enough to be included in the results
@@ -458,11 +466,11 @@ Tips:
 ";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result.ActionableTips);
@@ -474,19 +482,19 @@ Tips:
     public async Task ExtractQuote_WithTechnicalContent_FiltersOut()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var aiResponse = @"
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string aiResponse = @"
 Great job!
 ""HTTP 404 error occurred while processing the request""
 ""Believe in yourself and achieve your dreams""
 Keep going!";
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(aiResponse);
 
         // Act
-        var result = await this.service.GenerateMotivationAsync(request);
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Equal("Believe in yourself and achieve your dreams", result.Quote);
@@ -500,16 +508,16 @@ Keep going!";
     public async Task GenerateMotivationAsync_WithVeryLargeAIResponse_HandlesEfficiently()
     {
         // Arrange
-        var request = CreateTestMotivationRequest();
-        var largeResponse = string.Join("\n", Enumerable.Repeat("This is a line of AI response text.", 1000));
+        MotivationRequestDto request = CreateTestMotivationRequest();
+        string largeResponse = string.Join("\n", Enumerable.Repeat("This is a line of AI response text.", 1000));
 
         this.mockAIPromptService
-            .Setup(s => s.GetMotivationAsync(It.IsAny<string>()))
+            .Setup(s => s.GetMotivationAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(largeResponse);
 
         // Act
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var result = await this.service.GenerateMotivationAsync(request);
+        System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        MotivationResponseDto result = await this.service.GenerateMotivationAsync(request, CancellationToken.None);
         stopwatch.Stop();
 
         // Assert

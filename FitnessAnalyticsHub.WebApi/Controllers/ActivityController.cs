@@ -1,8 +1,8 @@
-﻿using FitnessAnalyticsHub.Application.DTOs;
+﻿namespace FitnessAnalyticsHub.WebApi.Controllers;
+
+using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-
-namespace FitnessAnalyticsHub.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -18,21 +18,21 @@ public class ActivityController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<ActivityDto>> GetById(int id, CancellationToken cancellationToken)
     {
-        var activity = await this.activityService.GetActivityByIdAsync(id, cancellationToken);
+        ActivityDto? activity = await this.activityService.GetActivityByIdAsync(id, cancellationToken);
         return this.Ok(activity);
     }
 
     [HttpGet("athlete/{athleteId}")]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> GetByAthleteId(int athleteId, CancellationToken cancellationToken)
     {
-        var activities = await this.activityService.GetActivitiesByAthleteIdAsync(athleteId, cancellationToken);
+        IEnumerable<ActivityDto> activities = await this.activityService.GetActivitiesByAthleteIdAsync(athleteId, cancellationToken);
         return this.Ok(activities);
     }
 
     [HttpPost]
     public async Task<ActionResult<ActivityDto>> Create(CreateActivityDto createActivityDto, CancellationToken cancellationToken)
     {
-        var activity = await this.activityService.CreateActivityAsync(createActivityDto, cancellationToken);
+        ActivityDto activity = await this.activityService.CreateActivityAsync(createActivityDto, cancellationToken);
         return this.CreatedAtAction(nameof(this.GetById), new { id = activity.Id }, activity);
     }
 
@@ -58,14 +58,14 @@ public class ActivityController : ControllerBase
     [HttpPost("import-from-strava")]
     public async Task<ActionResult<IEnumerable<ActivityDto>>> ImportFromStrava(CancellationToken cancellationToken)
     {
-        var activities = await this.activityService.ImportActivitiesFromStravaAsync(cancellationToken);
+        IEnumerable<ActivityDto> activities = await this.activityService.ImportActivitiesFromStravaAsync(cancellationToken);
         return this.Ok(activities);
     }
 
     [HttpGet("statistics/{athleteId}")]
     public async Task<ActionResult<ActivityStatisticsDto>> GetStatistics(int athleteId, CancellationToken cancellationToken)
     {
-        var statistics = await this.activityService.GetAthleteActivityStatisticsAsync(athleteId, cancellationToken);
+        ActivityStatisticsDto statistics = await this.activityService.GetAthleteActivityStatisticsAsync(athleteId, cancellationToken);
         return this.Ok(statistics);
     }
 }

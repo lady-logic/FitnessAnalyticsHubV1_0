@@ -7,8 +7,8 @@ public static class DatabaseConfiguration
 {
     public static void ConfigureDatabase(DbContextOptionsBuilder options, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        var provider = configuration.GetValue<string>("Database:Provider", "Sqlite");
+        string? connectionString = configuration.GetConnectionString("DefaultConnection");
+        string provider = configuration.GetValue<string>("Database:Provider", "Sqlite");
 
         switch (provider.ToLower())
         {
@@ -42,7 +42,7 @@ public static class DatabaseConfiguration
 
     private static void ConfigureCommonOptions(DbContextOptionsBuilder options, IConfiguration configuration)
     {
-        var isDevelopment = configuration.GetValue<bool>("Environment:IsDevelopment", false);
+        bool isDevelopment = configuration.GetValue<bool>("Environment:IsDevelopment", false);
 
         options.EnableSensitiveDataLogging(isDevelopment);
         options.EnableDetailedErrors(isDevelopment);

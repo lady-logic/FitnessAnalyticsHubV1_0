@@ -1,20 +1,20 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Tests.Infrastructure.Services;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Infrastructure.Services;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace AIAssistant.Tests.Infrastructure.Services;
-
 public class WorkoutAnalysisServiceTests
 {
     private WorkoutAnalysisService CreateServiceWithMockConfig(string defaultProvider = "GoogleGemini")
     {
-        var mockConfig = new Mock<IConfiguration>();
+        Mock<IConfiguration> mockConfig = new Mock<IConfiguration>();
         mockConfig.Setup(c => c["AI:DefaultProvider"]).Returns(defaultProvider);
 
-        var mockLogger = new Mock<ILogger<WorkoutAnalysisService>>();
+        Mock<ILogger<WorkoutAnalysisService>> mockLogger = new Mock<ILogger<WorkoutAnalysisService>>();
 
         // Hauptsächlich Fallback-Logik testen
         return new WorkoutAnalysisService(null, null, mockConfig.Object, mockLogger.Object);
@@ -48,11 +48,11 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WhenAIServiceFails_ReturnsFallbackAnalysis()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
 
         // Act - AI Services sind null, sollte Fallback triggern
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -69,12 +69,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithDifferentAnalysisTypes_GeneratesValidFallback(string analysisType)
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AnalysisType = analysisType;
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -88,15 +88,15 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithNoWorkouts_ReturnsValidFallback()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = new WorkoutAnalysisRequestDto
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = null,
             AnalysisType = "Performance",
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -108,8 +108,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithMultipleWorkouts_CalculatesCorrectStats()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = new WorkoutAnalysisRequestDto
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
             {
@@ -120,7 +120,7 @@ public class WorkoutAnalysisServiceTests
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -135,11 +135,11 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsWithProviderAsync_SetsCorrectProvider(string provider)
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig(provider);
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig(provider);
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Equal(provider, result.Provider);
@@ -149,11 +149,11 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeHuggingFaceWorkoutsAsync_ReturnsHuggingFaceProvider()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
 
         // Act
-        var result = await service.AnalyzeHuggingFaceWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeHuggingFaceWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Equal("HuggingFace", result.Provider);
@@ -163,11 +163,11 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeGoogleGeminiWorkoutsAsync_ReturnsGoogleGeminiProvider()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
 
         // Act
-        var result = await service.AnalyzeGoogleGeminiWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeGoogleGeminiWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.Equal("GoogleGemini", result.Provider);
@@ -178,12 +178,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithNullAnalysisType_UsesDefaultAnalysis()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AnalysisType = null;
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -195,12 +195,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithEmptyAnalysisType_UsesDefaultAnalysis()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AnalysisType = string.Empty;
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -216,12 +216,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithNullAthleteProfile_HandlesGracefully()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AthleteProfile = null;
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -233,8 +233,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithEmptyAthleteProfile_HandlesGracefully()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AthleteProfile = new AthleteProfileDto
         {
             FitnessLevel = string.Empty,
@@ -242,7 +242,7 @@ public class WorkoutAnalysisServiceTests
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -253,8 +253,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithNullAthleteProfileProperties_HandlesGracefully()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AthleteProfile = new AthleteProfileDto
         {
             FitnessLevel = null,
@@ -262,7 +262,7 @@ public class WorkoutAnalysisServiceTests
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -277,12 +277,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithEmptyWorkoutsList_ReturnsValidFallback()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.RecentWorkouts = new List<WorkoutDataDto>(); // Empty list
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -294,8 +294,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithWorkoutsContainingNullValues_HandlesGracefully()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = new WorkoutAnalysisRequestDto
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
         {
@@ -312,7 +312,7 @@ public class WorkoutAnalysisServiceTests
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -324,8 +324,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithLargeNumberOfWorkouts_HandlesCorrectly()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var workouts = new List<WorkoutDataDto>();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        List<WorkoutDataDto> workouts = new List<WorkoutDataDto>();
 
         // Create 10 workouts
         for (int i = 0; i < 10; i++)
@@ -340,14 +340,14 @@ public class WorkoutAnalysisServiceTests
             });
         }
 
-        var request = new WorkoutAnalysisRequestDto
+        WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = workouts,
             AnalysisType = "Performance",
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -363,12 +363,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_HealthAnalysis_ContainsHealthSpecificInsights()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AnalysisType = "health";
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result.KeyInsights);
@@ -381,12 +381,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_PerformanceAnalysis_ContainsPerformanceSpecificInsights()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AnalysisType = "performance";
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result.KeyInsights);
@@ -399,12 +399,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_TrendsAnalysis_ContainsTrendsSpecificInsights()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AnalysisType = "trends";
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result.KeyInsights);
@@ -417,16 +417,16 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_AllAnalysisTypes_ContainValidRecommendations()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var analysisTypes = new[] { "health", "performance", "trends", "general", null };
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        string?[] analysisTypes = new[] { "health", "performance", "trends", "general", null };
 
-        foreach (var analysisType in analysisTypes)
+        foreach (string? analysisType in analysisTypes)
         {
-            var request = this.CreateTestRequest();
+            WorkoutAnalysisRequestDto request = this.CreateTestRequest();
             request.AnalysisType = analysisType;
 
             // Act
-            var result = await service.AnalyzeWorkoutsAsync(request);
+            WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
             // Assert
             Assert.NotNull(result.Recommendations);
@@ -447,8 +447,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_CalculatesCorrectAverageCalories()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = new WorkoutAnalysisRequestDto
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
         {
@@ -460,7 +460,7 @@ public class WorkoutAnalysisServiceTests
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -473,8 +473,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithZeroValues_HandlesGracefully()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = new WorkoutAnalysisRequestDto
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
         {
@@ -490,7 +490,7 @@ public class WorkoutAnalysisServiceTests
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -512,12 +512,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithDifferentCasing_HandlesCorrectly(string analysisType)
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AnalysisType = analysisType;
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -529,12 +529,12 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithWhitespaceAnalysisType_HandlesCorrectly()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
         request.AnalysisType = "  performance  ";
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -549,13 +549,13 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_SetsGeneratedAtToCurrentTime()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = this.CreateTestRequest();
-        var beforeTest = DateTime.UtcNow.AddSeconds(-1);
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = this.CreateTestRequest();
+        DateTime beforeTest = DateTime.UtcNow.AddSeconds(-1);
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
-        var afterTest = DateTime.UtcNow.AddSeconds(1);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
+        DateTime afterTest = DateTime.UtcNow.AddSeconds(1);
 
         // Assert
         Assert.True(result.GeneratedAt >= beforeTest && result.GeneratedAt <= afterTest);
@@ -565,8 +565,8 @@ public class WorkoutAnalysisServiceTests
     public async Task AnalyzeWorkoutsAsync_WithOldWorkoutDates_HandlesCorrectly()
     {
         // Arrange
-        var service = this.CreateServiceWithMockConfig();
-        var request = new WorkoutAnalysisRequestDto
+        WorkoutAnalysisService service = this.CreateServiceWithMockConfig();
+        WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
         {
             RecentWorkouts = new List<WorkoutDataDto>
         {
@@ -583,7 +583,7 @@ public class WorkoutAnalysisServiceTests
         };
 
         // Act
-        var result = await service.AnalyzeWorkoutsAsync(request);
+        WorkoutAnalysisResponseDto result = await service.AnalyzeWorkoutsAsync(request, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);

@@ -2,3 +2,6 @@
 
 # SA1124: Do not use regions
 dotnet_diagnostic.SA1124.severity = none
+
+# Warnt bei async-Methoden ohne CancellationToken
+dotnet_diagnostic.CA2016.severity = warning

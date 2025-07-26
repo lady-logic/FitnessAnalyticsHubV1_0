@@ -33,29 +33,29 @@ public class GoogleGeminiService : IAIPromptService
         this.httpClient.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
     }
 
-    public async Task<string> GetFitnessAnalysisAsync(string prompt)
+    public Task<string> GetFitnessAnalysisAsync(string prompt, CancellationToken cancellationToken)
     {
-        return await this.GetGeminiCompletionAsync(prompt, "fitness");
+        return this.GetGeminiCompletionAsync(prompt, "fitness", cancellationToken);
     }
 
-    public async Task<string> GetHealthAnalysisAsync(string prompt)
+    public Task<string> GetHealthAnalysisAsync(string prompt, CancellationToken cancellationToken)
     {
-        return await this.GetGeminiCompletionAsync(prompt, "health");
+        return this.GetGeminiCompletionAsync(prompt, "health", cancellationToken);
     }
 
-    public async Task<string> GetMotivationAsync(string prompt)
+    public Task<string> GetMotivationAsync(string prompt, CancellationToken cancellationToken)
     {
-        return await this.GetGeminiCompletionAsync(prompt, "motivation");
+        return this.GetGeminiCompletionAsync(prompt, "motivation", cancellationToken);
     }
 
-    private async Task<string> GetGeminiCompletionAsync(string prompt, string modelType)
+    private async Task<string> GetGeminiCompletionAsync(string prompt, string modelType, CancellationToken cancellationToken)
     {
-        var enhancedPrompt = this.CreateEnhancedPrompt(prompt, modelType);
+        string enhancedPrompt = this.CreateEnhancedPrompt(prompt, modelType);
 
         try
         {
-            var model = this.models.GetValueOrDefault(modelType, "gemini-1.5-flash");
-            var apiKey = this.GetApiKey();
+            string model = this.models.GetValueOrDefault(modelType, "gemini-1.5-flash");
+            string apiKey = this.GetApiKey();
 
             this.logger.LogInformation(
                 "Calling Google Gemini API with model: {Model} for type: {ModelType}",
@@ -83,21 +83,21 @@ public class GoogleGeminiService : IAIPromptService
                 },
             };
 
-            var jsonContent = JsonSerializer.Serialize(requestPayload, new JsonSerializerOptions
+            string jsonContent = JsonSerializer.Serialize(requestPayload, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             });
 
-            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+            StringContent content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             // Google Gemini API Endpoint
-            var endpoint = $"v1beta/models/{model}:generateContent?key={apiKey}";
+            string endpoint = $"v1beta/models/{model}:generateContent?key={apiKey}";
 
             this.logger.LogDebug("Request URL: {Url}", endpoint);
             this.logger.LogDebug("Request payload: {Payload}", jsonContent);
 
-            var response = await this.httpClient.PostAsync(endpoint, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await this.httpClient.PostAsync(endpoint, content, cancellationToken);
+            string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
             this.logger.LogDebug("Response status: {StatusCode}", response.StatusCode);
             this.logger.LogDebug("Response content: {Content}", responseContent);
@@ -113,20 +113,20 @@ public class GoogleGeminiService : IAIPromptService
             }
 
             // Parse Google Gemini Response
-            var responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
+            JsonElement responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
 
-            if (responseJson.TryGetProperty("candidates", out var candidates) &&
+            if (responseJson.TryGetProperty("candidates", out JsonElement candidates) &&
                 candidates.GetArrayLength() > 0)
             {
-                var firstCandidate = candidates[0];
-                if (firstCandidate.TryGetProperty("content", out var content_) &&
-                    content_.TryGetProperty("parts", out var parts) &&
+                JsonElement firstCandidate = candidates[0];
+                if (firstCandidate.TryGetProperty("content", out JsonElement content_) &&
+                    content_.TryGetProperty("parts", out JsonElement parts) &&
                     parts.GetArrayLength() > 0)
                 {
-                    var firstPart = parts[0];
-                    if (firstPart.TryGetProperty("text", out var text))
+                    JsonElement firstPart = parts[0];
+                    if (firstPart.TryGetProperty("text", out JsonElement text))
                     {
-                        var result = text.GetString() ?? string.Empty;
+                        string result = text.GetString() ?? string.Empty;
                         this.logger.LogInformation("Successfully received response from Google Gemini API");
                         return result.Trim();
                     }
@@ -172,7 +172,7 @@ public class GoogleGeminiService : IAIPromptService
 
     private string GetApiKey()
     {
-        var apiKey = this.configuration["GoogleAI:ApiKey"];
+        string? apiKey = this.configuration["GoogleAI:ApiKey"];
         if (string.IsNullOrEmpty(apiKey))
         {
             throw new InvalidOperationException("Google AI API Key not configured. Please set 'GoogleAI:ApiKey' in configuration.");
@@ -183,7 +183,7 @@ public class GoogleGeminiService : IAIPromptService
 
     private string CreateEnhancedPrompt(string originalPrompt, string modelType)
     {
-        var systemContext = modelType.ToLower() switch
+        string systemContext = modelType.ToLower() switch
         {
             "motivation" => @"Du bist ein enthusiastischer Fitnesstrainer. 
 

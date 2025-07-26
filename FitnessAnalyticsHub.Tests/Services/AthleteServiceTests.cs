@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿namespace FitnessAnalyticsHub.Tests.Services;
+
+using AutoMapper;
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Mapping;
 using FitnessAnalyticsHub.Application.Services;
@@ -8,8 +10,6 @@ using FitnessAnalyticsHub.Domain.Interfaces;
 using FitnessAnalyticsHub.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-
-namespace FitnessAnalyticsHub.Tests.Services;
 
 public class AthleteServiceTests
 {
@@ -21,7 +21,7 @@ public class AthleteServiceTests
     public AthleteServiceTests()
     {
         // InMemory Database erstellen
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+        DbContextOptions<ApplicationDbContext> options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
@@ -29,7 +29,7 @@ public class AthleteServiceTests
         this.mockStravaService = new Mock<IStravaService>();
 
         // Konfiguriere AutoMapper mit dem tatsächlichen Mappingprofil
-        var mapperConfig = new MapperConfiguration(cfg =>
+        MapperConfiguration mapperConfig = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
@@ -51,7 +51,7 @@ public class AthleteServiceTests
     public async Task GetAthleteByIdAsync_ShouldReturnAthlete_WhenAthleteExists()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -67,7 +67,7 @@ public class AthleteServiceTests
         await this.context.SaveChangesAsync();
 
         // Act
-        var result = await this.athleteService.GetAthleteByIdAsync(1, CancellationToken.None);
+        AthleteDto result = await this.athleteService.GetAthleteByIdAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -85,7 +85,7 @@ public class AthleteServiceTests
         // Arrange - Keine Daten in DB
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
+        AthleteNotFoundException exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
             () => this.athleteService.GetAthleteByIdAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.AthleteId);
@@ -95,7 +95,7 @@ public class AthleteServiceTests
     public async Task GetAllAthletesAsync_ShouldReturnAllAthletes()
     {
         // Arrange
-        var athletes = new List<Athlete>
+        List<Athlete> athletes = new List<Athlete>
     {
         new Athlete
         {
@@ -121,10 +121,10 @@ public class AthleteServiceTests
         await this.context.SaveChangesAsync();
 
         // Act
-        var result = await this.athleteService.GetAllAthletesAsync(CancellationToken.None);
+        IEnumerable<AthleteDto> result = await this.athleteService.GetAllAthletesAsync(CancellationToken.None);
 
         // Assert
-        var resultList = result.ToList();
+        List<AthleteDto> resultList = result.ToList();
         Assert.Equal(2, resultList.Count);
         Assert.Contains(resultList, a => a.FirstName == "Max" && a.LastName == "Mustermann");
         Assert.Contains(resultList, a => a.FirstName == "Anna" && a.LastName == "Schmidt");
@@ -134,7 +134,7 @@ public class AthleteServiceTests
     public async Task CreateAthleteAsync_ShouldCreateAthlete_WhenValidData()
     {
         // Arrange
-        var createDto = new CreateAthleteDto
+        CreateAthleteDto createDto = new CreateAthleteDto
         {
             FirstName = "Test",
             LastName = "User",
@@ -144,7 +144,7 @@ public class AthleteServiceTests
         };
 
         // Act
-        var result = await this.athleteService.CreateAthleteAsync(createDto, CancellationToken.None);
+        AthleteDto result = await this.athleteService.CreateAthleteAsync(createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -154,7 +154,7 @@ public class AthleteServiceTests
         Assert.True(result.Id > 0);
 
         // Verify in database
-        var athleteInDb = await this.context.Athletes.FindAsync(result.Id);
+        Athlete? athleteInDb = await this.context.Athletes.FindAsync(result.Id);
         Assert.NotNull(athleteInDb);
         Assert.Equal("Test", athleteInDb.FirstName);
     }
@@ -163,7 +163,7 @@ public class AthleteServiceTests
     public async Task UpdateAthleteAsync_ShouldUpdateAthlete_WhenAthleteExists()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -178,7 +178,7 @@ public class AthleteServiceTests
         await this.context.Athletes.AddAsync(athlete);
         await this.context.SaveChangesAsync();
 
-        var updateDto = new UpdateAthleteDto
+        UpdateAthleteDto updateDto = new UpdateAthleteDto
         {
             Id = 1,
             FirstName = "Maximilian",
@@ -191,7 +191,7 @@ public class AthleteServiceTests
         await this.athleteService.UpdateAthleteAsync(updateDto, CancellationToken.None);
 
         // Assert
-        var updatedAthlete = await this.context.Athletes.FindAsync(1);
+        Athlete? updatedAthlete = await this.context.Athletes.FindAsync(1);
         Assert.NotNull(updatedAthlete);
         Assert.Equal("Maximilian", updatedAthlete.FirstName);
         Assert.Equal("Munich", updatedAthlete.City);
@@ -201,7 +201,7 @@ public class AthleteServiceTests
     public async Task UpdateAthleteAsync_ShouldThrowAthleteNotFoundException_WhenAthleteDoesNotExist()
     {
         // Arrange
-        var updateDto = new UpdateAthleteDto
+        UpdateAthleteDto updateDto = new UpdateAthleteDto
         {
             Id = 999,
             FirstName = "Test",
@@ -209,7 +209,7 @@ public class AthleteServiceTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
+        AthleteNotFoundException exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
             () => this.athleteService.UpdateAthleteAsync(updateDto, CancellationToken.None));
 
         Assert.Equal(999, exception.AthleteId);
@@ -219,7 +219,7 @@ public class AthleteServiceTests
     public async Task DeleteAthleteAsync_ShouldDeleteAthlete_WhenAthleteExists()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -236,7 +236,7 @@ public class AthleteServiceTests
         await this.athleteService.DeleteAthleteAsync(1, CancellationToken.None);
 
         // Assert
-        var deletedAthlete = await this.context.Athletes.FindAsync(1);
+        Athlete? deletedAthlete = await this.context.Athletes.FindAsync(1);
         Assert.Null(deletedAthlete);
     }
 
@@ -246,7 +246,7 @@ public class AthleteServiceTests
         // Arrange - Keine Daten in DB
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
+        AthleteNotFoundException exception = await Assert.ThrowsAsync<AthleteNotFoundException>(
             () => this.athleteService.DeleteAthleteAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.AthleteId);
@@ -256,7 +256,7 @@ public class AthleteServiceTests
     public async Task ImportAthleteFromStravaAsync_ShouldCreateNewAthlete_WhenAthleteDoesNotExist()
     {
         // Arrange
-        var stravaAthlete = new Athlete
+        Athlete stravaAthlete = new Athlete
         {
             StravaId = "12345",
             FirstName = "John",
@@ -268,11 +268,11 @@ public class AthleteServiceTests
             ProfilePictureUrl = "https://strava.com/profile.jpg",
         };
 
-        this.mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>()))
+        this.mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(stravaAthlete);
 
         // Act
-        var result = await this.athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
+        AthleteDto result = await this.athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -283,7 +283,7 @@ public class AthleteServiceTests
         Assert.True(result.Id > 0);
 
         // Verify in database
-        var athleteInDb = await this.context.Athletes.FirstOrDefaultAsync(a => a.StravaId == "12345");
+        Athlete? athleteInDb = await this.context.Athletes.FirstOrDefaultAsync(a => a.StravaId == "12345");
         Assert.NotNull(athleteInDb);
         Assert.Equal("12345", athleteInDb.StravaId);
         Assert.Equal("John", athleteInDb.FirstName);
@@ -293,7 +293,7 @@ public class AthleteServiceTests
     public async Task ImportAthleteFromStravaAsync_ShouldUpdateExistingAthlete_WhenAthleteAlreadyExists()
     {
         // Arrange
-        var existingAthlete = new Athlete
+        Athlete existingAthlete = new Athlete
         {
             Id = 1,
             StravaId = "12345",
@@ -308,7 +308,7 @@ public class AthleteServiceTests
         await this.context.Athletes.AddAsync(existingAthlete);
         await this.context.SaveChangesAsync();
 
-        var stravaAthlete = new Athlete
+        Athlete stravaAthlete = new Athlete
         {
             StravaId = "12345",
             FirstName = "John",
@@ -320,11 +320,11 @@ public class AthleteServiceTests
             ProfilePictureUrl = "https://strava.com/new_profile.jpg",
         };
 
-        this.mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>()))
+        this.mockStravaService.Setup(s => s.GetAthleteProfileAsync(It.IsAny<string>(), CancellationToken.None))
             .ReturnsAsync(stravaAthlete);
 
         // Act
-        var result = await this.athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
+        AthleteDto result = await this.athleteService.ImportAthleteFromStravaAsync("test_token", CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -334,7 +334,7 @@ public class AthleteServiceTests
         Assert.Equal("johndoe_updated", result.Username); // Username sollte aktualisiert sein
 
         // Verify in database - sollte nur einen Athlete geben
-        var athletesInDb = await this.context.Athletes.Where(a => a.StravaId == "12345").ToListAsync();
+        List<Athlete> athletesInDb = await this.context.Athletes.Where(a => a.StravaId == "12345").ToListAsync();
         Assert.Single(athletesInDb);
         Assert.Equal("new@strava.com", athletesInDb[0].Email);
         Assert.Equal("johndoe_updated", athletesInDb[0].Username);

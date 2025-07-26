@@ -21,7 +21,7 @@ public class DebugController : ControllerBase
     [HttpGet("config-check")]
     public Task<ActionResult> ConfigCheck()
     {
-        var apiKey = this.configuration["HuggingFace:ApiKey"];
+        string? apiKey = this.configuration["HuggingFace:ApiKey"];
         return Task.FromResult<ActionResult>(this.Ok(new
         {
             hasApiKey = !string.IsNullOrEmpty(apiKey),
@@ -33,9 +33,9 @@ public class DebugController : ControllerBase
     }
 
     [HttpGet("test-modern-huggingface")]
-    public async Task<ActionResult> TestModernHuggingFace()
+    public async Task<ActionResult> TestModernHuggingFace(CancellationToken cancellationToken)
     {
-        var apiKey = this.configuration["HuggingFace:ApiKey"];
+        string? apiKey = this.configuration["HuggingFace:ApiKey"];
 
         if (string.IsNullOrEmpty(apiKey))
         {
@@ -44,20 +44,20 @@ public class DebugController : ControllerBase
 
         try
         {
-            using var httpClient = new HttpClient();
+            using HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
             // Teste verschiedene Provider URLs (2025 korrekte URLs)
-            var testProviders = new[]
+            (string, string, string)[] testProviders = new[]
             {
                 ("novita", "https://router.huggingface.co/novita/v3/openai/chat/completions", "deepseek-ai/DeepSeek-V3-0324"),
                 ("sambanova", "https://router.huggingface.co/sambanova/v1/chat/completions", "Meta-Llama-3.1-8B-Instruct"),
                 ("together", "https://router.huggingface.co/together/v1/chat/completions", "meta-llama/Llama-3.2-3B-Instruct-Turbo"),
             };
 
-            var results = new List<object>();
+            List<object> results = new List<object>();
 
-            foreach (var (provider, url, model) in testProviders)
+            foreach ((string provider, string url, string model) in testProviders)
             {
                 try
                 {
@@ -73,12 +73,12 @@ public class DebugController : ControllerBase
                         stream = false,
                     };
 
-                    var json = System.Text.Json.JsonSerializer.Serialize(testPayload);
-                    var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+                    string json = System.Text.Json.JsonSerializer.Serialize(testPayload);
+                    StringContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
                     this.logger.LogInformation("Testing provider: {Provider} with URL: {Url}", provider, url);
-                    var response = await httpClient.PostAsync(url, content);
-                    var responseContent = await response.Content.ReadAsStringAsync();
+                    HttpResponseMessage response = await httpClient.PostAsync(url, content, cancellationToken);
+                    string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                     results.Add(new
                     {
@@ -122,14 +122,14 @@ public class DebugController : ControllerBase
     }
 
     [HttpGet("test-huggingface-service")]
-    public async Task<ActionResult> TestHuggingFaceService()
+    public async Task<ActionResult> TestHuggingFaceService(CancellationToken cancellationToken)
     {
         try
         {
             // Teste direkt über den HuggingFaceService
-            var motivationService = this.HttpContext.RequestServices.GetRequiredService<IMotivationCoachService>();
+            IMotivationCoachService motivationService = this.HttpContext.RequestServices.GetRequiredService<IMotivationCoachService>();
 
-            var testRequest = new MotivationRequestDto
+            MotivationRequestDto testRequest = new MotivationRequestDto
             {
                 AthleteProfile = new AthleteProfileDto
                 {
@@ -154,7 +154,7 @@ public class DebugController : ControllerBase
             };
 
             this.logger.LogInformation("Testing HuggingFaceService through MotivationCoachService...");
-            var result = await motivationService.GetHuggingFaceMotivationalMessageAsync(testRequest);
+            Application.DTOs.MotivationResponseDto result = await motivationService.GetHuggingFaceMotivationalMessageAsync(testRequest, cancellationToken);
 
             return this.Ok(new
             {
@@ -181,9 +181,9 @@ public class DebugController : ControllerBase
     }
 
     [HttpGet("direct-huggingface-test")]
-    public async Task<ActionResult> DirectHuggingFaceTest()
+    public async Task<ActionResult> DirectHuggingFaceTest(CancellationToken cancellationToken)
     {
-        var apiKey = this.configuration["HuggingFace:ApiKey"];
+        string? apiKey = this.configuration["HuggingFace:ApiKey"];
 
         if (string.IsNullOrEmpty(apiKey))
         {
@@ -192,11 +192,11 @@ public class DebugController : ControllerBase
 
         try
         {
-            using var httpClient = new HttpClient();
+            using HttpClient httpClient = new HttpClient();
             httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
 
             // Teste direkt HuggingFace API mit korrektem Model-Namen
-            var testUrl = "https://api-inference.huggingface.co/models/openai-community/gpt2";
+            string testUrl = "https://api-inference.huggingface.co/models/openai-community/gpt2";
             var testPayload = new
             {
                 inputs = "Great workout today! I feel",
@@ -209,13 +209,13 @@ public class DebugController : ControllerBase
                 },
             };
 
-            var json = System.Text.Json.JsonSerializer.Serialize(testPayload);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            string json = System.Text.Json.JsonSerializer.Serialize(testPayload);
+            StringContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
             this.logger.LogInformation("Testing HuggingFace API directly...");
-            var response = await httpClient.PostAsync(testUrl, content);
+            HttpResponseMessage response = await httpClient.PostAsync(testUrl, content, cancellationToken);
 
-            var responseContent = await response.Content.ReadAsStringAsync();
+            string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
             return this.Ok(new
             {
@@ -238,25 +238,25 @@ public class DebugController : ControllerBase
     }
 
     [HttpGet("test-no-auth")]
-    public async Task<ActionResult> TestWithoutAuth()
+    public async Task<ActionResult> TestWithoutAuth(CancellationToken cancellationToken)
     {
         try
         {
-            using var httpClient = new HttpClient();
+            using HttpClient httpClient = new HttpClient();
 
             // KEIN Authorization Header!
-            var testUrl = "https://api-inference.huggingface.co/models/openai-community/gpt2";
+            string testUrl = "https://api-inference.huggingface.co/models/openai-community/gpt2";
             var testPayload = new
             {
                 inputs = "Hello, I am a fitness coach and",
             };
 
-            var json = System.Text.Json.JsonSerializer.Serialize(testPayload);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            string json = System.Text.Json.JsonSerializer.Serialize(testPayload);
+            StringContent content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
             this.logger.LogInformation("Testing WITHOUT authentication...");
-            var response = await httpClient.PostAsync(testUrl, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await httpClient.PostAsync(testUrl, content, cancellationToken);
+            string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
             return this.Ok(new
             {

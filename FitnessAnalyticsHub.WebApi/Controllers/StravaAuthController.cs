@@ -1,7 +1,8 @@
-﻿using FitnessAnalyticsHub.Domain.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+﻿namespace FitnessAnalyticsHub.WebApi.Controllers;
 
-namespace FitnessAnalyticsHub.WebApi.Controllers;
+using FitnessAnalyticsHub.Domain.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -18,11 +19,11 @@ public class StravaAuthController : ControllerBase
     /// Schritt 1: Leitet den User zu Strava zur Autorisierung weiter
     /// </summary>
     [HttpGet("login")]
-    public async Task<IActionResult> Login()
+    public async Task<IActionResult> Login(CancellationToken cancellationToken)
     {
         try
         {
-            var authUrl = await this.stravaService.GetAuthorizationUrlAsync();
+            string authUrl = await this.stravaService.GetAuthorizationUrlAsync(cancellationToken);
             Console.WriteLine($"Redirecting to: {authUrl}");
 
             // Redirect zu Strava
@@ -38,7 +39,7 @@ public class StravaAuthController : ControllerBase
     /// Schritt 2: Callback von Strava - tauscht Code gegen Token
     /// </summary>
     [HttpGet("callback")]
-    public async Task<IActionResult> Callback([FromQuery] string code, [FromQuery] string scope, [FromQuery] string error)
+    public async Task<IActionResult> Callback([FromQuery] string code, [FromQuery] string scope, [FromQuery] string error, CancellationToken cancellationToken)
     {
         try
         {
@@ -53,10 +54,10 @@ public class StravaAuthController : ControllerBase
             }
 
             Console.WriteLine($"Received code: {code}");
-            Console.WriteLine($"Received scope: {scope}");  // <-- WICHTIG: Was bekommst du hier?
+            Console.WriteLine($"Received scope: {scope}");
 
             // Tausche Code gegen Token
-            var tokenInfo = await this.stravaService.ExchangeCodeForTokenAsync(code);
+            Domain.Models.TokenInfo tokenInfo = await this.stravaService.ExchangeCodeForTokenAsync(code, cancellationToken);
 
             Console.WriteLine($"Token received: {tokenInfo.AccessToken?.Substring(0, 10)}...");
             Console.WriteLine($"Token expires at: {DateTimeOffset.FromUnixTimeSeconds(tokenInfo.ExpiresAt)}");
@@ -65,7 +66,7 @@ public class StravaAuthController : ControllerBase
             Console.WriteLine($"Token scopes: {scope}");
 
             // Teste sofort das Token mit Athletendaten
-            var athlete = await this.stravaService.GetAthleteProfileAsync(tokenInfo.AccessToken);
+            Domain.Entities.Athlete athlete = await this.stravaService.GetAthleteProfileAsync(tokenInfo.AccessToken, cancellationToken);
             Console.WriteLine($"Athlete: {athlete.FirstName} {athlete.LastName}");
 
             // BEVOR du Activities abrufst, prüfe den Scope:
@@ -75,7 +76,7 @@ public class StravaAuthController : ControllerBase
             }
 
             // Jetzt erst Activities testen:
-            var activities = await this.stravaService.GetActivitiesAsync(tokenInfo.AccessToken, 1, 5);
+            IEnumerable<Domain.Entities.Activity> activities = await this.stravaService.GetActivitiesAsync(tokenInfo.AccessToken, cancellationToken, 1, 5);
             Console.WriteLine($"Found {activities.Count()} activities");
 
             return this.Ok(new
@@ -103,7 +104,7 @@ public class StravaAuthController : ControllerBase
     /// Schritt 3: Test-Endpoint um Aktivitäten mit gespeichertem Token abzurufen
     /// </summary>
     [HttpGet("test-activities")]
-    public async Task<IActionResult> TestActivities([FromQuery] string accessToken)
+    public async Task<IActionResult> TestActivities([FromQuery] string accessToken, CancellationToken cancellationToken)
     {
         try
         {
@@ -112,7 +113,7 @@ public class StravaAuthController : ControllerBase
                 return this.BadRequest("Access token required");
             }
 
-            var activities = await this.stravaService.GetActivitiesAsync(accessToken, 1, 10);
+            IEnumerable<Domain.Entities.Activity> activities = await this.stravaService.GetActivitiesAsync(accessToken, cancellationToken, 1, 10);
 
             return this.Ok(new
             {

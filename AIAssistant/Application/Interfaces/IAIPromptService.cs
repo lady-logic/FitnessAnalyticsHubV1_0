@@ -2,9 +2,9 @@
 
 public interface IAIPromptService
 {
-    Task<string> GetFitnessAnalysisAsync(string prompt);
+    Task<string> GetFitnessAnalysisAsync(string prompt, CancellationToken cancellationToken);
 
-    Task<string> GetHealthAnalysisAsync(string prompt);
+    Task<string> GetHealthAnalysisAsync(string prompt, CancellationToken cancellationToken);
 
-    Task<string> GetMotivationAsync(string prompt);
+    Task<string> GetMotivationAsync(string prompt, CancellationToken cancellationToken);
 }

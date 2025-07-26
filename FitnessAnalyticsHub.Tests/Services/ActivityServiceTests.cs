@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿namespace FitnessAnalyticsHub.Tests.Services;
+
+using AutoMapper;
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Application.Mapping;
@@ -11,8 +13,6 @@ using Microsoft.EntityFrameworkCore;
 using Moq;
 using Activity = FitnessAnalyticsHub.Domain.Entities.Activity;
 
-namespace FitnessAnalyticsHub.Tests.Services;
-
 public class ActivityServiceTests
 {
     private readonly ApplicationDbContext context;
@@ -24,7 +24,7 @@ public class ActivityServiceTests
     public ActivityServiceTests()
     {
         // InMemory Database erstellen
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+        DbContextOptions<ApplicationDbContext> options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Eindeutiger Name pro Test
             .Options;
 
@@ -33,7 +33,7 @@ public class ActivityServiceTests
         this.mockAiAssistantClient = new Mock<IAIAssistantClientService>();
 
         // Konfiguriere AutoMapper mit dem tatsächlichen Mappingprofil
-        var mapperConfig = new MapperConfiguration(cfg =>
+        MapperConfiguration mapperConfig = new MapperConfiguration(cfg =>
         {
             cfg.AddProfile<MappingProfile>();
         });
@@ -55,7 +55,7 @@ public class ActivityServiceTests
     public async Task GetActivityByIdAsync_ShouldReturnActivity_WhenActivityExists()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -65,7 +65,7 @@ public class ActivityServiceTests
             UpdatedAt = DateTime.Now,
         };
 
-        var activity = new Activity
+        Activity activity = new Activity
         {
             Id = 1,
             AthleteId = 1,
@@ -86,7 +86,7 @@ public class ActivityServiceTests
         await this.context.SaveChangesAsync();
 
         // Act
-        var result = await this.activityService.GetActivityByIdAsync(1, It.IsAny<CancellationToken>());
+        ActivityDto result = await this.activityService.GetActivityByIdAsync(1, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.NotNull(result);
@@ -103,7 +103,7 @@ public class ActivityServiceTests
         // Arrange - Keine Daten in DB einfügen
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
+        ActivityNotFoundException exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
             () => this.activityService.GetActivityByIdAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.ActivityId);
@@ -113,7 +113,7 @@ public class ActivityServiceTests
     public async Task GetActivitiesByAthleteIdAsync_ShouldReturnActivities_WhenActivitiesExist()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -123,7 +123,7 @@ public class ActivityServiceTests
             UpdatedAt = DateTime.Now,
         };
 
-        var activities = new List<Activity>
+        List<Activity> activities = new List<Activity>
     {
         new Activity
         {
@@ -156,10 +156,10 @@ public class ActivityServiceTests
         await this.context.SaveChangesAsync();
 
         // Act
-        var result = await this.activityService.GetActivitiesByAthleteIdAsync(1, CancellationToken.None);
+        IEnumerable<ActivityDto> result = await this.activityService.GetActivitiesByAthleteIdAsync(1, CancellationToken.None);
 
         // Assert
-        var resultList = result.ToList();
+        List<ActivityDto> resultList = result.ToList();
         Assert.Equal(2, resultList.Count);
         Assert.All(resultList, a => Assert.Equal("Max Mustermann", a.AthleteFullName));
         Assert.Contains(resultList, a => a.Name == "Morning Run");
@@ -170,7 +170,7 @@ public class ActivityServiceTests
     public async Task CreateActivityAsync_ShouldCreateActivity_WhenValidData()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -183,7 +183,7 @@ public class ActivityServiceTests
         await this.context.Athletes.AddAsync(athlete);
         await this.context.SaveChangesAsync();
 
-        var createDto = new CreateActivityDto
+        CreateActivityDto createDto = new CreateActivityDto
         {
             AthleteId = 1,
             Name = "Test Run",
@@ -195,7 +195,7 @@ public class ActivityServiceTests
         };
 
         // Act
-        var result = await this.activityService.CreateActivityAsync(createDto, CancellationToken.None);
+        ActivityDto result = await this.activityService.CreateActivityAsync(createDto, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -204,7 +204,7 @@ public class ActivityServiceTests
         Assert.True(result.Id > 0);
 
         // Verify in database
-        var activityInDb = await this.context.Activities.FindAsync(result.Id);
+        Activity? activityInDb = await this.context.Activities.FindAsync(result.Id);
         Assert.NotNull(activityInDb);
         Assert.Equal("Test Run", activityInDb.Name);
     }
@@ -213,7 +213,7 @@ public class ActivityServiceTests
     public async Task UpdateActivityAsync_ShouldUpdateActivity_WhenActivityExists()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -223,7 +223,7 @@ public class ActivityServiceTests
             UpdatedAt = DateTime.Now,
         };
 
-        var activity = new Activity
+        Activity activity = new Activity
         {
             Id = 1,
             AthleteId = 1,
@@ -240,7 +240,7 @@ public class ActivityServiceTests
         await this.context.Activities.AddAsync(activity);
         await this.context.SaveChangesAsync();
 
-        var updateDto = new UpdateActivityDto
+        UpdateActivityDto updateDto = new UpdateActivityDto
         {
             Id = 1,
             Name = "Updated Name",
@@ -251,7 +251,7 @@ public class ActivityServiceTests
         await this.activityService.UpdateActivityAsync(updateDto, CancellationToken.None);
 
         // Assert
-        var updatedActivity = await this.context.Activities.FindAsync(1);
+        Activity? updatedActivity = await this.context.Activities.FindAsync(1);
         Assert.NotNull(updatedActivity);
         Assert.Equal("Updated Name", updatedActivity.Name);
         Assert.Equal(6000, updatedActivity.Distance);
@@ -261,7 +261,7 @@ public class ActivityServiceTests
     public async Task UpdateActivityAsync_ShouldThrowActivityNotFoundException_WhenActivityDoesNotExist()
     {
         // Arrange
-        var updateDto = new UpdateActivityDto
+        UpdateActivityDto updateDto = new UpdateActivityDto
         {
             Id = 999,
             Name = "Updated Name",
@@ -269,7 +269,7 @@ public class ActivityServiceTests
         };
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
+        ActivityNotFoundException exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
             () => this.activityService.UpdateActivityAsync(updateDto, CancellationToken.None));
 
         Assert.Equal(999, exception.ActivityId);
@@ -279,7 +279,7 @@ public class ActivityServiceTests
     public async Task DeleteActivityAsync_ShouldDeleteActivity_WhenActivityExists()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -289,7 +289,7 @@ public class ActivityServiceTests
             UpdatedAt = DateTime.Now,
         };
 
-        var activity = new Activity
+        Activity activity = new Activity
         {
             Id = 1,
             AthleteId = 1,
@@ -309,7 +309,7 @@ public class ActivityServiceTests
         await this.activityService.DeleteActivityAsync(1, CancellationToken.None);
 
         // Assert
-        var deletedActivity = await this.context.Activities.FindAsync(1);
+        Activity? deletedActivity = await this.context.Activities.FindAsync(1);
         Assert.Null(deletedActivity);
     }
 
@@ -319,7 +319,7 @@ public class ActivityServiceTests
         // Arrange - Keine Activity in DB
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
+        ActivityNotFoundException exception = await Assert.ThrowsAsync<ActivityNotFoundException>(
             () => this.activityService.DeleteActivityAsync(999, CancellationToken.None));
 
         Assert.Equal(999, exception.ActivityId);
@@ -329,7 +329,7 @@ public class ActivityServiceTests
     public async Task GetAthleteActivityStatisticsAsync_ShouldReturnCorrectStatistics()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -339,7 +339,7 @@ public class ActivityServiceTests
             UpdatedAt = DateTime.Now,
         };
 
-        var activities = new List<Activity>
+        List<Activity> activities = new List<Activity>
     {
         new Activity
         {
@@ -393,7 +393,7 @@ public class ActivityServiceTests
         await this.context.SaveChangesAsync();
 
         // Act
-        var result = await this.activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
+        ActivityStatisticsDto result = await this.activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -419,7 +419,7 @@ public class ActivityServiceTests
     public async Task GetAthleteActivityStatisticsAsync_ShouldReturnZeroStatistics_WhenNoActivities()
     {
         // Arrange
-        var athlete = new Athlete
+        Athlete athlete = new Athlete
         {
             Id = 1,
             FirstName = "Max",
@@ -433,7 +433,7 @@ public class ActivityServiceTests
         await this.context.SaveChangesAsync();
 
         // Act
-        var result = await this.activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
+        ActivityStatisticsDto result = await this.activityService.GetAthleteActivityStatisticsAsync(1, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);

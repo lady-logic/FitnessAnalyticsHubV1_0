@@ -11,7 +11,7 @@ public abstract class ValueObject
             return false;
         }
 
-        var other = (ValueObject)obj;
+        ValueObject other = (ValueObject)obj;
 
         return this.GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
     }

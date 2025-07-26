@@ -1,8 +1,8 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Tests.Helpers;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Applications.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
-
-namespace AIAssistant.Tests.Helpers;
 
 /// <summary>
 /// Builder class for creating test data objects with sensible defaults.
@@ -11,12 +11,19 @@ namespace AIAssistant.Tests.Helpers;
 public class TestDataBuilder
 {
     public static AthleteProfileDtoBuilder AthleteProfile() => new();
+
     public static WorkoutDataDtoBuilder WorkoutData() => new();
+
     public static MotivationRequestDtoBuilder MotivationRequest() => new();
+
     public static MotivationResponseDtoBuilder MotivationResponse() => new();
+
     public static WorkoutAnalysisRequestDtoBuilder WorkoutAnalysisRequest() => new();
+
     public static WorkoutAnalysisResponseDtoBuilder WorkoutAnalysisResponse() => new();
+
     public static GrpcJsonWorkoutDtoBuilder GrpcJsonWorkout() => new();
+
     public static GrpcJsonAthleteProfileDtoBuilder GrpcJsonAthleteProfile() => new();
 }
 

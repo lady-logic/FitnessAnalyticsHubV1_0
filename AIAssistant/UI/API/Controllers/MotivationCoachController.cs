@@ -23,7 +23,7 @@ public class MotivationCoachController : ControllerBase
 
     [HttpPost("motivate")]
     public async Task<ActionResult<MotivationResponseDto>> GetMotivation(
-        [FromBody] MotivationRequestDto request)
+        [FromBody] MotivationRequestDto request, CancellationToken cancellationToken)
     {
         try
         {
@@ -32,7 +32,7 @@ public class MotivationCoachController : ControllerBase
                 request.AthleteProfile.Name);
 
             // Nutze HuggingFace (alte OpenAI/Claude Methoden sind jetzt redirects)
-            var result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(request);
+            MotivationResponseDto result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(request, cancellationToken);
             return this.Ok(result);
         }
         catch (Exception ex)
@@ -45,7 +45,7 @@ public class MotivationCoachController : ControllerBase
     // Neuer spezifischer HuggingFace Endpoint (optional)
     [HttpPost("motivate/huggingface")]
     public async Task<ActionResult<MotivationResponseDto>> GetHuggingFaceMotivation(
-        [FromBody] MotivationRequestDto request)
+        [FromBody] MotivationRequestDto request, CancellationToken cancellationToken)
     {
         try
         {
@@ -53,7 +53,7 @@ public class MotivationCoachController : ControllerBase
                 "Generating HuggingFace motivational message for athlete: {Name}",
                 request.AthleteProfile.Name);
 
-            var result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(request);
+            MotivationResponseDto result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(request, cancellationToken);
             return this.Ok(result);
         }
         catch (Exception ex)
@@ -65,12 +65,12 @@ public class MotivationCoachController : ControllerBase
 
     // Health Check für HuggingFace Service
     [HttpGet("health")]
-    public async Task<ActionResult> HealthCheck()
+    public async Task<ActionResult> HealthCheck(CancellationToken cancellationToken)
     {
         try
         {
             // Einfache Test-Anfrage
-            var testRequest = new MotivationRequestDto
+            MotivationRequestDto testRequest = new MotivationRequestDto
             {
                 AthleteProfile = new AthleteProfileDto
                 {
@@ -81,7 +81,7 @@ public class MotivationCoachController : ControllerBase
                 IsStruggling = false,
             };
 
-            var result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(testRequest);
+            MotivationResponseDto result = await this.motivationCoachService.GetHuggingFaceMotivationalMessageAsync(testRequest, cancellationToken);
 
             return this.Ok(new
             {

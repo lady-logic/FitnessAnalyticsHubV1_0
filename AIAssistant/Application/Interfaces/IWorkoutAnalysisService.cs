@@ -1,12 +1,12 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Application.Interfaces;
 
-namespace AIAssistant.Application.Interfaces;
+using AIAssistant.Application.DTOs;
 
 public interface IWorkoutAnalysisService
 {
     Task<WorkoutAnalysisResponseDto> AnalyzeHuggingFaceWorkoutsAsync(
-        WorkoutAnalysisRequestDto request);
+        WorkoutAnalysisRequestDto request, CancellationToken cancellationToken);
 
     Task<WorkoutAnalysisResponseDto> AnalyzeGoogleGeminiWorkoutsAsync(
-        WorkoutAnalysisRequestDto request);
+        WorkoutAnalysisRequestDto request, CancellationToken cancellationToken);
 }

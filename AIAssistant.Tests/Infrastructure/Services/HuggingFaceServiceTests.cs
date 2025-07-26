@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿namespace AIAssistant.Tests.Infrastructure.Services;
+
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
@@ -6,8 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
-
-namespace AIAssistant.Tests.Infrastructure.Services;
 
 public class HuggingFaceServiceTests : IDisposable
 {
@@ -45,7 +45,7 @@ public class HuggingFaceServiceTests : IDisposable
     public async Task GetFitnessAnalysisAsync_WithValidPrompt_ReturnsAnalysis()
     {
         // Arrange
-        var prompt = "Analyze my recent 5K run with time 25:30";
+        string prompt = "Analyze my recent 5K run with time 25:30";
         var expectedResponse = new
         {
             choices = new[]
@@ -63,7 +63,7 @@ public class HuggingFaceServiceTests : IDisposable
         this.SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await this.service.GetFitnessAnalysisAsync(prompt);
+        string result = await this.service.GetFitnessAnalysisAsync(prompt, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -75,11 +75,11 @@ public class HuggingFaceServiceTests : IDisposable
     public async Task GetFitnessAnalysisAsync_WithApiError_ReturnsFallbackResponse()
     {
         // Arrange
-        var prompt = "Test prompt";
+        string prompt = "Test prompt";
         this.SetupHttpResponse(null, HttpStatusCode.Unauthorized);
 
         // Act
-        var result = await this.service.GetFitnessAnalysisAsync(prompt);
+        string result = await this.service.GetFitnessAnalysisAsync(prompt, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -91,7 +91,7 @@ public class HuggingFaceServiceTests : IDisposable
     public async Task GetFitnessAnalysisAsync_WithTimeout_ReturnsFallbackResponse()
     {
         // Arrange
-        var prompt = "Test prompt";
+        string prompt = "Test prompt";
         this.mockHttpMessageHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
                 "SendAsync",
@@ -100,7 +100,7 @@ public class HuggingFaceServiceTests : IDisposable
             .ThrowsAsync(new TaskCanceledException("Timeout", new TimeoutException()));
 
         // Act
-        var result = await this.service.GetFitnessAnalysisAsync(prompt);
+        string result = await this.service.GetFitnessAnalysisAsync(prompt, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -116,7 +116,7 @@ public class HuggingFaceServiceTests : IDisposable
     public async Task GetMotivationAsync_WithValidPrompt_ReturnsMotivation()
     {
         // Arrange
-        var prompt = "I need motivation for my workout today";
+        string prompt = "I need motivation for my workout today";
         var expectedResponse = new
         {
             choices = new[]
@@ -134,7 +134,7 @@ public class HuggingFaceServiceTests : IDisposable
         this.SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await this.service.GetMotivationAsync(prompt);
+        string result = await this.service.GetMotivationAsync(prompt, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -146,11 +146,11 @@ public class HuggingFaceServiceTests : IDisposable
     public async Task GetMotivationAsync_WithRateLimitError_ReturnsFallbackResponse()
     {
         // Arrange
-        var prompt = "Motivate me";
+        string prompt = "Motivate me";
         this.SetupHttpResponse(null, HttpStatusCode.TooManyRequests);
 
         // Act
-        var result = await this.service.GetMotivationAsync(prompt);
+        string result = await this.service.GetMotivationAsync(prompt, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -167,7 +167,7 @@ public class HuggingFaceServiceTests : IDisposable
     public async Task GetHealthAnalysisAsync_WithValidPrompt_ReturnsHealthAnalysis()
     {
         // Arrange
-        var prompt = "Analyze my training load: 5 runs this week, feeling tired";
+        string prompt = "Analyze my training load: 5 runs this week, feeling tired";
         var expectedResponse = new
         {
             choices = new[]
@@ -185,7 +185,7 @@ public class HuggingFaceServiceTests : IDisposable
         this.SetupHttpResponse(expectedResponse, HttpStatusCode.OK);
 
         // Act
-        var result = await this.service.GetHealthAnalysisAsync(prompt);
+        string result = await this.service.GetHealthAnalysisAsync(prompt, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -204,11 +204,11 @@ public class HuggingFaceServiceTests : IDisposable
     public async Task HuggingFaceService_WithHttpErrors_ReturnsFallbackResponse(HttpStatusCode statusCode)
     {
         // Arrange
-        var prompt = "Test prompt";
+        string prompt = "Test prompt";
         this.SetupHttpResponse(null, statusCode);
 
         // Act
-        var result = await this.service.GetFitnessAnalysisAsync(prompt);
+        string result = await this.service.GetFitnessAnalysisAsync(prompt, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -220,9 +220,9 @@ public class HuggingFaceServiceTests : IDisposable
     public async Task HuggingFaceService_WithMalformedResponse_ReturnsFallbackResponse()
     {
         // Arrange
-        var prompt = "Test prompt";
-        var malformedResponse = "{ invalid json";
-        var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
+        string prompt = "Test prompt";
+        string malformedResponse = "{ invalid json";
+        HttpResponseMessage httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(malformedResponse, Encoding.UTF8, "application/json"),
         };
@@ -234,7 +234,7 @@ public class HuggingFaceServiceTests : IDisposable
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await this.service.GetFitnessAnalysisAsync(prompt);
+        string result = await this.service.GetFitnessAnalysisAsync(prompt, CancellationToken.None);
 
         // Assert
         Assert.NotNull(result);
@@ -250,11 +250,11 @@ public class HuggingFaceServiceTests : IDisposable
     public void HuggingFaceService_WithMissingApiKey_LogsWarning()
     {
         // Arrange
-        var mockConfigNoKey = new Mock<IConfiguration>();
+        Mock<IConfiguration> mockConfigNoKey = new Mock<IConfiguration>();
         mockConfigNoKey.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
 
         // Act
-        var serviceWithoutKey = new HuggingFaceService(
+        HuggingFaceService serviceWithoutKey = new HuggingFaceService(
             this.httpClient,
             mockConfigNoKey.Object,
             this.mockLogger.Object);
@@ -280,7 +280,7 @@ public class HuggingFaceServiceTests : IDisposable
 
         if (responseObject != null)
         {
-            var jsonResponse = JsonSerializer.Serialize(responseObject);
+            string jsonResponse = JsonSerializer.Serialize(responseObject);
             httpResponse = new HttpResponseMessage(statusCode)
             {
                 Content = new StringContent(jsonResponse, Encoding.UTF8, "application/json"),

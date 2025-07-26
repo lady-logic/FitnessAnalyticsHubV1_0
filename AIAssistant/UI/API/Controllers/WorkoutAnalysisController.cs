@@ -14,7 +14,7 @@ public class WorkoutAnalysisController : ControllerBase
 
     public WorkoutAnalysisController(
         IWorkoutAnalysisService workoutAnalysisService,
-        ILogger<WorkoutAnalysisController> logger)
+        ILogger<WorkoutAnalysisController> logger, CancellationToken cancellationToken)
     {
         this.workoutAnalysisService = workoutAnalysisService;
         this.logger = logger;
@@ -22,7 +22,7 @@ public class WorkoutAnalysisController : ControllerBase
 
     [HttpPost("analyze/huggingface")]
     public async Task<ActionResult<WorkoutAnalysisResponseDto>> AnalyzeHuggingFaceWorkouts(
-        [FromBody] WorkoutAnalysisRequestDto request)
+        [FromBody] WorkoutAnalysisRequestDto request, CancellationToken cancellationToken)
     {
         try
         {
@@ -30,7 +30,7 @@ public class WorkoutAnalysisController : ControllerBase
                 "Analyzing workouts with HuggingFace for analysis type: {AnalysisType}",
                 request.AnalysisType);
 
-            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
+            WorkoutAnalysisResponseDto result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request, cancellationToken);
             return this.Ok(result);
         }
         catch (Exception ex)
@@ -42,7 +42,7 @@ public class WorkoutAnalysisController : ControllerBase
 
     [HttpPost("analyze/googlegemini")]
     public async Task<ActionResult<WorkoutAnalysisResponseDto>> AnalyzeGoogleGeminiWorkouts(
-        [FromBody] WorkoutAnalysisRequestDto request)
+        [FromBody] WorkoutAnalysisRequestDto request, CancellationToken cancellationToken)
     {
         try
         {
@@ -50,7 +50,7 @@ public class WorkoutAnalysisController : ControllerBase
                 "Analyzing workouts with GoogleGemini for analysis type: {AnalysisType}",
                 request.AnalysisType);
 
-            var result = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(request);
+            WorkoutAnalysisResponseDto result = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(request, cancellationToken);
             return this.Ok(result);
         }
         catch (Exception ex)
@@ -64,16 +64,18 @@ public class WorkoutAnalysisController : ControllerBase
     [HttpGet("performance-trends/{athleteId}")]
     public async Task<ActionResult<WorkoutAnalysisResponseDto>> AnalyzePerformanceTrends(
         int athleteId,
+        CancellationToken cancellationToken,
         [FromQuery] string timeFrame = "month")
     {
         try
         {
             this.logger.LogInformation(
                 "Analyzing performance trends for athlete: {AthleteId}, timeFrame: {TimeFrame}",
-                athleteId, timeFrame);
+                athleteId,
+                timeFrame);
 
             // Erstelle Request für Performance Trends
-            var request = new WorkoutAnalysisRequestDto
+            WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Trends",
                 RecentWorkouts = this.GetDemoWorkouts(athleteId, timeFrame), // Später durch echte Daten ersetzen
@@ -85,7 +87,7 @@ public class WorkoutAnalysisController : ControllerBase
                 },
             };
 
-            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
+            WorkoutAnalysisResponseDto result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request, cancellationToken);
             return this.Ok(result);
         }
         catch (Exception ex)
@@ -98,13 +100,13 @@ public class WorkoutAnalysisController : ControllerBase
     // Training Recommendations Endpoint
     [HttpGet("recommendations/{athleteId}")]
     public async Task<ActionResult<WorkoutAnalysisResponseDto>> GetTrainingRecommendations(
-        int athleteId)
+        int athleteId, CancellationToken cancellationToken)
     {
         try
         {
             this.logger.LogInformation("Getting training recommendations for athlete: {AthleteId}", athleteId);
 
-            var request = new WorkoutAnalysisRequestDto
+            WorkoutAnalysisRequestDto request = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Recommendations",
                 RecentWorkouts = this.GetDemoWorkouts(athleteId, "week"),
@@ -116,7 +118,7 @@ public class WorkoutAnalysisController : ControllerBase
                 },
             };
 
-            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request);
+            WorkoutAnalysisResponseDto result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(request, cancellationToken);
             return this.Ok(result);
         }
         catch (Exception ex)
@@ -129,13 +131,13 @@ public class WorkoutAnalysisController : ControllerBase
     // Health Metrics Analysis Endpoint
     [HttpPost("health-analysis")]
     public async Task<ActionResult<WorkoutAnalysisResponseDto>> AnalyzeHealthMetrics(
-        [FromBody] HealthAnalysisRequestDto request)
+        [FromBody] HealthAnalysisRequestDto request, CancellationToken cancellationToken)
     {
         try
         {
             this.logger.LogInformation("Analyzing health metrics for athlete: {AthleteId}", request.AthleteId);
 
-            var analysisRequest = new WorkoutAnalysisRequestDto
+            WorkoutAnalysisRequestDto analysisRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Health",
                 RecentWorkouts = request.RecentWorkouts,
@@ -148,7 +150,7 @@ public class WorkoutAnalysisController : ControllerBase
                 },
             };
 
-            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+            WorkoutAnalysisResponseDto result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest, cancellationToken);
             return this.Ok(result);
         }
         catch (Exception ex)
@@ -160,12 +162,12 @@ public class WorkoutAnalysisController : ControllerBase
 
     // Health Check für WorkoutAnalysis Service
     [HttpGet("health")]
-    public async Task<ActionResult> HealthCheck()
+    public async Task<ActionResult> HealthCheck(CancellationToken cancellationToken)
     {
         try
         {
             // Einfache Test-Anfrage
-            var testRequest = new WorkoutAnalysisRequestDto
+            WorkoutAnalysisRequestDto testRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Health Check",
                 RecentWorkouts = new List<WorkoutDataDto>
@@ -187,7 +189,7 @@ public class WorkoutAnalysisController : ControllerBase
                 },
             };
 
-            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(testRequest);
+            WorkoutAnalysisResponseDto result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(testRequest, cancellationToken);
 
             return this.Ok(new
             {

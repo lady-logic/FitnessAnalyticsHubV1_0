@@ -1,10 +1,10 @@
-﻿using AIAssistant.Application.DTOs;
-using AIAssistant.Applications.DTOs;
+﻿namespace AIAssistant.Application.Interfaces;
 
-namespace AIAssistant.Application.Interfaces;
+using AIAssistant.Application.DTOs;
+using AIAssistant.Applications.DTOs;
 
 public interface IMotivationCoachService
 {
     Task<MotivationResponseDto> GetHuggingFaceMotivationalMessageAsync(
-        MotivationRequestDto request);
+        MotivationRequestDto request, CancellationToken cancellationToken);
 }

@@ -1,11 +1,11 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Tests.Extensions;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Domain.Models;
 using AIAssistant.Extensions;
 using AIAssistant.Tests.Helpers;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Extensions;
-
-namespace AIAssistant.Tests.Extensions;
 
 public class AthleteProfileExtensionsTests
 {
@@ -15,7 +15,7 @@ public class AthleteProfileExtensionsTests
     public void ToDto_WithValidDomainModel_ReturnsCorrectDto()
     {
         // Arrange
-        var domain = new AthleteProfile
+        AthleteProfile domain = new AthleteProfile
         {
             Id = "test-id-123",
             Name = "John Doe",
@@ -29,7 +29,7 @@ public class AthleteProfileExtensionsTests
         };
 
         // Act
-        var dto = domain.ToDto();
+        AthleteProfileDto dto = domain.ToDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -44,7 +44,7 @@ public class AthleteProfileExtensionsTests
     public void ToDto_WithNullPreferences_ReturnsNullPreferences()
     {
         // Arrange
-        var domain = new AthleteProfile
+        AthleteProfile domain = new AthleteProfile
         {
             Id = "test-id",
             Name = "Test User",
@@ -54,7 +54,7 @@ public class AthleteProfileExtensionsTests
         };
 
         // Act
-        var dto = domain.ToDto();
+        AthleteProfileDto dto = domain.ToDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -69,7 +69,7 @@ public class AthleteProfileExtensionsTests
     public void ToDomain_WithValidDto_ReturnsCorrectDomainModel()
     {
         // Arrange
-        var dto = TestDataBuilder.AthleteProfile()
+        AthleteProfileDto dto = TestDataBuilder.AthleteProfile()
             .WithId("dto-test-id")
             .WithName("Jane Smith")
             .WithFitnessLevel("Intermediate")
@@ -77,7 +77,7 @@ public class AthleteProfileExtensionsTests
             .Build();
 
         // Act
-        var domain = dto.ToDomain();
+        AthleteProfile domain = dto.ToDomain();
 
         // Assert
         Assert.NotNull(domain);
@@ -92,7 +92,7 @@ public class AthleteProfileExtensionsTests
     public void ToDomain_WithNullId_GeneratesNewId()
     {
         // Arrange
-        var dto = new AthleteProfileDto
+        AthleteProfileDto dto = new AthleteProfileDto
         {
             Id = null,
             Name = "Test User",
@@ -101,7 +101,7 @@ public class AthleteProfileExtensionsTests
         };
 
         // Act
-        var domain = dto.ToDomain();
+        AthleteProfile domain = dto.ToDomain();
 
         // Assert
         Assert.NotNull(domain);
@@ -117,14 +117,14 @@ public class AthleteProfileExtensionsTests
     public void ToAthleteProfileDto_WithValidGrpcJsonProfile_ReturnsCorrectDto()
     {
         // Arrange
-        var grpcProfile = TestDataBuilder.GrpcJsonAthleteProfile()
+        GrpcJsonAthleteProfileDto grpcProfile = TestDataBuilder.GrpcJsonAthleteProfile()
             .WithName("gRPC Test User")
             .Build();
         grpcProfile.FitnessLevel = "Expert";
         grpcProfile.PrimaryGoal = "Competition";
 
         // Act
-        var dto = grpcProfile.ToAthleteProfileDto();
+        AthleteProfileDto dto = grpcProfile.ToAthleteProfileDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -140,7 +140,7 @@ public class AthleteProfileExtensionsTests
     public void ToAthleteProfileDto_WithNullName_HandlesGracefully()
     {
         // Arrange
-        var grpcProfile = new GrpcJsonAthleteProfileDto
+        GrpcJsonAthleteProfileDto grpcProfile = new GrpcJsonAthleteProfileDto
         {
             Name = null,
             FitnessLevel = "Beginner",
@@ -148,7 +148,7 @@ public class AthleteProfileExtensionsTests
         };
 
         // Act
-        var dto = grpcProfile.ToAthleteProfileDto();
+        AthleteProfileDto dto = grpcProfile.ToAthleteProfileDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -165,7 +165,7 @@ public class AthleteProfileExtensionsTests
     public void ToAthleteProfileDto_WithValidGrpcProfile_ReturnsCorrectDto()
     {
         // Arrange
-        var grpcProfile = new global::Fitnessanalyticshub.AthleteProfile
+        Fitnessanalyticshub.AthleteProfile grpcProfile = new global::Fitnessanalyticshub.AthleteProfile
         {
             Name = "gRPC Athlete",
             FitnessLevel = "Advanced",
@@ -173,7 +173,7 @@ public class AthleteProfileExtensionsTests
         };
 
         // Act
-        var dto = grpcProfile.ToAthleteProfileDto();
+        AthleteProfileDto dto = grpcProfile.ToAthleteProfileDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -189,12 +189,12 @@ public class AthleteProfileExtensionsTests
     public void ToAthleteProfileDto_WithDefaultGrpcFields_HandlesGracefully()
     {
         // Arrange
-        var grpcProfile = new global::Fitnessanalyticshub.AthleteProfile();
+        Fitnessanalyticshub.AthleteProfile grpcProfile = new global::Fitnessanalyticshub.AthleteProfile();
 
         // gRPC Properties haben automatisch default values (leere Strings)
 
         // Act
-        var dto = grpcProfile.ToAthleteProfileDto();
+        AthleteProfileDto dto = grpcProfile.ToAthleteProfileDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -216,7 +216,7 @@ public class AthleteProfileExtensionsTests
     public void ToAthleteProfileDto_WithInvalidNames_HandleGracefully(string? invalidName)
     {
         // Arrange
-        var grpcProfile = new GrpcJsonAthleteProfileDto
+        GrpcJsonAthleteProfileDto grpcProfile = new GrpcJsonAthleteProfileDto
         {
             Name = invalidName,
             FitnessLevel = "Beginner",
@@ -224,7 +224,7 @@ public class AthleteProfileExtensionsTests
         };
 
         // Act
-        var dto = grpcProfile.ToAthleteProfileDto();
+        AthleteProfileDto dto = grpcProfile.ToAthleteProfileDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -235,7 +235,7 @@ public class AthleteProfileExtensionsTests
     public void ToDomain_PreservesComplexPreferences()
     {
         // Arrange
-        var complexPreferences = new Dictionary<string, object>
+        Dictionary<string, object> complexPreferences = new Dictionary<string, object>
         {
             { "preferredActivities", new[] { "Run", "Bike", "Swim" } },
             { "trainingDays", 6 },
@@ -249,7 +249,7 @@ public class AthleteProfileExtensionsTests
             },
         };
 
-        var dto = new AthleteProfileDto
+        AthleteProfileDto dto = new AthleteProfileDto
         {
             Id = "complex-test",
             Name = "Complex Athlete",
@@ -259,8 +259,8 @@ public class AthleteProfileExtensionsTests
         };
 
         // Act
-        var domain = dto.ToDomain();
-        var backToDto = domain.ToDto();
+        AthleteProfile domain = dto.ToDomain();
+        AthleteProfileDto backToDto = domain.ToDto();
 
         // Assert
         Assert.Equal(complexPreferences, domain.Preferences);

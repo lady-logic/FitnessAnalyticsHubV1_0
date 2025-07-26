@@ -1,12 +1,12 @@
-﻿using AutoMapper;
+﻿namespace FitnessAnalyticsHub.Application.Services;
+
+using AutoMapper;
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Entities;
 using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 using FitnessAnalyticsHub.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-
-namespace FitnessAnalyticsHub.Application.Services;
 
 public class AthleteService : IAthleteService
 {
@@ -26,7 +26,7 @@ public class AthleteService : IAthleteService
 
     public async Task<AthleteDto> GetAthleteByIdAsync(int id, CancellationToken cancellationToken)
     {
-        var athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        Athlete? athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
         if (athlete == null)
         {
@@ -38,13 +38,13 @@ public class AthleteService : IAthleteService
 
     public async Task<IEnumerable<AthleteDto>> GetAllAthletesAsync(CancellationToken cancellationToken)
     {
-        var athletes = await this.context.Athletes.ToListAsync(cancellationToken);
+        List<Athlete> athletes = await this.context.Athletes.ToListAsync(cancellationToken);
         return this.mapper.Map<IEnumerable<AthleteDto>>(athletes);
     }
 
     public async Task<AthleteDto> CreateAthleteAsync(CreateAthleteDto athleteDto, CancellationToken cancellationToken)
     {
-        var athlete = this.mapper.Map<Athlete>(athleteDto);
+        Athlete athlete = this.mapper.Map<Athlete>(athleteDto);
         await this.context.Athletes.AddAsync(athlete, cancellationToken);
         await this.context.SaveChangesAsync(cancellationToken);
         return this.mapper.Map<AthleteDto>(athlete);
@@ -52,7 +52,7 @@ public class AthleteService : IAthleteService
 
     public async Task UpdateAthleteAsync(UpdateAthleteDto athleteDto, CancellationToken cancellationToken)
     {
-        var athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.Id == athleteDto.Id, cancellationToken);
+        Athlete? athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.Id == athleteDto.Id, cancellationToken);
 
         if (athlete == null)
         {
@@ -67,7 +67,7 @@ public class AthleteService : IAthleteService
 
     public async Task DeleteAthleteAsync(int id, CancellationToken cancellationToken)
     {
-        var athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        Athlete? athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
         if (athlete == null)
         {
@@ -80,10 +80,10 @@ public class AthleteService : IAthleteService
 
     public async Task<AthleteDto> ImportAthleteFromStravaAsync(string accessToken, CancellationToken cancellationToken)
     {
-        var stravaAthlete = await this.stravaService.GetAthleteProfileAsync(accessToken);
+        Athlete stravaAthlete = await this.stravaService.GetAthleteProfileAsync(accessToken, cancellationToken);
 
         // Check if athlete already exists
-        var existingAthlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.StravaId == stravaAthlete.StravaId, cancellationToken);
+        Athlete? existingAthlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.StravaId == stravaAthlete.StravaId, cancellationToken);
 
         if (existingAthlete != null)
         {
@@ -95,7 +95,7 @@ public class AthleteService : IAthleteService
         else
         {
             // Create new athlete
-            var newAthlete = this.mapper.Map<Athlete>(stravaAthlete);
+            Athlete newAthlete = this.mapper.Map<Athlete>(stravaAthlete);
             newAthlete.CreatedAt = DateTime.Now;
             newAthlete.UpdatedAt = DateTime.Now;
 

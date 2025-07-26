@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿namespace AIAssistant.Tests.Helpers;
+
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using AIAssistant.Application.DTOs;
@@ -9,8 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
-
-namespace AIAssistant.Tests.Helpers;
 
 /// <summary>
 /// Helper class for setting up common mocks used across tests.
@@ -27,12 +27,12 @@ public static class MockSetup
         object responseObject,
         HttpStatusCode statusCode = HttpStatusCode.OK)
     {
-        var mockHandler = new Mock<HttpMessageHandler>();
+        Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
         HttpResponseMessage response;
         if (responseObject != null)
         {
-            var json = JsonSerializer.Serialize(responseObject);
+            string json = JsonSerializer.Serialize(responseObject);
             response = new HttpResponseMessage(statusCode)
             {
                 Content = new StringContent(json, Encoding.UTF8, "application/json"),
@@ -58,7 +58,7 @@ public static class MockSetup
     /// </summary>
     public static Mock<HttpMessageHandler> CreateMockHttpMessageHandlerWithException(Exception exception)
     {
-        var mockHandler = new Mock<HttpMessageHandler>();
+        Mock<HttpMessageHandler> mockHandler = new Mock<HttpMessageHandler>();
 
         mockHandler.Protected()
             .Setup<Task<HttpResponseMessage>>(
@@ -90,7 +90,7 @@ public static class MockSetup
     /// </summary>
     public static Mock<IConfiguration> CreateMockConfiguration()
     {
-        var mockConfig = new Mock<IConfiguration>();
+        Mock<IConfiguration> mockConfig = new Mock<IConfiguration>();
 
         // HuggingFace settings
         mockConfig.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_hf_key");
@@ -111,7 +111,7 @@ public static class MockSetup
     /// </summary>
     public static Mock<IConfiguration> CreateMockConfigurationWithoutKeys()
     {
-        var mockConfig = new Mock<IConfiguration>();
+        Mock<IConfiguration> mockConfig = new Mock<IConfiguration>();
 
         mockConfig.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
         mockConfig.Setup(c => c["GoogleAI:ApiKey"]).Returns((string?)null);
@@ -155,9 +155,9 @@ public static class MockSetup
     /// </summary>
     public static Mock<IMotivationCoachService> CreateMockMotivationCoachService()
     {
-        var mock = new Mock<IMotivationCoachService>();
+        Mock<IMotivationCoachService> mock = new Mock<IMotivationCoachService>();
 
-        mock.Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<AIAssistant.Applications.DTOs.MotivationRequestDto>()))
+        mock.Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<AIAssistant.Applications.DTOs.MotivationRequestDto>(), CancellationToken.None))
             .ReturnsAsync(TestDataBuilder.MotivationResponse().Build());
 
         return mock;
@@ -168,10 +168,10 @@ public static class MockSetup
     /// </summary>
     public static Mock<IWorkoutAnalysisService> CreateMockWorkoutAnalysisService()
     {
-        var mock = new Mock<IWorkoutAnalysisService>();
+        Mock<IWorkoutAnalysisService> mock = new Mock<IWorkoutAnalysisService>();
 
         // Setup default successful responses
-        var defaultResponse = new WorkoutAnalysisResponseDto
+        WorkoutAnalysisResponseDto defaultResponse = new WorkoutAnalysisResponseDto
         {
             Analysis = "Default analysis response",
             KeyInsights = new List<string> { "Default insight 1", "Default insight 2" },
@@ -181,10 +181,10 @@ public static class MockSetup
             RequestId = Guid.NewGuid().ToString(),
         };
 
-        mock.Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
+        mock.Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>(), CancellationToken.None))
             .ReturnsAsync(defaultResponse);
 
-        mock.Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
+        mock.Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>(), CancellationToken.None))
             .ReturnsAsync(new WorkoutAnalysisResponseDto
             {
                 Analysis = "GoogleGemini analysis response",
@@ -237,7 +237,7 @@ public static class MockSetup
                     {
                         parts = new[]
                         {
-                            new { text = content }
+                            new { text = content },
                         },
                     },
                 },
@@ -270,9 +270,9 @@ public static class MockSetup
     public static (Mock<HttpMessageHandler> httpHandler, Mock<IConfiguration> config, Mock<ILogger<T>> logger)
         SetupSuccessfulAIService<T>(string responseContent = "Successful AI response")
     {
-        var httpHandler = CreateMockHttpMessageHandler(CreateHuggingFaceSuccessResponse(responseContent));
-        var config = CreateMockConfiguration();
-        var logger = CreateMockLogger<T>();
+        Mock<HttpMessageHandler> httpHandler = CreateMockHttpMessageHandler(CreateHuggingFaceSuccessResponse(responseContent));
+        Mock<IConfiguration> config = CreateMockConfiguration();
+        Mock<ILogger<T>> logger = CreateMockLogger<T>();
 
         return (httpHandler, config, logger);
     }
@@ -283,9 +283,9 @@ public static class MockSetup
     public static (Mock<HttpMessageHandler> httpHandler, Mock<IConfiguration> config, Mock<ILogger<T>> logger)
         SetupFailingAIService<T>(HttpStatusCode statusCode = HttpStatusCode.Unauthorized)
     {
-        var httpHandler = CreateMockHttpMessageHandler(null, statusCode);
-        var config = CreateMockConfiguration();
-        var logger = CreateMockLogger<T>();
+        Mock<HttpMessageHandler> httpHandler = CreateMockHttpMessageHandler(null, statusCode);
+        Mock<IConfiguration> config = CreateMockConfiguration();
+        Mock<ILogger<T>> logger = CreateMockLogger<T>();
 
         return (httpHandler, config, logger);
     }
@@ -296,10 +296,10 @@ public static class MockSetup
     public static (Mock<HttpMessageHandler> httpHandler, Mock<IConfiguration> config, Mock<ILogger<T>> logger)
         SetupTimeoutAIService<T>()
     {
-        var timeoutException = new TaskCanceledException("Timeout", new TimeoutException());
-        var httpHandler = CreateMockHttpMessageHandlerWithException(timeoutException);
-        var config = CreateMockConfiguration();
-        var logger = CreateMockLogger<T>();
+        TaskCanceledException timeoutException = new TaskCanceledException("Timeout", new TimeoutException());
+        Mock<HttpMessageHandler> httpHandler = CreateMockHttpMessageHandlerWithException(timeoutException);
+        Mock<IConfiguration> config = CreateMockConfiguration();
+        Mock<ILogger<T>> logger = CreateMockLogger<T>();
 
         return (httpHandler, config, logger);
     }
@@ -344,12 +344,12 @@ public static class MockSetup
     /// </summary>
     public static Mock<IWorkoutAnalysisService> CreateFailingMockWorkoutAnalysisService()
     {
-        var mock = new Mock<IWorkoutAnalysisService>();
+        Mock<IWorkoutAnalysisService> mock = new Mock<IWorkoutAnalysisService>();
 
-        mock.Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
+        mock.Setup(s => s.AnalyzeHuggingFaceWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>(), CancellationToken.None))
             .ThrowsAsync(new Exception("HuggingFace service error"));
 
-        mock.Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>()))
+        mock.Setup(s => s.AnalyzeGoogleGeminiWorkoutsAsync(It.IsAny<WorkoutAnalysisRequestDto>(), CancellationToken.None))
             .ThrowsAsync(new Exception("GoogleGemini service error"));
 
         return mock;
@@ -364,9 +364,9 @@ public static class MockSetup
     /// </summary>
     public static Mock<IMotivationCoachService> CreateEnhancedMockMotivationCoachService()
     {
-        var mock = new Mock<IMotivationCoachService>();
+        Mock<IMotivationCoachService> mock = new Mock<IMotivationCoachService>();
 
-        var defaultResponse = new MotivationResponseDto
+        MotivationResponseDto defaultResponse = new MotivationResponseDto
         {
             MotivationalMessage = "You're doing great! Keep pushing forward!",
             Quote = "Success is the sum of small efforts repeated day in and day out.",
@@ -379,7 +379,7 @@ public static class MockSetup
             GeneratedAt = DateTime.UtcNow,
         };
 
-        mock.Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+        mock.Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ReturnsAsync(defaultResponse);
 
         return mock;
@@ -394,14 +394,14 @@ public static class MockSetup
     /// </summary>
     public static Mock<IConfiguration> CreateEnhancedMockConfiguration()
     {
-        var mockConfig = CreateMockConfiguration(); // Use existing method as base
+        Mock<IConfiguration> mockConfig = CreateMockConfiguration(); // Use existing method as base
 
         // Environment Configuration
         mockConfig.Setup(c => c["ASPNETCORE_ENVIRONMENT"]).Returns("Development");
 
         // Mock HuggingFace section
-        var mockHuggingFaceSection = new Mock<IConfigurationSection>();
-        var mockHuggingFaceChildren = new List<IConfigurationSection>();
+        Mock<IConfigurationSection> mockHuggingFaceSection = new Mock<IConfigurationSection>();
+        List<IConfigurationSection> mockHuggingFaceChildren = new List<IConfigurationSection>();
         mockHuggingFaceSection.Setup(s => s.GetChildren()).Returns(mockHuggingFaceChildren);
         mockConfig.Setup(c => c.GetSection("HuggingFace")).Returns(mockHuggingFaceSection.Object);
 
@@ -417,7 +417,7 @@ public static class MockSetup
     /// </summary>
     public static List<WorkoutDataDto> CreateTestWorkoutData(int count = 3)
     {
-        var workouts = new List<WorkoutDataDto>();
+        List<WorkoutDataDto> workouts = new List<WorkoutDataDto>();
 
         for (int i = 0; i < count; i++)
         {

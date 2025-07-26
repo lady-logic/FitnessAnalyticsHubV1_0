@@ -28,7 +28,7 @@ public class MotivationCoachControllerTests
     public async Task GetMotivation_WithValidRequest_ReturnsOkWithMotivationResponse()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = new AthleteProfileDto
             {
@@ -41,7 +41,7 @@ public class MotivationCoachControllerTests
             UpcomingWorkoutType = "Running",
         };
 
-        var expectedResponse = new MotivationResponseDto
+        MotivationResponseDto expectedResponse = new MotivationResponseDto
         {
             MotivationalMessage = "You're doing great! Keep pushing towards your weight loss goals.",
             Quote = "Success is the sum of small efforts repeated day in and day out.",
@@ -55,15 +55,15 @@ public class MotivationCoachControllerTests
         };
 
         this.mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await this.controller.GetMotivation(request);
+        ActionResult<MotivationResponseDto> result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<MotivationResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        MotivationResponseDto response = Assert.IsType<MotivationResponseDto>(okResult.Value);
 
         Assert.Equal(expectedResponse.MotivationalMessage, response.MotivationalMessage);
         Assert.Equal(expectedResponse.Quote, response.Quote);
@@ -71,7 +71,7 @@ public class MotivationCoachControllerTests
 
         // Verify service was called
         this.mockMotivationService.Verify(
-            s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()),
+            s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None),
             Times.Once);
     }
 
@@ -79,7 +79,7 @@ public class MotivationCoachControllerTests
     public async Task GetMotivation_WithStrugglingAthlete_ReturnsMotivationResponse()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = new AthleteProfileDto
             {
@@ -90,7 +90,7 @@ public class MotivationCoachControllerTests
             IsStruggling = true,
         };
 
-        var expectedResponse = new MotivationResponseDto
+        MotivationResponseDto expectedResponse = new MotivationResponseDto
         {
             MotivationalMessage = "It's okay to struggle - that's how we grow stronger! Every step forward counts.",
             Quote = "The strongest people are not those who show strength in front of us, but those who win battles we know nothing about.",
@@ -104,15 +104,15 @@ public class MotivationCoachControllerTests
         };
 
         this.mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await this.controller.GetMotivation(request);
+        ActionResult<MotivationResponseDto> result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<MotivationResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        MotivationResponseDto response = Assert.IsType<MotivationResponseDto>(okResult.Value);
 
         Assert.Contains("struggle", response.MotivationalMessage, StringComparison.OrdinalIgnoreCase);
         Assert.NotNull(response.ActionableTips);
@@ -121,7 +121,7 @@ public class MotivationCoachControllerTests
         // Verify the request was passed correctly
         this.mockMotivationService.Verify(
             s => s.GetHuggingFaceMotivationalMessageAsync(
-                It.Is<MotivationRequestDto>(r => r.IsStruggling == true)),
+                It.Is<MotivationRequestDto>(r => r.IsStruggling == true), CancellationToken.None),
             Times.Once);
     }
 
@@ -129,7 +129,7 @@ public class MotivationCoachControllerTests
     public async Task GetMotivation_WhenServiceThrowsException_Returns500()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = new AthleteProfileDto
             {
@@ -140,14 +140,14 @@ public class MotivationCoachControllerTests
         };
 
         this.mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ThrowsAsync(new Exception("Service unavailable"));
 
         // Act
-        var result = await this.controller.GetMotivation(request);
+        ActionResult<MotivationResponseDto> result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
+        ObjectResult statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, statusCodeResult.StatusCode);
         Assert.Contains("error occurred", statusCodeResult.Value?.ToString());
     }
@@ -160,7 +160,7 @@ public class MotivationCoachControllerTests
     public async Task GetHuggingFaceMotivation_WithValidRequest_ReturnsOkWithMotivationResponse()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = new AthleteProfileDto
             {
@@ -170,7 +170,7 @@ public class MotivationCoachControllerTests
             },
         };
 
-        var expectedResponse = new MotivationResponseDto
+        MotivationResponseDto expectedResponse = new MotivationResponseDto
         {
             MotivationalMessage = "Champion mindset! You're training for excellence.",
             Quote = "Champions are made in the gym, legends are made through dedication.",
@@ -184,15 +184,15 @@ public class MotivationCoachControllerTests
         };
 
         this.mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await this.controller.GetHuggingFaceMotivation(request);
+        ActionResult<MotivationResponseDto> result = await this.controller.GetHuggingFaceMotivation(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<MotivationResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        MotivationResponseDto response = Assert.IsType<MotivationResponseDto>(okResult.Value);
 
         Assert.Contains("Champion", response.MotivationalMessage);
         Assert.Contains("competition", response.ActionableTips[0], StringComparison.OrdinalIgnoreCase);
@@ -206,28 +206,28 @@ public class MotivationCoachControllerTests
     public async Task HealthCheck_WhenServiceIsHealthy_ReturnsOkWithHealthyStatus()
     {
         // Arrange
-        var healthyResponse = new MotivationResponseDto
+        MotivationResponseDto healthyResponse = new MotivationResponseDto
         {
             MotivationalMessage = "Health check passed!",
             GeneratedAt = DateTime.UtcNow,
         };
 
         this.mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ReturnsAsync(healthyResponse);
 
         // Act
-        var result = await this.controller.HealthCheck();
+        ActionResult result = await this.controller.HealthCheck(CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
 
         // Use reflection to check anonymous object properties
-        var responseType = response!.GetType();
-        var statusProperty = responseType.GetProperty("status");
-        var messageProperty = responseType.GetProperty("message");
-        var timestampProperty = responseType.GetProperty("timestamp");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? statusProperty = responseType.GetProperty("status");
+        System.Reflection.PropertyInfo? messageProperty = responseType.GetProperty("message");
+        System.Reflection.PropertyInfo? timestampProperty = responseType.GetProperty("timestamp");
 
         Assert.Equal("healthy", statusProperty?.GetValue(response));
         Assert.Equal("HuggingFace service is responding", messageProperty?.GetValue(response));
@@ -239,20 +239,20 @@ public class MotivationCoachControllerTests
     {
         // Arrange
         this.mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ThrowsAsync(new Exception("Service down"));
 
         // Act
-        var result = await this.controller.HealthCheck();
+        ActionResult result = await this.controller.HealthCheck(CancellationToken.None);
 
         // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(result);
+        ObjectResult statusCodeResult = Assert.IsType<ObjectResult>(result);
         Assert.Equal(503, statusCodeResult.StatusCode);
 
-        var response = statusCodeResult.Value;
-        var responseType = response!.GetType();
-        var statusProperty = responseType.GetProperty("status");
-        var messageProperty = responseType.GetProperty("message");
+        object? response = statusCodeResult.Value;
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? statusProperty = responseType.GetProperty("status");
+        System.Reflection.PropertyInfo? messageProperty = responseType.GetProperty("message");
 
         Assert.Equal("unhealthy", statusProperty?.GetValue(response));
         Assert.Contains("Service down", messageProperty?.GetValue(response)?.ToString());
@@ -266,7 +266,7 @@ public class MotivationCoachControllerTests
     public async Task GetMotivation_LogsAthleteNameCorrectly()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = new AthleteProfileDto
             {
@@ -275,18 +275,18 @@ public class MotivationCoachControllerTests
             },
         };
 
-        var response = new MotivationResponseDto
+        MotivationResponseDto response = new MotivationResponseDto
         {
             MotivationalMessage = "Test message",
             GeneratedAt = DateTime.UtcNow,
         };
 
         this.mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ReturnsAsync(response);
 
         // Act
-        await this.controller.GetMotivation(request);
+        await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
         this.mockLogger.Verify(
@@ -307,17 +307,17 @@ public class MotivationCoachControllerTests
     public async Task GetMotivation_WithNullAthleteProfile_ReturnsInternalServerError()
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = null!,
             IsStruggling = false,
         };
 
         // Act
-        var result = await this.controller.GetMotivation(request);
+        ActionResult<MotivationResponseDto> result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
-        var objectResult = Assert.IsType<ObjectResult>(result.Result);
+        ObjectResult objectResult = Assert.IsType<ObjectResult>(result.Result);
         Assert.Equal(500, objectResult.StatusCode);
         Assert.Contains("error occurred", objectResult.Value?.ToString());
     }
@@ -329,7 +329,7 @@ public class MotivationCoachControllerTests
     public async Task GetMotivation_WithInvalidAthleteName_StillReturnsMotivation(string? invalidName)
     {
         // Arrange
-        var request = new MotivationRequestDto
+        MotivationRequestDto request = new MotivationRequestDto
         {
             AthleteProfile = new AthleteProfileDto
             {
@@ -338,22 +338,22 @@ public class MotivationCoachControllerTests
             },
         };
 
-        var response = new MotivationResponseDto
+        MotivationResponseDto response = new MotivationResponseDto
         {
             MotivationalMessage = "Every journey starts with a single step!",
             GeneratedAt = DateTime.UtcNow,
         };
 
         this.mockMotivationService
-            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+            .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
             .ReturnsAsync(response);
 
         // Act
-        var result = await this.controller.GetMotivation(request);
+        ActionResult<MotivationResponseDto> result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var motivationResponse = Assert.IsType<MotivationResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        MotivationResponseDto motivationResponse = Assert.IsType<MotivationResponseDto>(okResult.Value);
         Assert.NotEmpty(motivationResponse.MotivationalMessage);
     }
 

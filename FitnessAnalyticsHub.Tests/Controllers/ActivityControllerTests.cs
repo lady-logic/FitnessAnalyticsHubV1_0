@@ -1,11 +1,11 @@
-﻿using FitnessAnalyticsHub.Application.DTOs;
+﻿namespace FitnessAnalyticsHub.Tests.Controllers;
+
+using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Exceptions.Activities;
 using FitnessAnalyticsHub.WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-
-namespace FitnessAnalyticsHub.Tests.Controllers;
 
 public class ActivityControllerTests
 {
@@ -23,8 +23,8 @@ public class ActivityControllerTests
     public async Task GetById_WithValidId_ReturnsOkWithActivity()
     {
         // Arrange
-        var activityId = 1;
-        var expectedActivity = new ActivityDto
+        int activityId = 1;
+        ActivityDto expectedActivity = new ActivityDto
         {
             Id = activityId,
             Name = "Test Activity",
@@ -34,27 +34,27 @@ public class ActivityControllerTests
                           .ReturnsAsync(expectedActivity);
 
         // Act
-        var result = await this.controller.GetById(activityId, It.IsAny<CancellationToken>());
+        ActionResult<ActivityDto> result = await this.controller.GetById(activityId, It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var activity = Assert.IsType<ActivityDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        ActivityDto activity = Assert.IsType<ActivityDto>(okResult.Value);
         Assert.Equal(expectedActivity.Id, activity.Id);
         Assert.Equal(expectedActivity.Name, activity.Name);
     }
 
     [Fact]
-    public async Task GetById_WithInvalidId_ReturnsNotFound()
+    public Task GetById_WithInvalidId_ReturnsNotFound()
     {
         // Arrange
-        var invalidId = 999;
+        int invalidId = 999;
 
         this.mockActivityService
             .Setup(s => s.GetActivityByIdAsync(invalidId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new ActivityNotFoundException(invalidId));
 
         // Act & Assert
-        await Assert.ThrowsAsync<ActivityNotFoundException>(
+        return Assert.ThrowsAsync<ActivityNotFoundException>(
             () => this.controller.GetById(invalidId, It.IsAny<CancellationToken>()));
     }
     #endregion
@@ -64,8 +64,8 @@ public class ActivityControllerTests
     public async Task GetByAthleteId_WithValidAthleteId_ReturnsOkWithActivities()
     {
         // Arrange
-        var athleteId = 1;
-        var expectedActivities = new List<ActivityDto>
+        int athleteId = 1;
+        List<ActivityDto> expectedActivities = new List<ActivityDto>
         {
             new ActivityDto { Id = 1, Name = "Activity 1", AthleteId = athleteId },
             new ActivityDto { Id = 2, Name = "Activity 2", AthleteId = athleteId },
@@ -74,11 +74,11 @@ public class ActivityControllerTests
                           .ReturnsAsync(expectedActivities);
 
         // Act
-        var result = await this.controller.GetByAthleteId(athleteId, It.IsAny<CancellationToken>());
+        ActionResult<IEnumerable<ActivityDto>> result = await this.controller.GetByAthleteId(athleteId, It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var activities = Assert.IsAssignableFrom<IEnumerable<ActivityDto>>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        IEnumerable<ActivityDto> activities = Assert.IsAssignableFrom<IEnumerable<ActivityDto>>(okResult.Value);
         Assert.Equal(expectedActivities.Count, activities.Count());
     }
 
@@ -86,17 +86,17 @@ public class ActivityControllerTests
     public async Task GetByAthleteId_WithEmptyResult_ReturnsOkWithEmptyList()
     {
         // Arrange
-        var athleteId = 1;
-        var expectedActivities = new List<ActivityDto>();
+        int athleteId = 1;
+        List<ActivityDto> expectedActivities = new List<ActivityDto>();
         this.mockActivityService.Setup(s => s.GetActivitiesByAthleteIdAsync(athleteId, It.IsAny<CancellationToken>()))
                           .ReturnsAsync(expectedActivities);
 
         // Act
-        var result = await this.controller.GetByAthleteId(athleteId, It.IsAny<CancellationToken>());
+        ActionResult<IEnumerable<ActivityDto>> result = await this.controller.GetByAthleteId(athleteId, It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var activities = Assert.IsAssignableFrom<IEnumerable<ActivityDto>>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        IEnumerable<ActivityDto> activities = Assert.IsAssignableFrom<IEnumerable<ActivityDto>>(okResult.Value);
         Assert.Empty(activities);
     }
     #endregion
@@ -106,12 +106,12 @@ public class ActivityControllerTests
     public async Task Create_WithValidDto_ReturnsCreatedAtAction()
     {
         // Arrange
-        var createDto = new CreateActivityDto
+        CreateActivityDto createDto = new CreateActivityDto
         {
             Name = "New Activity",
             AthleteId = 1,
         };
-        var createdActivity = new ActivityDto
+        ActivityDto createdActivity = new ActivityDto
         {
             Id = 1,
             Name = createDto.Name,
@@ -121,13 +121,13 @@ public class ActivityControllerTests
                           .ReturnsAsync(createdActivity);
 
         // Act
-        var result = await this.controller.Create(createDto, It.IsAny<CancellationToken>());
+        ActionResult<ActivityDto> result = await this.controller.Create(createDto, It.IsAny<CancellationToken>());
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        CreatedAtActionResult createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
         Assert.Equal(nameof(ActivityController.GetById), createdResult.ActionName);
         Assert.Equal(createdActivity.Id, createdResult.RouteValues["id"]);
-        var activity = Assert.IsType<ActivityDto>(createdResult.Value);
+        ActivityDto activity = Assert.IsType<ActivityDto>(createdResult.Value);
         Assert.Equal(createdActivity.Id, activity.Id);
     }
     #endregion
@@ -137,8 +137,8 @@ public class ActivityControllerTests
     public async Task Update_WithMatchingIds_ReturnsNoContent()
     {
         // Arrange
-        var id = 1;
-        var updateDto = new UpdateActivityDto
+        int id = 1;
+        UpdateActivityDto updateDto = new UpdateActivityDto
         {
             Id = id,
             Name = "Updated Activity",
@@ -147,7 +147,7 @@ public class ActivityControllerTests
                           .Returns(Task.CompletedTask);
 
         // Act
-        var result = await this.controller.Update(id, updateDto, It.IsAny<CancellationToken>());
+        IActionResult result = await this.controller.Update(id, updateDto, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -158,18 +158,18 @@ public class ActivityControllerTests
     public async Task Update_WithMismatchedIds_ReturnsBadRequest()
     {
         // Arrange
-        var id = 1;
-        var updateDto = new UpdateActivityDto
+        int id = 1;
+        UpdateActivityDto updateDto = new UpdateActivityDto
         {
             Id = 2,
             Name = "Updated Activity",
         };
 
         // Act
-        var result = await this.controller.Update(id, updateDto, It.IsAny<CancellationToken>());
+        IActionResult result = await this.controller.Update(id, updateDto, It.IsAny<CancellationToken>());
 
         // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        BadRequestObjectResult badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("ID in der URL stimmt nicht mit der ID im Körper überein.", badRequestResult.Value);
         this.mockActivityService.Verify(s => s.UpdateActivityAsync(It.IsAny<UpdateActivityDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -180,12 +180,12 @@ public class ActivityControllerTests
     public async Task Delete_WithValidId_ReturnsNoContent()
     {
         // Arrange
-        var id = 1;
+        int id = 1;
         this.mockActivityService.Setup(s => s.DeleteActivityAsync(id, It.IsAny<CancellationToken>()))
                           .Returns(Task.CompletedTask);
 
         // Act
-        var result = await this.controller.Delete(id, It.IsAny<CancellationToken>());
+        IActionResult result = await this.controller.Delete(id, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -198,7 +198,7 @@ public class ActivityControllerTests
     public async Task ImportFromStrava_WithValidParameters_ReturnsOkWithActivities()
     {
         // Arrange
-        var importedActivities = new List<ActivityDto>
+        List<ActivityDto> importedActivities = new List<ActivityDto>
             {
                 new ActivityDto { Id = 1, Name = "Strava Activity 1", AthleteId = 1 },
                 new ActivityDto { Id = 2, Name = "Strava Activity 2", AthleteId = 1 },
@@ -208,11 +208,11 @@ public class ActivityControllerTests
                           .ReturnsAsync(importedActivities);
 
         // Act
-        var result = await this.controller.ImportFromStrava(It.IsAny<CancellationToken>());
+        ActionResult<IEnumerable<ActivityDto>> result = await this.controller.ImportFromStrava(It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var activities = Assert.IsAssignableFrom<IEnumerable<ActivityDto>>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        IEnumerable<ActivityDto> activities = Assert.IsAssignableFrom<IEnumerable<ActivityDto>>(okResult.Value);
         Assert.Equal(importedActivities.Count, activities.Count());
     }
     #endregion
@@ -222,8 +222,8 @@ public class ActivityControllerTests
     public async Task GetStatistics_WithValidAthleteId_ReturnsOkWithStatistics()
     {
         // Arrange
-        var athleteId = 1;
-        var expectedStatistics = new ActivityStatisticsDto
+        int athleteId = 1;
+        ActivityStatisticsDto expectedStatistics = new ActivityStatisticsDto
         {
             TotalActivities = 10,
             TotalDistance = 100.5,
@@ -246,11 +246,11 @@ public class ActivityControllerTests
                           .ReturnsAsync(expectedStatistics);
 
         // Act
-        var result = await this.controller.GetStatistics(athleteId, It.IsAny<CancellationToken>());
+        ActionResult<ActivityStatisticsDto> result = await this.controller.GetStatistics(athleteId, It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var statistics = Assert.IsType<ActivityStatisticsDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        ActivityStatisticsDto statistics = Assert.IsType<ActivityStatisticsDto>(okResult.Value);
         Assert.Equal(expectedStatistics.TotalActivities, statistics.TotalActivities);
         Assert.Equal(expectedStatistics.TotalDistance, statistics.TotalDistance);
         Assert.Equal(expectedStatistics.TotalDuration, statistics.TotalDuration);

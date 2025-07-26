@@ -1,10 +1,10 @@
-﻿using FitnessAnalyticsHub.Application.DTOs;
+﻿namespace FitnessAnalyticsHub.Tests.Controllers;
+
+using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-
-namespace FitnessAnalyticsHub.Tests.Controllers;
 
 public class AthleteControllerTests
 {
@@ -23,7 +23,7 @@ public class AthleteControllerTests
     public async Task GetAll_WithExistingAthletes_ReturnsOkWithAthletes()
     {
         // Arrange
-        var expectedAthletes = new List<AthleteDto>
+        List<AthleteDto> expectedAthletes = new List<AthleteDto>
         {
             new AthleteDto { Id = 1, FirstName = "Max", LastName = "Mustermann", Email = "max@example.com" },
             new AthleteDto { Id = 2, FirstName = "Anna", LastName = "Schmidt", Email = "anna@example.com" },
@@ -32,11 +32,11 @@ public class AthleteControllerTests
                           .ReturnsAsync(expectedAthletes);
 
         // Act
-        var result = await this.controller.GetAll(It.IsAny<CancellationToken>());
+        ActionResult<IEnumerable<AthleteDto>> result = await this.controller.GetAll(It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var athletes = Assert.IsAssignableFrom<IEnumerable<AthleteDto>>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        IEnumerable<AthleteDto> athletes = Assert.IsAssignableFrom<IEnumerable<AthleteDto>>(okResult.Value);
         Assert.Equal(expectedAthletes.Count, athletes.Count());
     }
 
@@ -44,16 +44,16 @@ public class AthleteControllerTests
     public async Task GetAll_WithNoAthletes_ReturnsOkWithEmptyList()
     {
         // Arrange
-        var expectedAthletes = new List<AthleteDto>();
+        List<AthleteDto> expectedAthletes = new List<AthleteDto>();
         this.mockAthleteService.Setup(s => s.GetAllAthletesAsync(It.IsAny<CancellationToken>()))
                           .ReturnsAsync(expectedAthletes);
 
         // Act
-        var result = await this.controller.GetAll(It.IsAny<CancellationToken>());
+        ActionResult<IEnumerable<AthleteDto>> result = await this.controller.GetAll(It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var athletes = Assert.IsAssignableFrom<IEnumerable<AthleteDto>>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        IEnumerable<AthleteDto> athletes = Assert.IsAssignableFrom<IEnumerable<AthleteDto>>(okResult.Value);
         Assert.Empty(athletes);
     }
 
@@ -65,8 +65,8 @@ public class AthleteControllerTests
     public async Task GetById_WithValidId_ReturnsOkWithAthlete()
     {
         // Arrange
-        var athleteId = 1;
-        var expectedAthlete = new AthleteDto
+        int athleteId = 1;
+        AthleteDto expectedAthlete = new AthleteDto
         {
             Id = athleteId,
             FirstName = "Max",
@@ -77,11 +77,11 @@ public class AthleteControllerTests
                           .ReturnsAsync(expectedAthlete);
 
         // Act
-        var result = await this.controller.GetById(athleteId, It.IsAny<CancellationToken>());
+        ActionResult<AthleteDto> result = await this.controller.GetById(athleteId, It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var athlete = Assert.IsType<AthleteDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        AthleteDto athlete = Assert.IsType<AthleteDto>(okResult.Value);
         Assert.Equal(expectedAthlete.Id, athlete.Id);
         Assert.Equal(expectedAthlete.FirstName, athlete.FirstName);
         Assert.Equal(expectedAthlete.LastName, athlete.LastName);
@@ -94,13 +94,13 @@ public class AthleteControllerTests
     public async Task Create_WithValidDto_ReturnsCreatedAtAction()
     {
         // Arrange
-        var createDto = new CreateAthleteDto
+        CreateAthleteDto createDto = new CreateAthleteDto
         {
             FirstName = "Max",
             LastName = "Mustermann",
             Email = "max@example.com",
         };
-        var createdAthlete = new AthleteDto
+        AthleteDto createdAthlete = new AthleteDto
         {
             Id = 1,
             FirstName = createDto.FirstName,
@@ -111,13 +111,13 @@ public class AthleteControllerTests
                           .ReturnsAsync(createdAthlete);
 
         // Act
-        var result = await this.controller.Create(createDto, It.IsAny<CancellationToken>());
+        ActionResult<AthleteDto> result = await this.controller.Create(createDto, It.IsAny<CancellationToken>());
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+        CreatedAtActionResult createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
         Assert.Equal(nameof(AthleteController.GetById), createdResult.ActionName);
         Assert.Equal(createdAthlete.Id, createdResult.RouteValues["id"]);
-        var athlete = Assert.IsType<AthleteDto>(createdResult.Value);
+        AthleteDto athlete = Assert.IsType<AthleteDto>(createdResult.Value);
         Assert.Equal(createdAthlete.Id, athlete.Id);
         Assert.Equal(createdAthlete.FirstName, athlete.FirstName);
     }
@@ -130,8 +130,8 @@ public class AthleteControllerTests
     public async Task Update_WithMatchingIds_ReturnsNoContent()
     {
         // Arrange
-        var id = 1;
-        var updateDto = new UpdateAthleteDto
+        int id = 1;
+        UpdateAthleteDto updateDto = new UpdateAthleteDto
         {
             Id = id,
             FirstName = "Max Updated",
@@ -142,7 +142,7 @@ public class AthleteControllerTests
                           .Returns(Task.CompletedTask);
 
         // Act
-        var result = await this.controller.Update(id, updateDto, It.IsAny<CancellationToken>());
+        IActionResult result = await this.controller.Update(id, updateDto, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -153,8 +153,8 @@ public class AthleteControllerTests
     public async Task Update_WithMismatchedIds_ReturnsBadRequest()
     {
         // Arrange
-        var id = 1;
-        var updateDto = new UpdateAthleteDto
+        int id = 1;
+        UpdateAthleteDto updateDto = new UpdateAthleteDto
         {
             Id = 2,
             FirstName = "Max",
@@ -163,10 +163,10 @@ public class AthleteControllerTests
         };
 
         // Act
-        var result = await this.controller.Update(id, updateDto, It.IsAny<CancellationToken>());
+        IActionResult result = await this.controller.Update(id, updateDto, It.IsAny<CancellationToken>());
 
         // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        BadRequestObjectResult badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("ID in der URL stimmt nicht mit der ID im Körper überein.", badRequestResult.Value);
         this.mockAthleteService.Verify(s => s.UpdateAthleteAsync(It.IsAny<UpdateAthleteDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -178,12 +178,12 @@ public class AthleteControllerTests
     public async Task Delete_WithValidId_ReturnsNoContent()
     {
         // Arrange
-        var id = 1;
+        int id = 1;
         this.mockAthleteService.Setup(s => s.DeleteAthleteAsync(id, It.IsAny<CancellationToken>()))
                           .Returns(Task.CompletedTask);
 
         // Act
-        var result = await this.controller.Delete(id, It.IsAny<CancellationToken>());
+        IActionResult result = await this.controller.Delete(id, It.IsAny<CancellationToken>());
 
         // Assert
         Assert.IsType<NoContentResult>(result);
@@ -197,8 +197,8 @@ public class AthleteControllerTests
     public async Task ImportFromStrava_WithValidToken_ReturnsOkWithAthlete()
     {
         // Arrange
-        var accessToken = "valid_strava_token";
-        var importedAthlete = new AthleteDto
+        string accessToken = "valid_strava_token";
+        AthleteDto importedAthlete = new AthleteDto
         {
             Id = 1,
             FirstName = "Strava",
@@ -209,11 +209,11 @@ public class AthleteControllerTests
                           .ReturnsAsync(importedAthlete);
 
         // Act
-        var result = await this.controller.ImportFromStrava(accessToken, It.IsAny<CancellationToken>());
+        ActionResult<AthleteDto> result = await this.controller.ImportFromStrava(accessToken, It.IsAny<CancellationToken>());
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var athlete = Assert.IsType<AthleteDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        AthleteDto athlete = Assert.IsType<AthleteDto>(okResult.Value);
         Assert.Equal(importedAthlete.Id, athlete.Id);
         Assert.Equal(importedAthlete.FirstName, athlete.FirstName);
     }

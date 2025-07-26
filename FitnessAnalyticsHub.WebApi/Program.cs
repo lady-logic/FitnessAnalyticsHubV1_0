@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -81,10 +81,10 @@ builder.Services.AddHttpClient<GrpcJsonClientService>();
 // Konfigurierbare Service-Auswahl basierend auf appsettings.json
 builder.Services.AddScoped<IAIAssistantClientService>(provider =>
 {
-    var configuration = provider.GetRequiredService<IConfiguration>();
-    var clientType = configuration["AIAssistant:ClientType"] ?? "Http";
+    IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
+    string clientType = configuration["AIAssistant:ClientType"] ?? "Http";
 
-    var logger = provider.GetRequiredService<ILogger<Program>>();
+    ILogger<Program> logger = provider.GetRequiredService<ILogger<Program>>();
     logger.LogInformation("Using AIAssistant ClientType: {ClientType}", clientType);
 
     return clientType.ToLower() switch
@@ -99,7 +99,7 @@ builder.Services.AddScoped<IAIAssistantClientService>(provider =>
 // Service
 builder.Services.AddScoped<IStravaService, StravaService>();
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // Exception Handling
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
@@ -140,9 +140,9 @@ app.MapHealthChecksUI(options =>
 app.MapControllers();
 
 // Zeige beim Start an, welcher AIAssistant Client verwendet wird
-var logger = app.Services.GetRequiredService<ILogger<Program>>();
-var config = app.Services.GetRequiredService<IConfiguration>();
-var clientType = config["AIAssistant:ClientType"] ?? "Http";
+ILogger<Program> logger = app.Services.GetRequiredService<ILogger<Program>>();
+IConfiguration config = app.Services.GetRequiredService<IConfiguration>();
+string clientType = config["AIAssistant:ClientType"] ?? "Http";
 logger.LogInformation("AIAssistant Client Type: {ClientType}", clientType);
 
 app.Run();

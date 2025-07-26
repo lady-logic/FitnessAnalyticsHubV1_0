@@ -1,9 +1,9 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Tests.Extensions;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Extensions;
 using Fitnessanalyticshub;
 using Xunit;
-
-namespace AIAssistant.Tests.Extensions;
 
 public class GrpcMappingExtensionsTests
 {
@@ -11,7 +11,7 @@ public class GrpcMappingExtensionsTests
     public void ToAIAssistantAthleteProfile_WithValidProfile_MapsCorrectly()
     {
         // Arrange
-        var grpcProfile = new AthleteProfile
+        AthleteProfile grpcProfile = new AthleteProfile
         {
             Name = "John Doe",
             FitnessLevel = "Intermediate",
@@ -19,7 +19,7 @@ public class GrpcMappingExtensionsTests
         };
 
         // Act
-        var result = grpcProfile.ToAIAssistantAthleteProfile();
+        Domain.Models.AthleteProfile result = grpcProfile.ToAIAssistantAthleteProfile();
 
         // Assert
         Assert.NotNull(result);
@@ -38,7 +38,7 @@ public class GrpcMappingExtensionsTests
         AthleteProfile grpcProfile = null;
 
         // Act
-        var result = grpcProfile.ToAIAssistantAthleteProfile();
+        Domain.Models.AthleteProfile result = grpcProfile.ToAIAssistantAthleteProfile();
 
         // Assert
         Assert.NotNull(result);
@@ -53,7 +53,7 @@ public class GrpcMappingExtensionsTests
     public void ToMotivationRequestDto_WithValidRequest_MapsCorrectly()
     {
         // Arrange
-        var grpcRequest = new MotivationRequest
+        MotivationRequest grpcRequest = new MotivationRequest
         {
             AthleteProfile = new AthleteProfile
             {
@@ -64,7 +64,7 @@ public class GrpcMappingExtensionsTests
         };
 
         // Act
-        var result = grpcRequest.ToMotivationRequestDto();
+        Applications.DTOs.MotivationRequestDto result = grpcRequest.ToMotivationRequestDto();
 
         // Assert
         Assert.NotNull(result);
@@ -81,7 +81,7 @@ public class GrpcMappingExtensionsTests
     public void ToWorkoutAnalysisRequestDto_WithValidRequest_MapsCorrectly()
     {
         // Arrange
-        var grpcRequest = new WorkoutAnalysisRequest
+        WorkoutAnalysisRequest grpcRequest = new WorkoutAnalysisRequest
         {
             AnalysisType = "Performance",
             AthleteProfile = new AthleteProfile
@@ -100,7 +100,7 @@ public class GrpcMappingExtensionsTests
         });
 
         // Act
-        var result = grpcRequest.ToWorkoutAnalysisRequestDto();
+        WorkoutAnalysisRequestDto result = grpcRequest.ToWorkoutAnalysisRequestDto();
 
         // Assert
         Assert.NotNull(result);
@@ -116,14 +116,14 @@ public class GrpcMappingExtensionsTests
     public void ToWorkoutAnalysisRequestDto_WithNullAthleteProfile_CreatesDefault()
     {
         // Arrange
-        var grpcRequest = new WorkoutAnalysisRequest
+        WorkoutAnalysisRequest grpcRequest = new WorkoutAnalysisRequest
         {
             AnalysisType = "Health",
             AthleteProfile = null,
         };
 
         // Act
-        var result = grpcRequest.ToWorkoutAnalysisRequestDto();
+        WorkoutAnalysisRequestDto result = grpcRequest.ToWorkoutAnalysisRequestDto();
 
         // Assert
         Assert.NotNull(result.AthleteProfile);
@@ -134,7 +134,7 @@ public class GrpcMappingExtensionsTests
     public void ToAIAssistantWorkoutData_WithValidWorkout_MapsCorrectly()
     {
         // Arrange
-        var grpcWorkout = new Workout
+        Workout grpcWorkout = new Workout
         {
             Date = "2025-01-15",
             ActivityType = "Cycling",
@@ -144,7 +144,7 @@ public class GrpcMappingExtensionsTests
         };
 
         // Act
-        var result = grpcWorkout.ToAIAssistantWorkoutData();
+        Domain.Models.WorkoutData result = grpcWorkout.ToAIAssistantWorkoutData();
 
         // Assert
         Assert.NotNull(result);
@@ -162,7 +162,7 @@ public class GrpcMappingExtensionsTests
     public void ToAIAssistantWorkoutData_WithDifferentDates_ParsesCorrectly(string dateString)
     {
         // Arrange
-        var grpcWorkout = new Workout
+        Workout grpcWorkout = new Workout
         {
             Date = dateString,
             ActivityType = "Test",
@@ -172,7 +172,7 @@ public class GrpcMappingExtensionsTests
         };
 
         // Act
-        var result = grpcWorkout.ToAIAssistantWorkoutData();
+        Domain.Models.WorkoutData result = grpcWorkout.ToAIAssistantWorkoutData();
 
         // Assert
         Assert.Equal(DateTime.Parse(dateString), result.Date);
@@ -182,7 +182,7 @@ public class GrpcMappingExtensionsTests
     public void ToWorkoutAnalysisRequestDto_WithMultipleWorkouts_MapsAll()
     {
         // Arrange
-        var grpcRequest = new WorkoutAnalysisRequest
+        WorkoutAnalysisRequest grpcRequest = new WorkoutAnalysisRequest
         {
             AnalysisType = "Trends",
             AthleteProfile = new AthleteProfile(),
@@ -192,7 +192,7 @@ public class GrpcMappingExtensionsTests
         grpcRequest.RecentWorkouts.Add(new Workout { Date = "2025-01-02", ActivityType = "Bike" });
 
         // Act
-        var result = grpcRequest.ToWorkoutAnalysisRequestDto();
+        WorkoutAnalysisRequestDto result = grpcRequest.ToWorkoutAnalysisRequestDto();
 
         // Assert
         Assert.Equal(2, result.RecentWorkouts.Count);

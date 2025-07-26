@@ -1,9 +1,9 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Tests.Helpers;
+
+using AIAssistant.Application.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using Grpc.Core;
 using Moq;
-
-namespace AIAssistant.Tests.Helpers;
 
 public static class GrpcTestExtensions
 {
@@ -36,7 +36,7 @@ public static class GrpcTestExtensions
         string analysisType = "Performance",
         int workoutCount = 2)
     {
-        var request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
+        Fitnessanalyticshub.WorkoutAnalysisRequest request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
         {
             PreferredAiProvider = preferredAiProvider,
             AnalysisType = analysisType,
@@ -91,7 +91,7 @@ public static class GrpcTestExtensions
         int athleteId = 789,
         int workoutCount = 3)
     {
-        var request = new global::Fitnessanalyticshub.HealthAnalysisRequest
+        Fitnessanalyticshub.HealthAnalysisRequest request = new global::Fitnessanalyticshub.HealthAnalysisRequest
         {
             AthleteId = athleteId,
         };
@@ -176,7 +176,7 @@ public static class GrpcTestExtensions
     /// </summary>
     public static ServerCallContext CreateMockServerCallContext()
     {
-        var mockContext = new Mock<ServerCallContext>();
+        Mock<ServerCallContext> mockContext = new Mock<ServerCallContext>();
 
         // Setup basic properties that might be needed
         mockContext.Setup(c => c.CancellationToken).Returns(CancellationToken.None);
@@ -192,7 +192,7 @@ public static class GrpcTestExtensions
     public static ServerCallContext CreateMockServerCallContextWithCancellation(
         CancellationToken cancellationToken)
     {
-        var mockContext = new Mock<ServerCallContext>();
+        Mock<ServerCallContext> mockContext = new Mock<ServerCallContext>();
         mockContext.Setup(c => c.CancellationToken).Returns(cancellationToken);
         return mockContext.Object;
     }
@@ -281,7 +281,7 @@ public static class GrpcTestExtensions
         StatusCode expectedStatusCode = StatusCode.Internal,
         string? expectedMessageContains = null)
     {
-        var exception = Assert.ThrowsAsync<RpcException>(action);
+        Task<RpcException> exception = Assert.ThrowsAsync<RpcException>(action);
         Assert.Equal(expectedStatusCode, exception.Result.StatusCode);
 
         if (expectedMessageContains != null)
@@ -299,7 +299,7 @@ public static class GrpcTestExtensions
     /// </summary>
     public static global::Fitnessanalyticshub.WorkoutAnalysisRequest CreateComplexWorkoutAnalysisRequest()
     {
-        var request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
+        Fitnessanalyticshub.WorkoutAnalysisRequest request = new global::Fitnessanalyticshub.WorkoutAnalysisRequest
         {
             PreferredAiProvider = "googlegemini",
             AnalysisType = "Performance",
@@ -344,7 +344,7 @@ public static class GrpcTestExtensions
         Assert.NotNull(workouts);
         Assert.Equal(expectedCount, workouts.Count);
 
-        foreach (var workout in workouts)
+        foreach (WorkoutDataDto workout in workouts)
         {
             Assert.NotNull(workout.ActivityType);
             Assert.True(workout.Distance > 0);

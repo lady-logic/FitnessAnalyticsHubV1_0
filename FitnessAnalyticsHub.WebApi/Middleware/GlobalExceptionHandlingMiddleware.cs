@@ -31,12 +31,12 @@
             }
         }
 
-        private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
+        private static Task HandleExceptionAsync(HttpContext context, Exception exception)
         {
-            var response = context.Response;
+            HttpResponse response = context.Response;
             response.ContentType = "application/json";
 
-            var errorResponse = exception switch
+            ErrorResponse errorResponse = exception switch
             {
                 ActivityNotFoundException ex => new ErrorResponse
                 {
@@ -120,12 +120,12 @@
 
             response.StatusCode = errorResponse.StatusCode;
 
-            var jsonResponse = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
+            string jsonResponse = JsonSerializer.Serialize(errorResponse, new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             });
 
-            await response.WriteAsync(jsonResponse);
+            return response.WriteAsync(jsonResponse);
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using FitnessAnalyticsHub.Domain.Entities;
+﻿namespace FitnessAnalyticsHub.Infrastructure.Persistence.Configurations;
+
+using FitnessAnalyticsHub.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace FitnessAnalyticsHub.Infrastructure.Persistence.Configurations;
 
 public class AthleteConfiguration : IEntityTypeConfiguration<Athlete>
 {

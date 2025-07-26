@@ -18,7 +18,7 @@ public class MotivationCoachService : IMotivationCoachService
         this.logger = logger;
     }
 
-    public async Task<MotivationResponseDto> GenerateMotivationAsync(MotivationRequestDto request)
+    public async Task<MotivationResponseDto> GenerateMotivationAsync(MotivationRequestDto request, CancellationToken cancellationToken)
     {
         try
         {
@@ -26,11 +26,11 @@ public class MotivationCoachService : IMotivationCoachService
                 "Generating motivational message for athlete: {Name}",
                 request.AthleteProfile?.Name ?? "Unknown");
 
-            var prompt = this.BuildMotivationPrompt(request);
+            string prompt = this.BuildMotivationPrompt(request);
 
-            var aiResponse = await this.aiPromptService.GetMotivationAsync(prompt);
+            string aiResponse = await this.aiPromptService.GetMotivationAsync(prompt, cancellationToken);
 
-            var result = this.ParseMotivationResponse(aiResponse);
+            MotivationResponseDto result = this.ParseMotivationResponse(aiResponse);
 
             this.logger.LogInformation(
                 "Successfully generated motivational message with {MessageLength} characters",
@@ -59,24 +59,24 @@ public class MotivationCoachService : IMotivationCoachService
     }
 
     // Legacy method für Backwards Compatibility
-    public async Task<MotivationResponseDto> GetHuggingFaceMotivationalMessageAsync(
-        MotivationRequestDto request)
+    public Task<MotivationResponseDto> GetHuggingFaceMotivationalMessageAsync(
+        MotivationRequestDto request, CancellationToken cancellationToken)
     {
-        return await this.GenerateMotivationAsync(request);
+        return this.GenerateMotivationAsync(request, cancellationToken);
     }
 
     private string BuildMotivationPrompt(MotivationRequestDto request)
     {
-        var athleteName = request.AthleteProfile?.Name ?? "Champion";
-        var fitnessLevel = request.AthleteProfile?.FitnessLevel ?? "Beginner";
-        var primaryGoal = request.AthleteProfile?.PrimaryGoal ?? "General Fitness";
+        string athleteName = request.AthleteProfile?.Name ?? "Champion";
+        string fitnessLevel = request.AthleteProfile?.FitnessLevel ?? "Beginner";
+        string primaryGoal = request.AthleteProfile?.PrimaryGoal ?? "General Fitness";
 
-        var lastWorkoutInfo = request.LastWorkout != null ?
+        string lastWorkoutInfo = request.LastWorkout != null ?
             $"Last workout: {request.LastWorkout.ActivityType}, {request.LastWorkout.Distance}km, " +
             $"{TimeSpan.FromSeconds(request.LastWorkout.Duration):hh\\:mm\\:ss}" :
             "No recent workout data available";
 
-        var motivationLevel = request.IsStruggling ?
+        string motivationLevel = request.IsStruggling ?
             "The athlete is currently struggling with motivation and needs extra encouragement." :
             "The athlete is looking for additional motivation to stay on track.";
 
@@ -101,7 +101,7 @@ Response:";
 
     private MotivationResponseDto ParseMotivationResponse(string aiResponse)
     {
-        var response = new MotivationResponseDto
+        MotivationResponseDto response = new MotivationResponseDto
         {
             MotivationalMessage = this.ExtractMotivationalMessage(aiResponse),
             Quote = this.ExtractQuote(aiResponse),
@@ -120,12 +120,12 @@ Response:";
         }
 
         // Extrahiere Hauptnachricht (ersten Absatz oder bis zum Quote/Tips)
-        var lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        var messageLines = new List<string>();
+        string[] lines = aiResponse.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        List<string> messageLines = new List<string>();
 
-        foreach (var line in lines)
+        foreach (string line in lines)
         {
-            var cleanLine = line.Trim();
+            string cleanLine = line.Trim();
 
             // Stoppe bei strukturierten Abschnitten
             if (cleanLine.StartsWith("Quote:", StringComparison.OrdinalIgnoreCase) ||
@@ -149,13 +149,13 @@ Response:";
             }
         }
 
-        var result = messageLines.Any() ? string.Join(" ", messageLines) :
+        string result = messageLines.Any() ? string.Join(" ", messageLines) :
                     "You're doing great! Keep up the excellent work with your fitness journey.";
 
         // Begrenze die Länge
         if (result.Length > 300)
         {
-            var sentences = result.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            string[] sentences = result.Split('.', StringSplitOptions.RemoveEmptyEntries);
             result = string.Join(". ", sentences.Take(3)) + ".";
         }
 
@@ -170,12 +170,12 @@ Response:";
         }
 
         // Suche nach Zitaten in Anführungszeichen
-        var quoteMatches = System.Text.RegularExpressions.Regex.Matches(
+        MatchCollection quoteMatches = System.Text.RegularExpressions.Regex.Matches(
             aiResponse, @"""([^""]{10,})""", RegexOptions.None, TimeSpan.FromMilliseconds(100));
 
         foreach (System.Text.RegularExpressions.Match match in quoteMatches)
         {
-            var quote = match.Groups[1].Value.Trim();
+            string quote = match.Groups[1].Value.Trim();
 
             // Filtere motivierende Quotes (keine technischen Texte)
             if (quote.Length >= 15 && quote.Length <= 150 &&
@@ -190,10 +190,10 @@ Response:";
 
         if (aiResponse.Contains("Quote:", StringComparison.OrdinalIgnoreCase))
         {
-            var quoteParts = aiResponse.Split("Quote:", StringSplitOptions.RemoveEmptyEntries);
+            string[] quoteParts = aiResponse.Split("Quote:", StringSplitOptions.RemoveEmptyEntries);
             if (quoteParts.Length > 1)
             {
-                var quoteLine = quoteParts[1].Split('\n')[0].Trim().Trim('"', '-', '*').Trim();
+                string quoteLine = quoteParts[1].Split('\n')[0].Trim().Trim('"', '-', '*').Trim();
                 if (!string.IsNullOrWhiteSpace(quoteLine) && quoteLine.Length >= 15)
                 {
                     return quoteLine; // ← Keine Keyword-Prüfung mehr
@@ -211,11 +211,11 @@ Response:";
             return null;
         }
 
-        var tips = new List<string>();
+        List<string> tips = new List<string>();
 
         // Suche nach "Tips:" oder ähnlichen Labels
-        var tipsSection = string.Empty;
-        var lowerResponse = aiResponse.ToLower();
+        string tipsSection = string.Empty;
+        string lowerResponse = aiResponse.ToLower();
 
         if (lowerResponse.Contains("tips:"))
         {
@@ -223,16 +223,16 @@ Response:";
         }
         else if (lowerResponse.Contains("actionable"))
         {
-            var actionableIndex = lowerResponse.IndexOf("actionable");
+            int actionableIndex = lowerResponse.IndexOf("actionable");
             tipsSection = aiResponse.Substring(actionableIndex);
         }
 
         if (!string.IsNullOrWhiteSpace(tipsSection))
         {
-            var lines = tipsSection.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            foreach (var line in lines)
+            string[] lines = tipsSection.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            foreach (string line in lines)
             {
-                var cleanLine = line.Trim()
+                string cleanLine = line.Trim()
                     .TrimStart('-', '*', '•', '1', '2', '3', '4', '5', '.', ' ')
                     .Trim();
 
@@ -255,11 +255,11 @@ Response:";
 
     private string GetFallbackMotivation(MotivationRequestDto request)
     {
-        var athleteName = request.AthleteProfile?.Name ?? "Champion";
-        var primaryGoal = request.AthleteProfile?.PrimaryGoal ?? "fitness goals";
-        var fitnessLevel = request.AthleteProfile?.FitnessLevel ?? "current";
+        string athleteName = request.AthleteProfile?.Name ?? "Champion";
+        string primaryGoal = request.AthleteProfile?.PrimaryGoal ?? "fitness goals";
+        string fitnessLevel = request.AthleteProfile?.FitnessLevel ?? "current";
 
-        var motivations = new[]
+        string[] motivations = new[]
         {
             $"Great job, {athleteName}! Your consistency in training is inspiring. Every workout brings you closer to your {primaryGoal}.",
             $"You're making excellent progress, {athleteName}! Your dedication to fitness shows real commitment to your health and goals.",
@@ -267,10 +267,10 @@ Response:";
             $"Amazing work, {athleteName}! Your commitment to {primaryGoal} is paying off. Stay strong and keep moving forward!",
         };
 
-        using var rng = System.Security.Cryptography.RandomNumberGenerator.Create();
-        var randomBytes = new byte[4];
+        using System.Security.Cryptography.RandomNumberGenerator rng = System.Security.Cryptography.RandomNumberGenerator.Create();
+        byte[] randomBytes = new byte[4];
         rng.GetBytes(randomBytes);
-        var randomIndex = Math.Abs(BitConverter.ToInt32(randomBytes, 0)) % motivations.Length;
+        int randomIndex = Math.Abs(BitConverter.ToInt32(randomBytes, 0)) % motivations.Length;
         return motivations[randomIndex];
     }
 }

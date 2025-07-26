@@ -4,7 +4,7 @@ using AIAssistant.UI.API.Services;
 using FitnessAnalyticsHub.AIAssistant.Infrastructure.Services;
 using FitnessAnalyticsHub.AIAssistant.UI.API.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -45,7 +45,7 @@ builder.Services.AddGrpc();
 
 builder.Services.AddScoped<IAIPromptService>(provider =>
 {
-    var defaultProvider = builder.Configuration["AI:DefaultProvider"] ?? "GoogleGemini";
+    string defaultProvider = builder.Configuration["AI:DefaultProvider"] ?? "GoogleGemini";
     return defaultProvider.ToLower() switch
     {
         "huggingface" => provider.GetRequiredService<HuggingFaceService>(),
@@ -67,7 +67,7 @@ builder.Services.AddLogging(logging =>
     logging.AddDebug();
 });
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 // gRPC Services registrieren
 app.MapGrpcService<MotivationGrpcService>();

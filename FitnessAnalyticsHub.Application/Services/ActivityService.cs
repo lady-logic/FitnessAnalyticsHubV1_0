@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿namespace FitnessAnalyticsHub.Application.Services;
+
+using AutoMapper;
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Domain.Entities;
@@ -6,8 +8,6 @@ using FitnessAnalyticsHub.Domain.Exceptions.Activities;
 using FitnessAnalyticsHub.Domain.Exceptions.Athletes;
 using FitnessAnalyticsHub.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
-
-namespace FitnessAnalyticsHub.Application.Services;
 
 public class ActivityService : IActivityService
 {
@@ -27,7 +27,7 @@ public class ActivityService : IActivityService
 
     public async Task<ActivityDto> GetActivityByIdAsync(int id, CancellationToken cancellationToken)
     {
-        var activity = await this.context.Activities
+        Activity? activity = await this.context.Activities
             .Include(a => a.Athlete)
             .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
@@ -36,41 +36,41 @@ public class ActivityService : IActivityService
             throw new ActivityNotFoundException(id);
         }
 
-        var activityDto = this.mapper.Map<ActivityDto>(activity);
+        ActivityDto activityDto = this.mapper.Map<ActivityDto>(activity);
 
         return activityDto;
     }
 
     public async Task<IEnumerable<ActivityDto>> GetActivitiesByAthleteIdAsync(int athleteId, CancellationToken cancellationToken)
     {
-        var activities = await this.context.Activities
+        List<Activity> activities = await this.context.Activities
             .Include(a => a.Athlete)
             .Where(a => a.AthleteId == athleteId)
             .ToListAsync(cancellationToken);
 
-        var activityDtos = this.mapper.Map<IEnumerable<ActivityDto>>(activities);
+        IEnumerable<ActivityDto> activityDtos = this.mapper.Map<IEnumerable<ActivityDto>>(activities);
         return activityDtos;
     }
 
     public async Task<ActivityDto> CreateActivityAsync(CreateActivityDto activityDto, CancellationToken cancellationToken)
     {
-        var activity = this.mapper.Map<Activity>(activityDto);
+        Activity activity = this.mapper.Map<Activity>(activityDto);
 
         await this.context.Activities.AddAsync(activity, cancellationToken);
         await this.context.SaveChangesAsync(cancellationToken);
 
         // Activity mit Athlete laden für das Mapping
-        var activityWithAthlete = await this.context.Activities
+        Activity activityWithAthlete = await this.context.Activities
             .Include(a => a.Athlete)
             .FirstAsync(a => a.Id == activity.Id, cancellationToken);
 
-        var resultDto = this.mapper.Map<ActivityDto>(activityWithAthlete);
+        ActivityDto resultDto = this.mapper.Map<ActivityDto>(activityWithAthlete);
         return resultDto;
     }
 
     public async Task UpdateActivityAsync(UpdateActivityDto activityDto, CancellationToken cancellationToken)
     {
-        var activity = await this.context.Activities.FirstOrDefaultAsync(a => a.Id == activityDto.Id, cancellationToken);
+        Activity? activity = await this.context.Activities.FirstOrDefaultAsync(a => a.Id == activityDto.Id, cancellationToken);
 
         if (activity == null)
         {
@@ -86,7 +86,7 @@ public class ActivityService : IActivityService
 
     public async Task DeleteActivityAsync(int id, CancellationToken cancellationToken)
     {
-        var activity = await this.context.Activities.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        Activity? activity = await this.context.Activities.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
 
         if (activity == null)
         {
@@ -102,10 +102,10 @@ public class ActivityService : IActivityService
         Console.WriteLine("=== IMPORTING YOUR STRAVA ACTIVITIES ===");
 
         // StravaService aufrufen
-        var (stravaAthlete, stravaActivities) = await this.stravaService.ImportMyActivitiesAsync();
+        (Athlete stravaAthlete, IEnumerable<Activity> stravaActivities) = await this.stravaService.ImportMyActivitiesAsync(cancellationToken);
 
         // Athlet in DB finden oder erstellen
-        var athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.StravaId == stravaAthlete.StravaId, cancellationToken);
+        Athlete? athlete = await this.context.Athletes.FirstOrDefaultAsync(a => a.StravaId == stravaAthlete.StravaId, cancellationToken);
 
         if (athlete == null)
         {
@@ -126,28 +126,28 @@ public class ActivityService : IActivityService
 
         // Aktivitäten verarbeiten und speichern
         // BULK CHECK: Alle existierenden StravaIds auf einmal abfragen
-        var stravaIds = stravaActivities.Select(sa => sa.StravaId).ToList();
-        var existingStravaIds = await this.context.Activities
+        List<string?> stravaIds = stravaActivities.Select(sa => sa.StravaId).ToList();
+        List<string?> existingStravaIds = await this.context.Activities
             .Where(a => a.AthleteId == athlete.Id && stravaIds.Contains(a.StravaId))
             .Select(a => a.StravaId)
             .ToListAsync(cancellationToken);
 
         // Nur neue Aktivitäten verarbeiten
-        var newStravaActivities = stravaActivities
+        List<Activity> newStravaActivities = stravaActivities
             .Where(sa => !existingStravaIds.Contains(sa.StravaId))
             .ToList();
 
-        var importedActivities = new List<ActivityDto>();
+        List<ActivityDto> importedActivities = new List<ActivityDto>();
 
-        foreach (var stravaActivity in newStravaActivities)
+        foreach (Activity? stravaActivity in newStravaActivities)
         {
-            var newActivity = this.mapper.Map<Activity>(stravaActivity);
+            Activity newActivity = this.mapper.Map<Activity>(stravaActivity);
             newActivity.AthleteId = athlete.Id;
             newActivity.Athlete = athlete; // Für das AthleteFullName Mapping
 
             await this.context.Activities.AddAsync(newActivity, cancellationToken);
 
-            var activityDto = this.mapper.Map<ActivityDto>(newActivity);
+            ActivityDto activityDto = this.mapper.Map<ActivityDto>(newActivity);
             importedActivities.Add(activityDto);
 
             Console.WriteLine($"✅ Imported: {newActivity.Name} ({newActivity.SportType}, {newActivity.Distance / 1000:F1}km)");
@@ -165,14 +165,14 @@ public class ActivityService : IActivityService
     public async Task<ActivityStatisticsDto> GetAthleteActivityStatisticsAsync(int athleteId, CancellationToken cancellationToken)
     {
         // Prüfen ob Athlet existiert
-        var athleteExists = await this.context.Athletes.AnyAsync(a => a.Id == athleteId, cancellationToken);
+        bool athleteExists = await this.context.Athletes.AnyAsync(a => a.Id == athleteId, cancellationToken);
 
         if (!athleteExists)
         {
             throw new AthleteNotFoundException(athleteId);
         }
 
-        var activities = await this.context.Activities
+        List<Activity> activities = await this.context.Activities
             .Where(a => a.AthleteId == athleteId)
             .ToListAsync(cancellationToken);
 

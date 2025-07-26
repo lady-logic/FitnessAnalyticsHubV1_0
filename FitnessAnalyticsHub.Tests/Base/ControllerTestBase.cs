@@ -19,11 +19,11 @@
         public void Controller_ShouldNotContainTryCatchBlocks()
         {
             // Arrange
-            var controllerType = typeof(TController);
-            var methods = controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            Type controllerType = typeof(TController);
+            MethodInfo[] methods = controllerType.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
             // Act & Assert
-            foreach (var method in methods)
+            foreach (MethodInfo method in methods)
             {
                 // Skip inherited methods from ControllerBase
                 if (method.DeclaringType == typeof(ControllerBase) ||
@@ -32,11 +32,11 @@
                     continue;
                 }
 
-                var methodBody = method.GetMethodBody();
+                MethodBody? methodBody = method.GetMethodBody();
                 if (methodBody != null)
                 {
                     // Check for try-catch patterns in IL code
-                    var hasTryCatch = ContainsTryCatchBlock(method);
+                    bool hasTryCatch = ContainsTryCatchBlock(method);
 
                     Assert.False(
                         hasTryCatch,
@@ -54,11 +54,11 @@
         public void Controller_ActionMethodsShouldBeAsync()
         {
             // Arrange
-            var controllerType = typeof(TController);
-            var actionMethods = GetActionMethods(controllerType);
+            Type controllerType = typeof(TController);
+            IEnumerable<MethodInfo> actionMethods = GetActionMethods(controllerType);
 
             // Act & Assert
-            foreach (var method in actionMethods)
+            foreach (MethodInfo method in actionMethods)
             {
                 Assert.True(
                     method.ReturnType.IsAssignableFrom(typeof(Task)) ||
@@ -74,13 +74,13 @@
         public void Controller_ActionMethodsShouldHaveHttpAttributes()
         {
             // Arrange
-            var controllerType = typeof(TController);
-            var actionMethods = GetActionMethods(controllerType);
+            Type controllerType = typeof(TController);
+            IEnumerable<MethodInfo> actionMethods = GetActionMethods(controllerType);
 
             // Act & Assert
-            foreach (var method in actionMethods)
+            foreach (MethodInfo method in actionMethods)
             {
-                var hasHttpAttribute = method.GetCustomAttributes()
+                bool hasHttpAttribute = method.GetCustomAttributes()
                     .Any(attr => attr.GetType().Name.StartsWith("Http") &&
                                 attr.GetType().Name.EndsWith("Attribute"));
 
@@ -98,14 +98,14 @@
         {
             try
             {
-                var methodBody = method.GetMethodBody();
+                MethodBody? methodBody = method.GetMethodBody();
                 if (methodBody == null)
                 {
                     return false;
                 }
 
                 // Check for exception handling clauses (try-catch blocks)
-                var exceptionHandlingClauses = methodBody.ExceptionHandlingClauses;
+                IList<ExceptionHandlingClause> exceptionHandlingClauses = methodBody.ExceptionHandlingClauses;
                 return exceptionHandlingClauses.Count > 0;
             }
             catch

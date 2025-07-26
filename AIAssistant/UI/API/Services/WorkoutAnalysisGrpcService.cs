@@ -32,25 +32,25 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 request.RecentWorkouts?.Count ?? 0);
 
             // Konvertiere gRPC Request zu Application DTO
-            var analysisRequest = request.ToWorkoutAnalysisRequestDto();
+            WorkoutAnalysisRequestDto analysisRequest = request.ToWorkoutAnalysisRequestDto();
 
             // Rufe den echten HuggingFace/GoogleGemini Service auf!
             WorkoutAnalysisResponseDto response;
 
             // Bestimme welcher AI-Service verwendet werden soll basierend auf Request
-            var aiProvider = request.PreferredAiProvider?.ToLower() ?? "huggingface";
+            string aiProvider = request.PreferredAiProvider?.ToLower() ?? "huggingface";
 
             if (aiProvider == "googlegemini")
             {
-                response = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(analysisRequest);
+                response = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(analysisRequest, context.CancellationToken);
             }
             else
             {
-                response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+                response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest, context.CancellationToken);
             }
 
             // Konvertiere zurück zu gRPC Response
-            var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
+            WorkoutAnalysisResponse grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
                 Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
@@ -95,7 +95,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 request.AthleteId);
 
             // Konvertiere zu WorkoutAnalysisRequest
-            var analysisRequest = new WorkoutAnalysisRequestDto
+            WorkoutAnalysisRequestDto analysisRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Trends",
                 RecentWorkouts = this.GetDemoWorkouts(request.AthleteId, request.TimeFrame),
@@ -107,9 +107,9 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 },
             };
 
-            var response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+            WorkoutAnalysisResponseDto response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest, context.CancellationToken);
 
-            var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
+            WorkoutAnalysisResponse grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
                 Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
@@ -149,7 +149,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 "gRPC: Received training recommendations request for athlete: {AthleteId}",
                 request.AthleteId);
 
-            var analysisRequest = new WorkoutAnalysisRequestDto
+            WorkoutAnalysisRequestDto analysisRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Recommendations",
                 RecentWorkouts = this.GetDemoWorkouts(request.AthleteId, "week"),
@@ -161,9 +161,9 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 },
             };
 
-            var response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+            WorkoutAnalysisResponseDto response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest, context.CancellationToken);
 
-            var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
+            WorkoutAnalysisResponse grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
                 Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
@@ -203,7 +203,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 "gRPC: Received health metrics analysis request for athlete: {AthleteId}",
                 request.AthleteId);
 
-            var analysisRequest = new WorkoutAnalysisRequestDto
+            WorkoutAnalysisRequestDto analysisRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Health",
                 RecentWorkouts = request.RecentWorkouts
@@ -218,9 +218,9 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 },
             };
 
-            var response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest);
+            WorkoutAnalysisResponseDto response = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(analysisRequest, context.CancellationToken);
 
-            var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
+            WorkoutAnalysisResponse grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
                 Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
@@ -260,12 +260,12 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 "gRPC: Received GoogleGemini workout analysis request for {WorkoutCount} workouts",
                 request.RecentWorkouts?.Count ?? 0);
 
-            var analysisRequest = request.ToWorkoutAnalysisRequestDto();
+            WorkoutAnalysisRequestDto analysisRequest = request.ToWorkoutAnalysisRequestDto();
 
             // Zwinge GoogleGemini Service
-            var response = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(analysisRequest);
+            WorkoutAnalysisResponseDto response = await this.workoutAnalysisService.AnalyzeGoogleGeminiWorkoutsAsync(analysisRequest, context.CancellationToken);
 
-            var grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
+            WorkoutAnalysisResponse grpcResponse = new global::Fitnessanalyticshub.WorkoutAnalysisResponse
             {
                 Analysis = response.Analysis ?? string.Empty,
                 GeneratedAt = response.GeneratedAt.ToString("yyyy-MM-ddTHH:mm:ssZ"),
@@ -302,7 +302,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
         try
         {
             // Einfacher Test-Request
-            var testRequest = new WorkoutAnalysisRequestDto
+            WorkoutAnalysisRequestDto testRequest = new WorkoutAnalysisRequestDto
             {
                 AnalysisType = "Health Check",
                 RecentWorkouts = new List<WorkoutDataDto>
@@ -324,7 +324,7 @@ public class WorkoutAnalysisGrpcService : WorkoutService.WorkoutServiceBase
                 },
             };
 
-            var result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(testRequest);
+            WorkoutAnalysisResponseDto result = await this.workoutAnalysisService.AnalyzeHuggingFaceWorkoutsAsync(testRequest, context.CancellationToken);
 
             return new HealthCheckResponse
             {

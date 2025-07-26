@@ -1,9 +1,9 @@
-﻿using FitnessAnalyticsHub.Application;
+﻿namespace FitnessAnalyticsHub.WebApi.Controllers;
+
+using FitnessAnalyticsHub.Application;
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-
-namespace FitnessAnalyticsHub.WebApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -19,7 +19,7 @@ public class TrainingPlanController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TrainingPlanDto>> GetById(int id, CancellationToken cancellationToken)
     {
-        var trainingPlan = await this.trainingPlanService.GetTrainingPlanByIdAsync(id, cancellationToken);
+        TrainingPlanDto? trainingPlan = await this.trainingPlanService.GetTrainingPlanByIdAsync(id, cancellationToken);
         if (trainingPlan == null)
         {
             return this.NotFound($"Trainingsplan mit ID {id} wurde nicht gefunden.");
@@ -31,14 +31,14 @@ public class TrainingPlanController : ControllerBase
     [HttpGet("athlete/{athleteId}")]
     public async Task<ActionResult<IEnumerable<TrainingPlanDto>>> GetByAthleteId(int athleteId, CancellationToken cancellationToken)
     {
-        var trainingPlans = await this.trainingPlanService.GetTrainingPlansByAthleteIdAsync(athleteId, cancellationToken);
+        IEnumerable<TrainingPlanDto> trainingPlans = await this.trainingPlanService.GetTrainingPlansByAthleteIdAsync(athleteId, cancellationToken);
         return this.Ok(trainingPlans);
     }
 
     [HttpPost]
     public async Task<ActionResult<TrainingPlanDto>> Create(CreateTrainingPlanDto createTrainingPlanDto, CancellationToken cancellationToken)
     {
-        var trainingPlan = await this.trainingPlanService.CreateTrainingPlanAsync(createTrainingPlanDto, cancellationToken);
+        TrainingPlanDto trainingPlan = await this.trainingPlanService.CreateTrainingPlanAsync(createTrainingPlanDto, cancellationToken);
         return this.CreatedAtAction(nameof(this.GetById), new { id = trainingPlan.Id }, trainingPlan);
     }
 
@@ -89,7 +89,7 @@ public class TrainingPlanController : ControllerBase
 
         try
         {
-            var plannedActivity = await this.trainingPlanService.AddPlannedActivityAsync(trainingPlanId, createPlannedActivityDto,
+            PlannedActivityDto plannedActivity = await this.trainingPlanService.AddPlannedActivityAsync(trainingPlanId, createPlannedActivityDto,
                 cancellationToken);
             return this.Ok(plannedActivity);
         }
@@ -139,7 +139,7 @@ public class TrainingPlanController : ControllerBase
     {
         try
         {
-            var plannedActivity = await this.trainingPlanService.MarkPlannedActivityAsCompletedAsync(plannedActivityId, activityId, cancellationToken);
+            PlannedActivityDto plannedActivity = await this.trainingPlanService.MarkPlannedActivityAsCompletedAsync(plannedActivityId, activityId, cancellationToken);
             return this.Ok(plannedActivity);
         }
         catch (Exception ex)

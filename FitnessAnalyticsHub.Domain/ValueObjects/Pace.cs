@@ -20,8 +20,8 @@ public class Pace : ValueObject
 
     public static Pace FromDistanceAndDuration(double distance, TimeSpan duration)
     {
-        var distanceInKm = distance;
-        var timePerKm = duration.TotalSeconds / (double)distanceInKm;
+        double distanceInKm = distance;
+        double timePerKm = duration.TotalSeconds / (double)distanceInKm;
         return new Pace(TimeSpan.FromSeconds(timePerKm));
     }
 

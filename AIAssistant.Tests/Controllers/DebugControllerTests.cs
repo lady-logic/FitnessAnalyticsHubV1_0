@@ -31,22 +31,22 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         // Arrange
         this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_api_key_1234567890");
 
-        var mockSection = new Mock<IConfigurationSection>();
+        Mock<IConfigurationSection> mockSection = new Mock<IConfigurationSection>();
         mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
         this.mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
 
         // Act
-        var result = await this.controller.ConfigCheck();
+        ActionResult result = await this.controller.ConfigCheck();
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
 
         // Use reflection to verify response structure
-        var responseType = response!.GetType();
-        var hasApiKeyProperty = responseType.GetProperty("hasApiKey");
-        var apiKeyLengthProperty = responseType.GetProperty("apiKeyLength");
-        var apiKeyPreviewProperty = responseType.GetProperty("apiKeyPreview");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? hasApiKeyProperty = responseType.GetProperty("hasApiKey");
+        System.Reflection.PropertyInfo? apiKeyLengthProperty = responseType.GetProperty("apiKeyLength");
+        System.Reflection.PropertyInfo? apiKeyPreviewProperty = responseType.GetProperty("apiKeyPreview");
 
         Assert.True((bool)hasApiKeyProperty!.GetValue(response)!);
         Assert.Equal(23, (int)apiKeyLengthProperty!.GetValue(response)!);
@@ -60,16 +60,16 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         this.SetupMockConfiguration(null);
 
         // Act
-        var result = await this.controller.ConfigCheck();
+        ActionResult result = await this.controller.ConfigCheck();
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
 
-        var responseType = response!.GetType();
-        var hasApiKeyProperty = responseType.GetProperty("hasApiKey");
-        var apiKeyLengthProperty = responseType.GetProperty("apiKeyLength");
-        var apiKeyPreviewProperty = responseType.GetProperty("apiKeyPreview");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? hasApiKeyProperty = responseType.GetProperty("hasApiKey");
+        System.Reflection.PropertyInfo? apiKeyLengthProperty = responseType.GetProperty("apiKeyLength");
+        System.Reflection.PropertyInfo? apiKeyPreviewProperty = responseType.GetProperty("apiKeyPreview");
 
         Assert.False((bool)hasApiKeyProperty!.GetValue(response)!);
         Assert.Equal(0, (int)apiKeyLengthProperty!.GetValue(response)!);
@@ -80,7 +80,7 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     {
         this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns(apiKey);
 
-        var mockSection = new Mock<IConfigurationSection>();
+        Mock<IConfigurationSection> mockSection = new Mock<IConfigurationSection>();
         mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
         this.mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
     }
@@ -95,15 +95,15 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("valid_test_key");
 
         // Act
-        var result = await this.controller.TestModernHuggingFace();
+        ActionResult result = await this.controller.TestModernHuggingFace(CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
 
-        var responseType = response!.GetType();
-        var messageProperty = responseType.GetProperty("message");
-        var testResultsProperty = responseType.GetProperty("testResults");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? messageProperty = responseType.GetProperty("message");
+        System.Reflection.PropertyInfo? testResultsProperty = responseType.GetProperty("testResults");
 
         Assert.Contains("Modern HuggingFace", messageProperty!.GetValue(response)!.ToString());
         Assert.NotNull(testResultsProperty!.GetValue(response));
@@ -116,10 +116,10 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
 
         // Act
-        var result = await this.controller.TestModernHuggingFace();
+        ActionResult result = await this.controller.TestModernHuggingFace(CancellationToken.None);
 
         // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        BadRequestObjectResult badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("No HuggingFace API key found", badRequestResult.Value);
     }
 
@@ -131,14 +131,14 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task TestHuggingFaceService_WithWorkingService_ReturnsSuccessInfo()
     {
         // Arrange
-        var mockMotivationService = MockSetup.CreateMockMotivationCoachService();
+        Mock<IMotivationCoachService> mockMotivationService = MockSetup.CreateMockMotivationCoachService();
 
         // Setup the service provider to return our mock
-        var serviceProviderMock = new Mock<IServiceProvider>();
+        Mock<IServiceProvider> serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(sp => sp.GetService(typeof(IMotivationCoachService)))
                           .Returns(mockMotivationService.Object);
 
-        var httpContextMock = new Mock<Microsoft.AspNetCore.Http.HttpContext>();
+        Mock<Microsoft.AspNetCore.Http.HttpContext> httpContextMock = new Mock<Microsoft.AspNetCore.Http.HttpContext>();
         httpContextMock.Setup(ctx => ctx.RequestServices)
                       .Returns(serviceProviderMock.Object);
 
@@ -148,15 +148,15 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         };
 
         // Act
-        var result = await this.controller.TestHuggingFaceService();
+        ActionResult result = await this.controller.TestHuggingFaceService(CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
 
-        var responseType = response!.GetType();
-        var messageProperty = responseType.GetProperty("message");
-        var isSuccessProperty = responseType.GetProperty("isSuccess");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? messageProperty = responseType.GetProperty("message");
+        System.Reflection.PropertyInfo? isSuccessProperty = responseType.GetProperty("isSuccess");
 
         Assert.Contains("HuggingFaceService Test", messageProperty!.GetValue(response)!.ToString());
         Assert.True((bool)isSuccessProperty!.GetValue(response)!);
@@ -173,15 +173,15 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("valid_api_key");
 
         // Act
-        var result = await this.controller.DirectHuggingFaceTest();
+        ActionResult result = await this.controller.DirectHuggingFaceTest(CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
 
-        var responseType = response!.GetType();
-        var statusCodeProperty = responseType.GetProperty("statusCode");
-        var requestUrlProperty = responseType.GetProperty("requestUrl");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? statusCodeProperty = responseType.GetProperty("statusCode");
+        System.Reflection.PropertyInfo? requestUrlProperty = responseType.GetProperty("requestUrl");
 
         Assert.NotNull(statusCodeProperty!.GetValue(response));
         Assert.Contains("huggingface.co", requestUrlProperty!.GetValue(response)!.ToString());
@@ -194,10 +194,10 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns((string?)null);
 
         // Act
-        var result = await this.controller.DirectHuggingFaceTest();
+        ActionResult result = await this.controller.DirectHuggingFaceTest(CancellationToken.None);
 
         // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        BadRequestObjectResult badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal("No HuggingFace API key found in configuration", badRequestResult.Value);
     }
 
@@ -209,14 +209,14 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task TestWithoutAuth_ReturnsResponseWithoutAuthentication()
     {
         // Act
-        var result = await this.controller.TestWithoutAuth();
+        ActionResult result = await this.controller.TestWithoutAuth(CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
 
-        var responseType = response!.GetType();
-        var messageProperty = responseType.GetProperty("message");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? messageProperty = responseType.GetProperty("message");
 
         Assert.Equal("Test without authentication", messageProperty!.GetValue(response));
     }
@@ -232,17 +232,17 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns("test_key");
 
         // Act
-        var result = await this.controller.HealthCheck();
+        ActionResult result = await this.controller.HealthCheck();
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
 
-        var responseType = response!.GetType();
-        var statusProperty = responseType.GetProperty("status");
-        var messageProperty = responseType.GetProperty("message");
-        var configurationProperty = responseType.GetProperty("configuration");
-        var availableTestsProperty = responseType.GetProperty("availableTests");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? statusProperty = responseType.GetProperty("status");
+        System.Reflection.PropertyInfo? messageProperty = responseType.GetProperty("message");
+        System.Reflection.PropertyInfo? configurationProperty = responseType.GetProperty("configuration");
+        System.Reflection.PropertyInfo? availableTestsProperty = responseType.GetProperty("availableTests");
 
         Assert.Equal("healthy", statusProperty!.GetValue(response));
         Assert.Equal("Debug controller is responding", messageProperty!.GetValue(response));
@@ -254,15 +254,15 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task HealthCheck_WhenExceptionOccurs_ThrowsException()
     {
         // Arrange
-        var mockConfigThrowsException = new Mock<IConfiguration>();
+        Mock<IConfiguration> mockConfigThrowsException = new Mock<IConfiguration>();
         mockConfigThrowsException.Setup(c => c["HuggingFace:ApiKey"])
                                  .Throws(new Exception("Configuration error"));
-        var controllerWithFailingConfig = new DebugController(
+        DebugController controllerWithFailingConfig = new DebugController(
             mockConfigThrowsException.Object,
             this.mockLogger.Object);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => controllerWithFailingConfig.HealthCheck());
+        Exception exception = await Assert.ThrowsAsync<Exception>(() => controllerWithFailingConfig.HealthCheck());
         Assert.Equal("Configuration error", exception.Message);
     }
 
@@ -278,19 +278,19 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         // Arrange
         this.mockConfiguration.Setup(c => c["HuggingFace:ApiKey"]).Returns(apiKey);
 
-        var mockSection = new Mock<IConfigurationSection>();
+        Mock<IConfigurationSection> mockSection = new Mock<IConfigurationSection>();
         mockSection.Setup(s => s.GetChildren()).Returns(new List<IConfigurationSection>());
         this.mockConfiguration.Setup(c => c.GetSection("HuggingFace")).Returns(mockSection.Object);
 
         // Act
-        var result = await this.controller.ConfigCheck();
+        ActionResult result = await this.controller.ConfigCheck();
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result);
-        var response = okResult.Value;
-        var responseType = response!.GetType();
-        var apiKeyLengthProperty = responseType.GetProperty("apiKeyLength");
-        var hasApiKeyProperty = responseType.GetProperty("hasApiKey");
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result);
+        object? response = okResult.Value;
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? apiKeyLengthProperty = responseType.GetProperty("apiKeyLength");
+        System.Reflection.PropertyInfo? hasApiKeyProperty = responseType.GetProperty("hasApiKey");
 
         Assert.Equal(apiKey.Length, (int)apiKeyLengthProperty!.GetValue(response)!);
         Assert.Equal(!string.IsNullOrEmpty(apiKey), (bool)hasApiKeyProperty!.GetValue(response)!);
@@ -304,15 +304,15 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
     public async Task TestHuggingFaceService_WhenServiceThrowsException_ReturnsError()
     {
         // Arrange
-        var mockMotivationService = new Mock<IMotivationCoachService>();
-        mockMotivationService.Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<AIAssistant.Applications.DTOs.MotivationRequestDto>()))
+        Mock<IMotivationCoachService> mockMotivationService = new Mock<IMotivationCoachService>();
+        mockMotivationService.Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<AIAssistant.Applications.DTOs.MotivationRequestDto>(), CancellationToken.None))
                            .ThrowsAsync(new Exception("Service unavailable"));
 
-        var serviceProviderMock = new Mock<IServiceProvider>();
+        Mock<IServiceProvider> serviceProviderMock = new Mock<IServiceProvider>();
         serviceProviderMock.Setup(sp => sp.GetService(typeof(IMotivationCoachService)))
                           .Returns(mockMotivationService.Object);
 
-        var httpContextMock = new Mock<Microsoft.AspNetCore.Http.HttpContext>();
+        Mock<Microsoft.AspNetCore.Http.HttpContext> httpContextMock = new Mock<Microsoft.AspNetCore.Http.HttpContext>();
         httpContextMock.Setup(ctx => ctx.RequestServices)
                       .Returns(serviceProviderMock.Object);
 
@@ -322,15 +322,15 @@ public class DebugControllerTests : AIAssistantControllerTestBase<DebugControlle
         };
 
         // Act
-        var result = await this.controller.TestHuggingFaceService();
+        ActionResult result = await this.controller.TestHuggingFaceService(CancellationToken.None);
 
         // Assert
-        var statusCodeResult = Assert.IsType<ObjectResult>(result);
+        ObjectResult statusCodeResult = Assert.IsType<ObjectResult>(result);
         Assert.Equal(500, statusCodeResult.StatusCode);
 
-        var response = statusCodeResult.Value;
-        var responseType = response!.GetType();
-        var errorProperty = responseType.GetProperty("error");
+        object? response = statusCodeResult.Value;
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? errorProperty = responseType.GetProperty("error");
 
         Assert.Contains("Service unavailable", errorProperty!.GetValue(response)!.ToString());
     }

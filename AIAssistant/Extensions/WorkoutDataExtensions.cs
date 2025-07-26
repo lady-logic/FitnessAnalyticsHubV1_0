@@ -36,7 +36,7 @@ public static class WorkoutDataExtensions
     {
         return new WorkoutDataDto
         {
-            Date = DateTime.TryParse(grpcWorkout.Date, out var date) ? date : DateTime.UtcNow,
+            Date = DateTime.TryParse(grpcWorkout.Date, out DateTime date) ? date : DateTime.UtcNow,
             ActivityType = grpcWorkout.ActivityType ?? string.Empty,
             Distance = grpcWorkout.Distance,
             Duration = grpcWorkout.Duration,
@@ -49,7 +49,7 @@ public static class WorkoutDataExtensions
     {
         return new WorkoutDataDto
         {
-            Date = DateTime.TryParse(grpcWorkout.Date, out var date) ? date : DateTime.UtcNow,
+            Date = DateTime.TryParse(grpcWorkout.Date, out DateTime date) ? date : DateTime.UtcNow,
             ActivityType = grpcWorkout.ActivityType ?? string.Empty,
             Distance = grpcWorkout.Distance,
             Duration = grpcWorkout.Duration,

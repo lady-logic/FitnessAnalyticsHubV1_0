@@ -1,4 +1,6 @@
-﻿using FitnessAnalyticsHub.Application.DTOs;
+﻿namespace FitnessAnalyticsHub.Tests.Controllers;
+
+using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using FitnessAnalyticsHub.Infrastructure.Exceptions;
 using FitnessAnalyticsHub.Tests.Base;
@@ -6,8 +8,6 @@ using FitnessAnalyticsHub.WebApi.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-
-namespace FitnessAnalyticsHub.Tests.Controllers;
 
 public class AIControllerTests : ControllerTestBase<AIController>
 {
@@ -28,7 +28,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetMotivation_WithValidRequest_ReturnsOkWithMotivationResponse()
     {
         // Arrange
-        var request = new AIMotivationRequestDto
+        AIMotivationRequestDto request = new AIMotivationRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto
             {
@@ -51,7 +51,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             ContextualInfo = "Feeling a bit tired today",
         };
 
-        var expectedResponse = new AIMotivationResponseDto
+        AIMotivationResponseDto expectedResponse = new AIMotivationResponseDto
         {
             MotivationalMessage = "Great job on your recent run, John! Keep pushing forward!",
             Quote = "The only bad workout is the one that didn't happen.",
@@ -70,11 +70,11 @@ public class AIControllerTests : ControllerTestBase<AIController>
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await this.controller.GetMotivation(request, CancellationToken.None);
+        ActionResult<AIMotivationResponseDto> result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<AIMotivationResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        AIMotivationResponseDto response = Assert.IsType<AIMotivationResponseDto>(okResult.Value);
 
         Assert.Equal(expectedResponse.MotivationalMessage, response.MotivationalMessage);
         Assert.Equal(expectedResponse.Quote, response.Quote);
@@ -89,7 +89,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetMotivation_WithMinimalRequest_ReturnsOkWithMotivationResponse()
     {
         // Arrange
-        var request = new AIMotivationRequestDto
+        AIMotivationRequestDto request = new AIMotivationRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto
             {
@@ -101,7 +101,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             // No recent workouts, no preferred tone, no contextual info
         };
 
-        var expectedResponse = new AIMotivationResponseDto
+        AIMotivationResponseDto expectedResponse = new AIMotivationResponseDto
         {
             MotivationalMessage = "You're doing amazing, Jane! Every step counts on your fitness journey.",
             Quote = "A journey of a thousand miles begins with a single step.",
@@ -119,11 +119,11 @@ public class AIControllerTests : ControllerTestBase<AIController>
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await this.controller.GetMotivation(request, CancellationToken.None);
+        ActionResult<AIMotivationResponseDto> result = await this.controller.GetMotivation(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<AIMotivationResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        AIMotivationResponseDto response = Assert.IsType<AIMotivationResponseDto>(okResult.Value);
 
         Assert.NotNull(response.MotivationalMessage);
         Assert.NotEmpty(response.MotivationalMessage);
@@ -134,7 +134,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetMotivation_WithAIServiceFailure_ThrowsException()
     {
         // Arrange
-        var request = new AIMotivationRequestDto
+        AIMotivationRequestDto request = new AIMotivationRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto
             {
@@ -164,7 +164,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetWorkoutAnalysis_WithValidRequest_ReturnsOkWithAnalysisResponse()
     {
         // Arrange
-        var request = new AIWorkoutAnalysisRequestDto
+        AIWorkoutAnalysisRequestDto request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto
             {
@@ -195,7 +195,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             FocusAreas = new List<string> { "endurance", "pacing", "recovery" },
         };
 
-        var expectedResponse = new AIWorkoutAnalysisResponseDto
+        AIWorkoutAnalysisResponseDto expectedResponse = new AIWorkoutAnalysisResponseDto
         {
             Analysis = "Your recent workouts show excellent endurance progression. The 10K run demonstrates improved pacing consistency compared to previous sessions.",
             KeyInsights = new List<string>
@@ -219,11 +219,11 @@ public class AIControllerTests : ControllerTestBase<AIController>
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
+        ActionResult<AIWorkoutAnalysisResponseDto> result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<AIWorkoutAnalysisResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        AIWorkoutAnalysisResponseDto response = Assert.IsType<AIWorkoutAnalysisResponseDto>(okResult.Value);
 
         Assert.Equal(expectedResponse.Analysis, response.Analysis);
         Assert.Equal(expectedResponse.KeyInsights.Count, response.KeyInsights.Count);
@@ -238,7 +238,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetWorkoutAnalysis_WithNoWorkouts_ReturnsOkWithBasicAnalysis()
     {
         // Arrange
-        var request = new AIWorkoutAnalysisRequestDto
+        AIWorkoutAnalysisRequestDto request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto
             {
@@ -250,7 +250,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             AnalysisType = "General",
         };
 
-        var expectedResponse = new AIWorkoutAnalysisResponseDto
+        AIWorkoutAnalysisResponseDto expectedResponse = new AIWorkoutAnalysisResponseDto
         {
             Analysis = "Welcome to your fitness journey! Since you're just getting started, focus on building consistent habits.",
             KeyInsights = new List<string>
@@ -273,11 +273,11 @@ public class AIControllerTests : ControllerTestBase<AIController>
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
+        ActionResult<AIWorkoutAnalysisResponseDto> result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<AIWorkoutAnalysisResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        AIWorkoutAnalysisResponseDto response = Assert.IsType<AIWorkoutAnalysisResponseDto>(okResult.Value);
 
         Assert.NotNull(response.Analysis);
         Assert.NotEmpty(response.Analysis);
@@ -293,7 +293,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetWorkoutAnalysis_WithDifferentAnalysisTypes_ReturnsOkWithAppropriateResponse(string analysisType)
     {
         // Arrange
-        var request = new AIWorkoutAnalysisRequestDto
+        AIWorkoutAnalysisRequestDto request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto
             {
@@ -315,7 +315,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             AnalysisType = analysisType,
         };
 
-        var expectedResponse = new AIWorkoutAnalysisResponseDto
+        AIWorkoutAnalysisResponseDto expectedResponse = new AIWorkoutAnalysisResponseDto
         {
             Analysis = $"Analysis focused on {analysisType.ToLower()} aspects of your training.",
             KeyInsights = new List<string> { $"Key insight for {analysisType} analysis" },
@@ -329,11 +329,11 @@ public class AIControllerTests : ControllerTestBase<AIController>
             .ReturnsAsync(expectedResponse);
 
         // Act
-        var result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
+        ActionResult<AIWorkoutAnalysisResponseDto> result = await this.controller.GetWorkoutAnalysis(request, CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = Assert.IsType<AIWorkoutAnalysisResponseDto>(okResult.Value);
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        AIWorkoutAnalysisResponseDto response = Assert.IsType<AIWorkoutAnalysisResponseDto>(okResult.Value);
 
         Assert.Contains(analysisType.ToLower(), response.Analysis.ToLower());
 
@@ -358,29 +358,29 @@ public class AIControllerTests : ControllerTestBase<AIController>
             .ReturnsAsync(true);
 
         // Act
-        var result = await this.controller.GetAIHealth(CancellationToken.None);
+        ActionResult<object> result = await this.controller.GetAIHealth(CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        object? response = okResult.Value;
 
         // Use reflection to check the anonymous object properties
-        var responseType = response!.GetType();
-        var isHealthyProperty = responseType.GetProperty("isHealthy");
-        var serviceProperty = responseType.GetProperty("service");
-        var statusProperty = responseType.GetProperty("status");
-        var timestampProperty = responseType.GetProperty("timestamp");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? isHealthyProperty = responseType.GetProperty("isHealthy");
+        System.Reflection.PropertyInfo? serviceProperty = responseType.GetProperty("service");
+        System.Reflection.PropertyInfo? statusProperty = responseType.GetProperty("status");
+        System.Reflection.PropertyInfo? timestampProperty = responseType.GetProperty("timestamp");
 
         Assert.NotNull(isHealthyProperty);
         Assert.NotNull(serviceProperty);
         Assert.NotNull(statusProperty);
         Assert.NotNull(timestampProperty);
 
-        Assert.True((bool)isHealthyProperty.GetValue(response)!);
+        Assert.True((bool)isHealthyProperty.GetValue(response) !);
         Assert.Equal("AIAssistant", serviceProperty.GetValue(response));
         Assert.Equal("Available", statusProperty.GetValue(response));
 
-        var timestamp = (DateTime)timestampProperty.GetValue(response)!;
+        DateTime timestamp = (DateTime)timestampProperty.GetValue(response) !;
         Assert.True(DateTime.UtcNow.Subtract(timestamp).TotalSeconds < 5); // Within 5 seconds
 
         // Verify service was called
@@ -396,22 +396,22 @@ public class AIControllerTests : ControllerTestBase<AIController>
             .ReturnsAsync(false);
 
         // Act
-        var result = await this.controller.GetAIHealth(CancellationToken.None);
+        ActionResult<object> result = await this.controller.GetAIHealth(CancellationToken.None);
 
         // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var response = okResult.Value;
+        OkObjectResult okResult = Assert.IsType<OkObjectResult>(result.Result);
+        object? response = okResult.Value;
 
-        var responseType = response!.GetType();
-        var isHealthyProperty = responseType.GetProperty("isHealthy");
-        var statusProperty = responseType.GetProperty("status");
+        Type responseType = response!.GetType();
+        System.Reflection.PropertyInfo? isHealthyProperty = responseType.GetProperty("isHealthy");
+        System.Reflection.PropertyInfo? statusProperty = responseType.GetProperty("status");
 
-        Assert.False((bool)isHealthyProperty!.GetValue(response)!);
+        Assert.False((bool)isHealthyProperty!.GetValue(response) !);
         Assert.Equal("Unavailable", statusProperty!.GetValue(response));
     }
 
     [Fact]
-    public async Task GetAIHealth_WhenServiceThrowsException_ThrowsException()
+    public Task GetAIHealth_WhenServiceThrowsException_ThrowsException()
     {
         // Arrange
         this.mockAIAssistantClient
@@ -419,7 +419,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             .ThrowsAsync(new TimeoutException("Health check timed out"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<TimeoutException>(
+        return Assert.ThrowsAsync<TimeoutException>(
             () => this.controller.GetAIHealth(CancellationToken.None));
     }
 
@@ -431,7 +431,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetMotivation_LogsAthleteNameCorrectly()
     {
         // Arrange
-        var request = new AIMotivationRequestDto
+        AIMotivationRequestDto request = new AIMotivationRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto
             {
@@ -441,7 +441,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             },
         };
 
-        var response = new AIMotivationResponseDto
+        AIMotivationResponseDto response = new AIMotivationResponseDto
         {
             MotivationalMessage = "Test message",
             Source = "Test-Source",
@@ -461,7 +461,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Logged Athlete")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("Logged Athlete")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -471,7 +471,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Test-Source")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("Test-Source")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -481,7 +481,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
     public async Task GetWorkoutAnalysis_LogsWorkoutCountCorrectly()
     {
         // Arrange
-        var request = new AIWorkoutAnalysisRequestDto
+        AIWorkoutAnalysisRequestDto request = new AIWorkoutAnalysisRequestDto
         {
             AthleteProfile = new AIAthleteProfileDto { Name = "Test" },
             RecentWorkouts = new List<AIWorkoutDataDto>
@@ -493,7 +493,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             AnalysisType = "TestAnalysis",
         };
 
-        var response = new AIWorkoutAnalysisResponseDto
+        AIWorkoutAnalysisResponseDto response = new AIWorkoutAnalysisResponseDto
         {
             Analysis = "Test analysis",
             Source = "Test-Source",
@@ -513,7 +513,7 @@ public class AIControllerTests : ControllerTestBase<AIController>
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("3") && v.ToString()!.Contains("TestAnalysis")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString() !.Contains("3") && v.ToString() !.Contains("TestAnalysis")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);

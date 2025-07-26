@@ -52,30 +52,30 @@ public class HuggingFaceService : IAIPromptService
         this.logger.LogInformation("HuggingFaceService initialized successfully");
     }
 
-    public async Task<string> GetFitnessAnalysisAsync(string prompt)
+    public Task<string> GetFitnessAnalysisAsync(string prompt, CancellationToken cancellationToken)
     {
-        return await this.GetHuggingFaceCompletionAsync(prompt, "fitness");
+        return this.GetHuggingFaceCompletionAsync(prompt, "fitness", cancellationToken);
     }
 
-    public async Task<string> GetHealthAnalysisAsync(string prompt)
+    public Task<string> GetHealthAnalysisAsync(string prompt, CancellationToken cancellationToken)
     {
-        return await this.GetHuggingFaceCompletionAsync(prompt, "health");
+        return this.GetHuggingFaceCompletionAsync(prompt, "health", cancellationToken);
     }
 
-    public async Task<string> GetMotivationAsync(string prompt)
+    public Task<string> GetMotivationAsync(string prompt, CancellationToken cancellationToken)
     {
-        return await this.GetHuggingFaceCompletionAsync(prompt, "motivation");
+        return this.GetHuggingFaceCompletionAsync(prompt, "motivation", cancellationToken);
     }
 
-    private async Task<string> GetHuggingFaceCompletionAsync(string prompt, string modelType)
+    private async Task<string> GetHuggingFaceCompletionAsync(string prompt, string modelType, CancellationToken cancellationToken)
     {
         // Erstelle erweiterten Prompt basierend auf Kontext
-        var enhancedPrompt = this.CreateEnhancedPrompt(prompt, modelType);
+        string enhancedPrompt = this.CreateEnhancedPrompt(prompt, modelType);
 
         try
         {
-            var modelConfig = this.models.GetValueOrDefault(modelType, this.models["motivation"]);
-            var (provider, model, url) = modelConfig;
+            (string provider, string model, string url) modelConfig = this.models.GetValueOrDefault(modelType, this.models["motivation"]);
+            (string provider, string model, string url) = modelConfig;
 
             this.logger.LogInformation(
                 "Calling HuggingFace Inference Provider: {Provider} with model: {Model} for type: {ModelType}",
@@ -94,21 +94,21 @@ public class HuggingFaceService : IAIPromptService
                 stream = false,
             };
 
-            var jsonContent = JsonSerializer.Serialize(requestPayload);
-            var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+            string jsonContent = JsonSerializer.Serialize(requestPayload);
+            StringContent content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             this.logger.LogDebug("Request URL: {Url}", url);
             this.logger.LogDebug("Request payload: {Payload}", jsonContent);
 
-            var response = await this.httpClient.PostAsync(url, content);
-            var responseContent = await response.Content.ReadAsStringAsync();
+            HttpResponseMessage response = await this.httpClient.PostAsync(url, content, cancellationToken);
+            string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
             this.logger.LogDebug("Response status: {StatusCode}", response.StatusCode);
             this.logger.LogDebug("Response content: {Content}", responseContent);
 
             if (!response.IsSuccessStatusCode)
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
+                string errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
                 this.logger.LogError("HuggingFace API error: {StatusCode} - {Error}", response.StatusCode, errorContent);
                 this.logger.LogError("Request URL: {Url}", url);
                 this.logger.LogError("Request payload: {Payload}", jsonContent);
@@ -129,16 +129,16 @@ public class HuggingFaceService : IAIPromptService
             }
 
             // Parse OpenAI-kompatible Response
-            var responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
+            JsonElement responseJson = JsonSerializer.Deserialize<JsonElement>(responseContent);
 
-            if (responseJson.TryGetProperty("choices", out var choices) &&
+            if (responseJson.TryGetProperty("choices", out JsonElement choices) &&
                 choices.GetArrayLength() > 0)
             {
-                var firstChoice = choices[0];
-                if (firstChoice.TryGetProperty("message", out var message) &&
-                    message.TryGetProperty("content", out var messageContent))
+                JsonElement firstChoice = choices[0];
+                if (firstChoice.TryGetProperty("message", out JsonElement message) &&
+                    message.TryGetProperty("content", out JsonElement messageContent))
                 {
-                    var result = messageContent.GetString() ?? string.Empty;
+                    string result = messageContent.GetString() ?? string.Empty;
                     this.logger.LogInformation("Successfully received response from HuggingFace Inference Provider");
                     return result.Trim();
                 }
@@ -161,7 +161,7 @@ public class HuggingFaceService : IAIPromptService
 
     private string CreateEnhancedPrompt(string originalPrompt, string modelType)
     {
-        var systemContext = modelType.ToLower() switch
+        string systemContext = modelType.ToLower() switch
         {
             "motivation" => "You are an enthusiastic fitness coach. Provide motivational and encouraging response.",
             "fitness" => "You are a fitness expert analyzing workout data. Provide professional insights.",
@@ -175,11 +175,11 @@ public class HuggingFaceService : IAIPromptService
 
     private string ConvertMessagesToPrompt(List<Message> messages)
     {
-        var promptBuilder = new StringBuilder();
+        StringBuilder promptBuilder = new StringBuilder();
 
-        foreach (var message in messages)
+        foreach (Message message in messages)
         {
-            var role = message.Role.ToLower() switch
+            string role = message.Role.ToLower() switch
             {
                 "system" => "System",
                 "user" => "User",

@@ -1,10 +1,10 @@
-﻿using ArchUnitNET.Domain;
+﻿namespace FitnessAnalyticsHub.Tests.Architecture;
+
+using ArchUnitNET.Domain;
 using ArchUnitNET.Fluent;
 using ArchUnitNET.Loader;
 using ArchUnitNET.xUnit;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
-
-namespace FitnessAnalyticsHub.Tests.Architecture;
 
 [Trait("Category", "Architecture")]
 public class CleanArchitectureTests
@@ -17,16 +17,16 @@ public class CleanArchitectureTests
             System.Reflection.Assembly.Load("FitnessAnalyticsHub.WebApi"))
         .Build();
 
-    private readonly IObjectProvider<IType> DomainLayer =
+    private readonly IObjectProvider<IType> domainLayer =
         Types().That().ResideInAssembly("FitnessAnalyticsHub.Domain").As("Domain Layer");
 
-    private readonly IObjectProvider<IType> ApplicationLayer =
+    private readonly IObjectProvider<IType> applicationLayer =
         Types().That().ResideInAssembly("FitnessAnalyticsHub.Application").As("Application Layer");
 
-    private readonly IObjectProvider<IType> InfrastructureLayer =
+    private readonly IObjectProvider<IType> infrastructureLayer =
         Types().That().ResideInAssembly("FitnessAnalyticsHub.Infrastructure").As("Infrastructure Layer");
 
-    private readonly IObjectProvider<IType> PresentationLayer =
+    private readonly IObjectProvider<IType> presentationLayer =
         Types().That().ResideInAssembly("FitnessAnalyticsHub.WebApi").As("Presentation Layer");
 
     [Fact]
@@ -34,8 +34,8 @@ public class CleanArchitectureTests
     {
         // In Clean Architecture sollte die Domain-Schicht von nichts abhängen
         // außer von sich selbst
-        IArchRule rule = Types().That().Are(this.DomainLayer)
-            .Should().OnlyDependOnTypesThat().Are(this.DomainLayer)
+        IArchRule rule = Types().That().Are(this.domainLayer)
+            .Should().OnlyDependOnTypesThat().Are(this.domainLayer)
             .OrShould().OnlyDependOnTypesThat().ResideInNamespace("System")
             .OrShould().OnlyDependOnTypesThat().ResideInNamespace("Microsoft.Extensions")
             .As("Domain Layer sollte nur von sich selbst und Basisbibliotheken abhängen")
@@ -48,9 +48,9 @@ public class CleanArchitectureTests
     public void ApplicationLayerShouldOnlyDependOnDomainLayer()
     {
         // Application Layer darf nur von Domain Layer und sich selbst abhängen
-        IArchRule rule = Types().That().Are(this.ApplicationLayer)
-            .Should().OnlyDependOnTypesThat().Are(this.DomainLayer)
-            .OrShould().OnlyDependOnTypesThat().Are(this.ApplicationLayer)
+        IArchRule rule = Types().That().Are(this.applicationLayer)
+            .Should().OnlyDependOnTypesThat().Are(this.domainLayer)
+            .OrShould().OnlyDependOnTypesThat().Are(this.applicationLayer)
             .OrShould().OnlyDependOnTypesThat().ResideInNamespace("System")
             .OrShould().OnlyDependOnTypesThat().ResideInNamespace("Microsoft.Extensions")
             .As("Application Layer sollte nur von Domain Layer, sich selbst und Basisbibliotheken abhängen")
@@ -63,10 +63,10 @@ public class CleanArchitectureTests
     public void PresentationLayerShouldNotBeAccessedByAnyLayer()
     {
         // Keine andere Schicht sollte auf die Präsentationsschicht zugreifen
-        IArchRule rule = Types().That().Are(this.PresentationLayer)
-            .Should().NotDependOnAny(this.DomainLayer)
-            .AndShould().NotDependOnAny(this.ApplicationLayer)
-            .AndShould().NotDependOnAny(this.InfrastructureLayer)
+        IArchRule rule = Types().That().Are(this.presentationLayer)
+            .Should().NotDependOnAny(this.domainLayer)
+            .AndShould().NotDependOnAny(this.applicationLayer)
+            .AndShould().NotDependOnAny(this.infrastructureLayer)
             .As("Presentation Layer sollte von keiner anderen Schicht aufgerufen werden")
             .WithoutRequiringPositiveResults();
 
@@ -77,9 +77,9 @@ public class CleanArchitectureTests
     public void InfrastructureLayerShouldNotBeAccessedByDomainOrApplicationLayer()
     {
         // Domain und Application sollten nicht direkt auf Infrastructure zugreifen
-        IArchRule rule = Types().That().Are(this.InfrastructureLayer)
-            .Should().NotDependOnAny(this.DomainLayer)
-            .AndShould().NotDependOnAny(this.ApplicationLayer)
+        IArchRule rule = Types().That().Are(this.infrastructureLayer)
+            .Should().NotDependOnAny(this.domainLayer)
+            .AndShould().NotDependOnAny(this.applicationLayer)
             .As("Infrastructure Layer sollte von Domain oder Application Layer nicht aufgerufen werden")
             .WithoutRequiringPositiveResults();
 
@@ -104,7 +104,7 @@ public class CleanArchitectureTests
     public void RepositoriesShouldImplementCorrectInterfaces()
     {
         // Prüft, ob alle Repository-Implementierungen ihr Interface implementieren
-        var repositoryClasses = Classes().That().HaveNameEndingWith("Repository")
+        ArchUnitNET.Fluent.Syntax.Elements.Types.Classes.GivenClassesConjunctionWithDescription repositoryClasses = Classes().That().HaveNameEndingWith("Repository")
             .And().DoNotHaveNameEndingWith("Interface")
             .As("Repository Classes");
 
@@ -120,7 +120,7 @@ public class CleanArchitectureTests
     public void UseCasesShouldBeInApplicationLayer()
     {
         // Annahme: Ihre UseCases oder Handlers enden mit "UseCase", "Handler" oder "Service"
-        var useCases = Classes().That()
+        ArchUnitNET.Fluent.Syntax.Elements.Types.Classes.GivenClassesConjunctionWithDescription useCases = Classes().That()
             .HaveNameEndingWith("Service")
             .And().ResideInNamespace("FitnessAnalyticsHub.Application")
             .As("Use Cases");

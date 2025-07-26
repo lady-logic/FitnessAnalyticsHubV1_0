@@ -27,7 +27,7 @@
         public async Task GetMotivation_WithValidRequest_ReturnsCorrectResponse()
         {
             // Arrange
-            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            Fitnessanalyticshub.MotivationRequest grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
             {
                 AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
                 {
@@ -37,7 +37,7 @@
                 },
             };
 
-            var serviceResponse = new MotivationResponseDto
+            MotivationResponseDto serviceResponse = new MotivationResponseDto
             {
                 MotivationalMessage = "You're doing amazing! Keep pushing forward!",
                 Quote = "Success is the sum of small efforts repeated day in and day out.",
@@ -51,13 +51,13 @@
             };
 
             this.mockMotivationService
-                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
                 .ReturnsAsync(serviceResponse);
 
-            var context = new Mock<ServerCallContext>().Object;
+            ServerCallContext context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await this.service.GetMotivation(grpcRequest, context);
+            Fitnessanalyticshub.MotivationResponse result = await this.service.GetMotivation(grpcRequest, context);
 
             // Assert
             Assert.NotNull(result);
@@ -74,15 +74,15 @@
         public async Task GetMotivation_WithNullAthleteProfile_ThrowsRpcException()
         {
             // Arrange
-            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            Fitnessanalyticshub.MotivationRequest grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
             {
                 AthleteProfile = null, // Dies wird eine NullReferenceException in der Extension verursachen
             };
 
-            var context = new Mock<ServerCallContext>().Object;
+            ServerCallContext context = new Mock<ServerCallContext>().Object;
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<RpcException>(() =>
+            RpcException exception = await Assert.ThrowsAsync<RpcException>(() =>
                 this.service.GetMotivation(grpcRequest, context));
 
             // Das erwartete Verhalten: RpcException mit Internal Status
@@ -105,7 +105,7 @@
         public async Task GetMotivation_WithEmptyResponseFields_HandlesNullValues()
         {
             // Arrange
-            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            Fitnessanalyticshub.MotivationRequest grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
             {
                 AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
                 {
@@ -113,7 +113,7 @@
                 },
             };
 
-            var serviceResponse = new MotivationResponseDto
+            MotivationResponseDto serviceResponse = new MotivationResponseDto
             {
                 MotivationalMessage = null, // Null value test
                 Quote = null,
@@ -122,26 +122,26 @@
             };
 
             this.mockMotivationService
-                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
                 .ReturnsAsync(serviceResponse);
 
-            var context = new Mock<ServerCallContext>().Object;
+            ServerCallContext context = new Mock<ServerCallContext>().Object;
 
             // Act
-            var result = await this.service.GetMotivation(grpcRequest, context);
+            Fitnessanalyticshub.MotivationResponse result = await this.service.GetMotivation(grpcRequest, context);
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(string.Empty, result.MotivationalMessage); // Should be empty string, not null
             Assert.Equal(string.Empty, result.Quote);
-            Assert.Equal(0, result.ActionableTips.Count); // Should be empty collection
+            Assert.Empty(result.ActionableTips); // Should be empty collection
         }
 
         [Fact]
         public async Task GetMotivation_CallsServiceWithCorrectMapping()
         {
             // Arrange
-            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            Fitnessanalyticshub.MotivationRequest grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
             {
                 AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
                 {
@@ -151,17 +151,17 @@
                 },
             };
 
-            var serviceResponse = new MotivationResponseDto
+            MotivationResponseDto serviceResponse = new MotivationResponseDto
             {
                 MotivationalMessage = "Test message",
                 GeneratedAt = DateTime.UtcNow,
             };
 
             this.mockMotivationService
-                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
                 .ReturnsAsync(serviceResponse);
 
-            var context = new Mock<ServerCallContext>().Object;
+            ServerCallContext context = new Mock<ServerCallContext>().Object;
 
             // Act
             await this.service.GetMotivation(grpcRequest, context);
@@ -172,7 +172,7 @@
                     It.Is<MotivationRequestDto>(req =>
                         req.AthleteProfile.Name == "Mapping Test User" &&
                         req.AthleteProfile.FitnessLevel == "Advanced" &&
-                        req.AthleteProfile.PrimaryGoal == "Marathon Training")),
+                        req.AthleteProfile.PrimaryGoal == "Marathon Training"), CancellationToken.None),
                 Times.Once);
         }
 
@@ -180,7 +180,7 @@
         public async Task GetMotivation_WhenServiceThrowsException_ThrowsRpcException()
         {
             // Arrange
-            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            Fitnessanalyticshub.MotivationRequest grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
             {
                 AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
                 {
@@ -189,13 +189,13 @@
             };
 
             this.mockMotivationService
-                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
                 .ThrowsAsync(new InvalidOperationException("Service is down"));
 
-            var context = new Mock<ServerCallContext>().Object;
+            ServerCallContext context = new Mock<ServerCallContext>().Object;
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<RpcException>(() =>
+            RpcException exception = await Assert.ThrowsAsync<RpcException>(() =>
                 this.service.GetMotivation(grpcRequest, context));
 
             Assert.Equal(StatusCode.Internal, exception.StatusCode);
@@ -217,7 +217,7 @@
         public async Task GetMotivation_LogsRequestAndResponse()
         {
             // Arrange
-            var grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
+            Fitnessanalyticshub.MotivationRequest grpcRequest = new global::Fitnessanalyticshub.MotivationRequest
             {
                 AthleteProfile = new global::Fitnessanalyticshub.AthleteProfile
                 {
@@ -225,17 +225,17 @@
                 },
             };
 
-            var serviceResponse = new MotivationResponseDto
+            MotivationResponseDto serviceResponse = new MotivationResponseDto
             {
                 MotivationalMessage = "Test message",
                 GeneratedAt = DateTime.UtcNow,
             };
 
             this.mockMotivationService
-                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>()))
+                .Setup(s => s.GetHuggingFaceMotivationalMessageAsync(It.IsAny<MotivationRequestDto>(), CancellationToken.None))
                 .ReturnsAsync(serviceResponse);
 
-            var context = new Mock<ServerCallContext>().Object;
+            ServerCallContext context = new Mock<ServerCallContext>().Object;
 
             // Act
             await this.service.GetMotivation(grpcRequest, context);

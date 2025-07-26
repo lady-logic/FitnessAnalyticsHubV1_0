@@ -1,10 +1,10 @@
-﻿using AIAssistant.Application.DTOs;
+﻿namespace AIAssistant.Tests.Extensions;
+
+using AIAssistant.Application.DTOs;
 using AIAssistant.Domain.Models;
 using AIAssistant.Tests.Helpers;
 using FitnessAnalyticsHub.AIAssistant.Application.DTOs;
 using FitnessAnalyticsHub.AIAssistant.Extensions;
-
-namespace AIAssistant.Tests.Extensions;
 
 public class WorkoutDataExtensionsTests
 {
@@ -14,13 +14,13 @@ public class WorkoutDataExtensionsTests
     public void ToDomain_WithValidDto_ReturnsCorrectDomainModel()
     {
         // Arrange
-        var dto = TestDataBuilder.WorkoutData()
+        WorkoutDataDto dto = TestDataBuilder.WorkoutData()
             .AsRun(10.0, 45)
             .WithCalories(500)
             .Build();
 
         // Act
-        var domain = dto.ToDomain();
+        WorkoutData domain = dto.ToDomain();
 
         // Assert
         Assert.NotNull(domain);
@@ -36,12 +36,12 @@ public class WorkoutDataExtensionsTests
     public void ToDomain_WithNullCalories_HandlesCorrectly()
     {
         // Arrange
-        var dto = TestDataBuilder.WorkoutData()
+        WorkoutDataDto dto = TestDataBuilder.WorkoutData()
             .WithCalories(null)
             .Build();
 
         // Act
-        var domain = dto.ToDomain();
+        WorkoutData domain = dto.ToDomain();
 
         // Assert
         Assert.NotNull(domain);
@@ -52,7 +52,7 @@ public class WorkoutDataExtensionsTests
     public void ToDomain_WithComplexMetricsData_PreservesData()
     {
         // Arrange
-        var complexMetrics = new Dictionary<string, double>
+        Dictionary<string, double> complexMetrics = new Dictionary<string, double>
         {
             { "averageHeartRate", 155.5 },
             { "maxHeartRate", 185.0 },
@@ -63,7 +63,7 @@ public class WorkoutDataExtensionsTests
             { "powerOutput", 250.8 },
         };
 
-        var dto = new WorkoutDataDto
+        WorkoutDataDto dto = new WorkoutDataDto
         {
             Date = DateTime.UtcNow,
             ActivityType = "Run",
@@ -74,7 +74,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var domain = dto.ToDomain();
+        WorkoutData domain = dto.ToDomain();
 
         // Assert
         Assert.NotNull(domain);
@@ -91,7 +91,7 @@ public class WorkoutDataExtensionsTests
     public void ToDto_WithValidDomainModel_ReturnsCorrectDto()
     {
         // Arrange
-        var domain = new WorkoutData
+        WorkoutData domain = new WorkoutData
         {
             Date = DateTime.UtcNow.AddDays(-1),
             ActivityType = "Swim",
@@ -106,7 +106,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = domain.ToDto();
+        WorkoutDataDto dto = domain.ToDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -122,7 +122,7 @@ public class WorkoutDataExtensionsTests
     public void ToDto_WithNullMetricsData_HandlesCorrectly()
     {
         // Arrange
-        var domain = new WorkoutData
+        WorkoutData domain = new WorkoutData
         {
             Date = DateTime.UtcNow,
             ActivityType = "Walk",
@@ -133,7 +133,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = domain.ToDto();
+        WorkoutDataDto dto = domain.ToDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -148,7 +148,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithValidGrpcWorkout_ReturnsCorrectDto()
     {
         // Arrange
-        var grpcWorkout = new global::Fitnessanalyticshub.Workout
+        Fitnessanalyticshub.Workout grpcWorkout = new global::Fitnessanalyticshub.Workout
         {
             Date = "2024-01-15",
             ActivityType = "Run",
@@ -158,7 +158,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -174,7 +174,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithInvalidDate_UsesCurrentTime()
     {
         // Arrange
-        var grpcWorkout = new global::Fitnessanalyticshub.Workout
+        Fitnessanalyticshub.Workout grpcWorkout = new global::Fitnessanalyticshub.Workout
         {
             Date = "invalid-date",
             ActivityType = "Run",
@@ -184,7 +184,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -196,12 +196,12 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithDefaultValues_HandlesGracefully()
     {
         // Arrange
-        var grpcWorkout = new global::Fitnessanalyticshub.Workout();
+        Fitnessanalyticshub.Workout grpcWorkout = new global::Fitnessanalyticshub.Workout();
 
         // Alle Properties haben gRPC default values
 
         // Act
-        var dto = grpcWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -219,7 +219,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithVariousDateFormats_ParsesCorrectly(string dateString)
     {
         // Arrange
-        var grpcWorkout = new global::Fitnessanalyticshub.Workout
+        Fitnessanalyticshub.Workout grpcWorkout = new global::Fitnessanalyticshub.Workout
         {
             Date = dateString,
             ActivityType = "Test",
@@ -229,7 +229,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -246,7 +246,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithValidGrpcJsonWorkout_ReturnsCorrectDto()
     {
         // Arrange
-        var grpcJsonWorkout = TestDataBuilder.GrpcJsonWorkout()
+        GrpcJsonWorkoutDto grpcJsonWorkout = TestDataBuilder.GrpcJsonWorkout()
             .WithDate("2024-02-20")
             .WithActivityType("Ride")
             .Build();
@@ -255,7 +255,7 @@ public class WorkoutDataExtensionsTests
         grpcJsonWorkout.Calories = 800;
 
         // Act
-        var dto = grpcJsonWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcJsonWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -270,7 +270,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithInvalidGrpcJsonDate_UsesCurrentTime()
     {
         // Arrange
-        var grpcJsonWorkout = new GrpcJsonWorkoutDto
+        GrpcJsonWorkoutDto grpcJsonWorkout = new GrpcJsonWorkoutDto
         {
             Date = "not-a-date",
             ActivityType = "Run",
@@ -280,7 +280,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcJsonWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcJsonWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -291,7 +291,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithEmptyGrpcJsonDate_UsesCurrentTime()
     {
         // Arrange
-        var grpcJsonWorkout = new GrpcJsonWorkoutDto
+        GrpcJsonWorkoutDto grpcJsonWorkout = new GrpcJsonWorkoutDto
         {
             Date = string.Empty,
             ActivityType = "Swim",
@@ -301,7 +301,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcJsonWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcJsonWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -317,7 +317,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutAnalysisRequestDto_WithValidGrpcJsonRequest_ReturnsCorrectDto()
     {
         // Arrange
-        var grpcJsonRequest = new GrpcJsonWorkoutAnalysisRequestDto
+        GrpcJsonWorkoutAnalysisRequestDto grpcJsonRequest = new GrpcJsonWorkoutAnalysisRequestDto
         {
             AthleteProfile = TestDataBuilder.GrpcJsonAthleteProfile()
                 .WithName("Analysis Test User")
@@ -333,7 +333,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcJsonRequest.ToWorkoutAnalysisRequestDto();
+        WorkoutAnalysisRequestDto dto = grpcJsonRequest.ToWorkoutAnalysisRequestDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -350,7 +350,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutAnalysisRequestDto_WithNullAthleteProfile_HandlesGracefully()
     {
         // Arrange
-        var grpcJsonRequest = new GrpcJsonWorkoutAnalysisRequestDto
+        GrpcJsonWorkoutAnalysisRequestDto grpcJsonRequest = new GrpcJsonWorkoutAnalysisRequestDto
         {
             AthleteProfile = null,
             RecentWorkouts = new[] { TestDataBuilder.GrpcJsonWorkout().Build() },
@@ -358,13 +358,13 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcJsonRequest.ToWorkoutAnalysisRequestDto();
+        WorkoutAnalysisRequestDto dto = grpcJsonRequest.ToWorkoutAnalysisRequestDto();
 
         // Assert
         Assert.NotNull(dto);
         Assert.Null(dto.AthleteProfile);
         Assert.NotNull(dto.RecentWorkouts);
-        Assert.Equal(1, dto.RecentWorkouts.Count);
+        Assert.Single(dto.RecentWorkouts);
         Assert.Equal("Health", dto.AnalysisType);
     }
 
@@ -372,7 +372,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutAnalysisRequestDto_WithNullWorkouts_ReturnsEmptyList()
     {
         // Arrange
-        var grpcJsonRequest = new GrpcJsonWorkoutAnalysisRequestDto
+        GrpcJsonWorkoutAnalysisRequestDto grpcJsonRequest = new GrpcJsonWorkoutAnalysisRequestDto
         {
             AthleteProfile = TestDataBuilder.GrpcJsonAthleteProfile().Build(),
             RecentWorkouts = null,
@@ -380,7 +380,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcJsonRequest.ToWorkoutAnalysisRequestDto();
+        WorkoutAnalysisRequestDto dto = grpcJsonRequest.ToWorkoutAnalysisRequestDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -393,7 +393,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutAnalysisRequestDto_WithNullAnalysisType_UsesDefaultPerformance()
     {
         // Arrange
-        var grpcJsonRequest = new GrpcJsonWorkoutAnalysisRequestDto
+        GrpcJsonWorkoutAnalysisRequestDto grpcJsonRequest = new GrpcJsonWorkoutAnalysisRequestDto
         {
             AthleteProfile = TestDataBuilder.GrpcJsonAthleteProfile().Build(),
             RecentWorkouts = new[] { TestDataBuilder.GrpcJsonWorkout().Build() },
@@ -401,7 +401,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcJsonRequest.ToWorkoutAnalysisRequestDto();
+        WorkoutAnalysisRequestDto dto = grpcJsonRequest.ToWorkoutAnalysisRequestDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -416,7 +416,7 @@ public class WorkoutDataExtensionsTests
     public void WorkoutDataExtensions_WithZeroValues_PreservesValues()
     {
         // Arrange
-        var dto = new WorkoutDataDto
+        WorkoutDataDto dto = new WorkoutDataDto
         {
             Date = DateTime.UtcNow,
             ActivityType = "Rest",
@@ -426,8 +426,8 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var domain = dto.ToDomain();
-        var backToDto = domain.ToDto();
+        WorkoutData domain = dto.ToDomain();
+        WorkoutDataDto backToDto = domain.ToDto();
 
         // Assert
         Assert.Equal(0, domain.Distance);
@@ -442,7 +442,7 @@ public class WorkoutDataExtensionsTests
     public void WorkoutDataExtensions_WithLargeValues_HandlesCorrectly()
     {
         // Arrange
-        var dto = new WorkoutDataDto
+        WorkoutDataDto dto = new WorkoutDataDto
         {
             Date = DateTime.UtcNow,
             ActivityType = "Ultra Marathon",
@@ -452,8 +452,8 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var domain = dto.ToDomain();
-        var backToDto = domain.ToDto();
+        WorkoutData domain = dto.ToDomain();
+        WorkoutDataDto backToDto = domain.ToDto();
 
         // Assert
         Assert.Equal(100000, domain.Distance);
@@ -468,7 +468,7 @@ public class WorkoutDataExtensionsTests
     public void WorkoutDataExtensions_RoundTripConversion_PreservesAllData()
     {
         // Arrange
-        var originalDto = TestDataBuilder.WorkoutData()
+        WorkoutDataDto originalDto = TestDataBuilder.WorkoutData()
             .AsRun(21.1, 105) // Half marathon
             .WithCalories(1200)
             .WithDate(DateTime.UtcNow.AddDays(-3))
@@ -483,8 +483,8 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var domain = originalDto.ToDomain();
-        var convertedDto = domain.ToDto();
+        WorkoutData domain = originalDto.ToDomain();
+        WorkoutDataDto convertedDto = domain.ToDto();
 
         // Assert
         Assert.Equal(originalDto.Date, convertedDto.Date);
@@ -502,7 +502,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithVariousDistances_HandlesCorrectly(double distance)
     {
         // Arrange
-        var grpcWorkout = new global::Fitnessanalyticshub.Workout
+        Fitnessanalyticshub.Workout grpcWorkout = new global::Fitnessanalyticshub.Workout
         {
             Date = "2024-01-15",
             ActivityType = "Test",
@@ -512,7 +512,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);
@@ -526,7 +526,7 @@ public class WorkoutDataExtensionsTests
     public void ToWorkoutDataDto_WithVariousDurations_HandlesCorrectly(int duration)
     {
         // Arrange
-        var grpcWorkout = new global::Fitnessanalyticshub.Workout
+        Fitnessanalyticshub.Workout grpcWorkout = new global::Fitnessanalyticshub.Workout
         {
             Date = "2024-01-15",
             ActivityType = "Test",
@@ -536,7 +536,7 @@ public class WorkoutDataExtensionsTests
         };
 
         // Act
-        var dto = grpcWorkout.ToWorkoutDataDto();
+        WorkoutDataDto dto = grpcWorkout.ToWorkoutDataDto();
 
         // Assert
         Assert.NotNull(dto);

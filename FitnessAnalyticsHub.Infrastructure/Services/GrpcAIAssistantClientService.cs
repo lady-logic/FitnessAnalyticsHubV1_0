@@ -1,11 +1,11 @@
-﻿using Fitnessanalyticshub;
+﻿namespace FitnessAnalyticsHub.Infrastructure.Services;
+
+using Fitnessanalyticshub;
 using FitnessAnalyticsHub.Application.DTOs;
 using FitnessAnalyticsHub.Application.Interfaces;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-
-namespace FitnessAnalyticsHub.Infrastructure.Services;
 
 public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposable
 {
@@ -21,7 +21,7 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         this.logger = logger;
 
         // gRPC Channel erstellen (wie HttpClient, aber für gRPC)
-        var grpcUrl = configuration["AIAssistant:GrpcUrl"] ?? "http://localhost:5001";
+        string grpcUrl = configuration["AIAssistant:GrpcUrl"] ?? "http://localhost:5001";
         this.channel = GrpcChannel.ForAddress(grpcUrl);
 
         // Client erstellen!
@@ -31,7 +31,7 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         this.logger.LogInformation("gRPC Channel created for: {GrpcUrl}", grpcUrl);
     }
 
-    public async Task<AIMotivationResponseDto> GetMotivationAsync(AIMotivationRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<AIMotivationResponseDto> GetMotivationAsync(AIMotivationRequestDto request, CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
             "gRPC: Requesting motivation for athlete: {AthleteName}",
@@ -39,7 +39,7 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
 
         try
         {
-            var grpcRequest = new MotivationRequest
+            MotivationRequest grpcRequest = new MotivationRequest
             {
                 AthleteProfile = new AthleteProfile
                 {
@@ -52,15 +52,15 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
             };
 
             // gRPC-Call
-            var grpcResponse = await this.motivationClient.GetMotivationAsync(grpcRequest, cancellationToken: cancellationToken);
+            MotivationResponse grpcResponse = await this.motivationClient.GetMotivationAsync(grpcRequest, cancellationToken: cancellationToken);
 
             // gRPC-Response zu DTO konvertieren
-            var response = new AIMotivationResponseDto
+            AIMotivationResponseDto response = new AIMotivationResponseDto
             {
                 MotivationalMessage = grpcResponse.MotivationalMessage,
                 Quote = grpcResponse.Quote,
                 ActionableTips = grpcResponse.ActionableTips.ToList(),
-                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out var parsedDate)
+                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out DateTime parsedDate)
                 ? parsedDate : DateTime.UtcNow,
                 Source = grpcResponse.Source,
             };
@@ -75,7 +75,7 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         }
     }
 
-    public async Task<AIWorkoutAnalysisResponseDto> GetWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<AIWorkoutAnalysisResponseDto> GetWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
             "gRPC: Requesting workout analysis for {WorkoutCount} workouts",
@@ -84,7 +84,7 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         try
         {
             // Konvertiere DTO zu gRPC Request
-            var grpcRequest = new WorkoutAnalysisRequest
+            WorkoutAnalysisRequest grpcRequest = new WorkoutAnalysisRequest
             {
                 AnalysisType = request.AnalysisType ?? "General",
 
@@ -106,9 +106,9 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
             // Workouts hinzufügen
             if (request.RecentWorkouts != null)
             {
-                foreach (var workout in request.RecentWorkouts)
+                foreach (AIWorkoutDataDto workout in request.RecentWorkouts)
                 {
-                    var grpcWorkout = new Workout
+                    Workout grpcWorkout = new Workout
                     {
                         Date = workout.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                         ActivityType = workout.ActivityType ?? string.Empty,
@@ -130,15 +130,15 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
             }
 
             // gRPC-Call durchführen!
-            var grpcResponse = await this.workoutServiceClient.GetWorkoutAnalysisAsync(grpcRequest, cancellationToken: cancellationToken);
+            WorkoutAnalysisResponse grpcResponse = await this.workoutServiceClient.GetWorkoutAnalysisAsync(grpcRequest, cancellationToken: cancellationToken);
 
             // gRPC-Response zu DTO konvertieren
-            var response = new AIWorkoutAnalysisResponseDto
+            AIWorkoutAnalysisResponseDto response = new AIWorkoutAnalysisResponseDto
             {
                 Analysis = grpcResponse.Analysis,
                 KeyInsights = grpcResponse.KeyInsights.ToList(),
                 Recommendations = grpcResponse.Recommendations.ToList(),
-                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out var parsedDate)
+                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out DateTime parsedDate)
                     ? parsedDate : DateTime.UtcNow,
                 Source = grpcResponse.Source,
 
@@ -155,7 +155,7 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         }
     }
 
-    public async Task<AIWorkoutAnalysisResponseDto> GetPerformanceTrendsAsync(int athleteId, string timeFrame = "month", CancellationToken cancellationToken = default)
+    public async Task<AIWorkoutAnalysisResponseDto> GetPerformanceTrendsAsync(int athleteId, CancellationToken cancellationToken, string timeFrame = "month")
     {
         this.logger.LogInformation(
             "gRPC: Requesting performance trends for athlete: {AthleteId}, timeFrame: {TimeFrame}",
@@ -163,20 +163,20 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
 
         try
         {
-            var grpcRequest = new PerformanceTrendsRequest
+            PerformanceTrendsRequest grpcRequest = new PerformanceTrendsRequest
             {
                 AthleteId = athleteId,
                 TimeFrame = timeFrame,
             };
 
-            var grpcResponse = await this.workoutServiceClient.GetPerformanceTrendsAsync(grpcRequest, cancellationToken: cancellationToken);
+            WorkoutAnalysisResponse grpcResponse = await this.workoutServiceClient.GetPerformanceTrendsAsync(grpcRequest, cancellationToken: cancellationToken);
 
-            var response = new AIWorkoutAnalysisResponseDto
+            AIWorkoutAnalysisResponseDto response = new AIWorkoutAnalysisResponseDto
             {
                 Analysis = grpcResponse.Analysis,
                 KeyInsights = grpcResponse.KeyInsights.ToList(),
                 Recommendations = grpcResponse.Recommendations.ToList(),
-                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out var parsedDate)
+                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out DateTime parsedDate)
                     ? parsedDate : DateTime.UtcNow,
                 Source = grpcResponse.Source,
 
@@ -193,25 +193,25 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         }
     }
 
-    public async Task<AIWorkoutAnalysisResponseDto> GetTrainingRecommendationsAsync(int athleteId, CancellationToken cancellationToken = default)
+    public async Task<AIWorkoutAnalysisResponseDto> GetTrainingRecommendationsAsync(int athleteId, CancellationToken cancellationToken)
     {
         this.logger.LogInformation("gRPC: Requesting training recommendations for athlete: {AthleteId}", athleteId);
 
         try
         {
-            var grpcRequest = new TrainingRecommendationsRequest
+            TrainingRecommendationsRequest grpcRequest = new TrainingRecommendationsRequest
             {
                 AthleteId = athleteId,
             };
 
-            var grpcResponse = await this.workoutServiceClient.GetTrainingRecommendationsAsync(grpcRequest, cancellationToken: cancellationToken);
+            WorkoutAnalysisResponse grpcResponse = await this.workoutServiceClient.GetTrainingRecommendationsAsync(grpcRequest, cancellationToken: cancellationToken);
 
-            var response = new AIWorkoutAnalysisResponseDto
+            AIWorkoutAnalysisResponseDto response = new AIWorkoutAnalysisResponseDto
             {
                 Analysis = grpcResponse.Analysis,
                 KeyInsights = grpcResponse.KeyInsights.ToList(),
                 Recommendations = grpcResponse.Recommendations.ToList(),
-                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out var parsedDate)
+                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out DateTime parsedDate)
                     ? parsedDate : DateTime.UtcNow,
                 Source = grpcResponse.Source,
 
@@ -228,13 +228,13 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         }
     }
 
-    public async Task<AIWorkoutAnalysisResponseDto> AnalyzeHealthMetricsAsync(int athleteId, List<AIWorkoutDataDto> recentWorkouts, CancellationToken cancellationToken = default)
+    public async Task<AIWorkoutAnalysisResponseDto> AnalyzeHealthMetricsAsync(int athleteId, List<AIWorkoutDataDto> recentWorkouts, CancellationToken cancellationToken)
     {
         this.logger.LogInformation("gRPC: Requesting health metrics analysis for athlete: {AthleteId}", athleteId);
 
         try
         {
-            var grpcRequest = new HealthAnalysisRequest
+            HealthAnalysisRequest grpcRequest = new HealthAnalysisRequest
             {
                 AthleteId = athleteId,
             };
@@ -242,9 +242,9 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
             // Workouts hinzufügen
             if (recentWorkouts != null)
             {
-                foreach (var workout in recentWorkouts)
+                foreach (AIWorkoutDataDto workout in recentWorkouts)
                 {
-                    var grpcWorkout = new Workout
+                    Workout grpcWorkout = new Workout
                     {
                         Date = workout.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                         ActivityType = workout.ActivityType ?? string.Empty,
@@ -264,14 +264,14 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
                 }
             }
 
-            var grpcResponse = await this.workoutServiceClient.AnalyzeHealthMetricsAsync(grpcRequest, cancellationToken: cancellationToken);
+            WorkoutAnalysisResponse grpcResponse = await this.workoutServiceClient.AnalyzeHealthMetricsAsync(grpcRequest, cancellationToken: cancellationToken);
 
-            var response = new AIWorkoutAnalysisResponseDto
+            AIWorkoutAnalysisResponseDto response = new AIWorkoutAnalysisResponseDto
             {
                 Analysis = grpcResponse.Analysis,
                 KeyInsights = grpcResponse.KeyInsights.ToList(),
                 Recommendations = grpcResponse.Recommendations.ToList(),
-                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out var parsedDate)
+                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out DateTime parsedDate)
                     ? parsedDate : DateTime.UtcNow,
                 Source = grpcResponse.Source,
 
@@ -289,7 +289,7 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
     }
 
     // GoogleGemini Workout Analysis
-    public async Task<AIWorkoutAnalysisResponseDto> GetGoogleGeminiWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken = default)
+    public async Task<AIWorkoutAnalysisResponseDto> GetGoogleGeminiWorkoutAnalysisAsync(AIWorkoutAnalysisRequestDto request, CancellationToken cancellationToken)
     {
         this.logger.LogInformation(
             "gRPC: Requesting GoogleGemini workout analysis for {WorkoutCount} workouts",
@@ -298,7 +298,7 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         try
         {
             // Konvertiere DTO zu gRPC Request
-            var grpcRequest = new WorkoutAnalysisRequest
+            WorkoutAnalysisRequest grpcRequest = new WorkoutAnalysisRequest
             {
                 AnalysisType = request.AnalysisType ?? "General",
                 PreferredAiProvider = "googlegemini", // Zwinge GoogleGemini
@@ -318,9 +318,9 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
             // Workouts hinzufügen
             if (request.RecentWorkouts != null)
             {
-                foreach (var workout in request.RecentWorkouts)
+                foreach (AIWorkoutDataDto workout in request.RecentWorkouts)
                 {
-                    var grpcWorkout = new Workout
+                    Workout grpcWorkout = new Workout
                     {
                         Date = workout.Date.ToString("yyyy-MM-ddTHH:mm:ssZ"),
                         ActivityType = workout.ActivityType ?? string.Empty,
@@ -341,14 +341,14 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
             }
 
             // Verwende die GoogleGemini-spezifische Methode
-            var grpcResponse = await this.workoutServiceClient.AnalyzeGoogleGeminiWorkoutsAsync(grpcRequest, cancellationToken: cancellationToken);
+            WorkoutAnalysisResponse grpcResponse = await this.workoutServiceClient.AnalyzeGoogleGeminiWorkoutsAsync(grpcRequest, cancellationToken: cancellationToken);
 
-            var response = new AIWorkoutAnalysisResponseDto
+            AIWorkoutAnalysisResponseDto response = new AIWorkoutAnalysisResponseDto
             {
                 Analysis = grpcResponse.Analysis,
                 KeyInsights = grpcResponse.KeyInsights.ToList(),
                 Recommendations = grpcResponse.Recommendations.ToList(),
-                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out var parsedDate)
+                GeneratedAt = DateTime.TryParse(grpcResponse.GeneratedAt, out DateTime parsedDate)
                     ? parsedDate : DateTime.UtcNow,
                 Source = grpcResponse.Source,
 
@@ -365,13 +365,13 @@ public class GrpcAIAssistantClientService : IAIAssistantClientService, IDisposab
         }
     }
 
-    public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> IsHealthyAsync(CancellationToken cancellationToken)
     {
         try
         {
             // gRPC Health-Check durchführen
-            var grpcRequest = new HealthCheckRequest();
-            var grpcResponse = await this.workoutServiceClient.CheckHealthAsync(grpcRequest, cancellationToken: cancellationToken);
+            HealthCheckRequest grpcRequest = new HealthCheckRequest();
+            HealthCheckResponse grpcResponse = await this.workoutServiceClient.CheckHealthAsync(grpcRequest, cancellationToken: cancellationToken);
 
             this.logger.LogInformation(
                 "gRPC: Health check completed - Healthy: {IsHealthy}, Message: {Message}",

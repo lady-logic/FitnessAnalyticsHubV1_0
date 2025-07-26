@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿namespace FitnessAnalyticsHub.Infrastructure.Services;
+
+using System.Net;
 using System.Text.Json;
 using FitnessAnalyticsHub.Domain.Entities;
 using FitnessAnalyticsHub.Domain.Interfaces;
@@ -6,8 +8,6 @@ using FitnessAnalyticsHub.Domain.Models;
 using FitnessAnalyticsHub.Infrastructure.Configuration;
 using FitnessAnalyticsHub.Infrastructure.Exceptions;
 using Microsoft.Extensions.Options;
-
-namespace FitnessAnalyticsHub.Infrastructure.Services;
 
 public class StravaService : IStravaService
 {
@@ -24,7 +24,7 @@ public class StravaService : IStravaService
         this.httpClient.BaseAddress = new Uri(this.config.BaseUrl);
     }
 
-    public Task<string> GetAuthorizationUrlAsync()
+    public Task<string> GetAuthorizationUrlAsync(CancellationToken cancellationToken)
     {
         string authUrl = $"{this.config.AuthorizeUrl}?client_id={this.config.ClientId}" +
                          $"&redirect_uri={Uri.EscapeDataString(this.config.RedirectUrl)}" +
@@ -35,9 +35,9 @@ public class StravaService : IStravaService
         return Task.FromResult(authUrl);
     }
 
-    public async Task<TokenInfo> ExchangeCodeForTokenAsync(string code)
+    public async Task<TokenInfo> ExchangeCodeForTokenAsync(string code, CancellationToken cancellationToken)
     {
-        var content = new FormUrlEncodedContent(new Dictionary<string, string>
+        FormUrlEncodedContent content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "client_id", this.config.ClientId },
             { "client_secret", this.config.ClientSecret },
@@ -45,11 +45,11 @@ public class StravaService : IStravaService
             { "grant_type", "authorization_code" },
         });
 
-        var response = await this.httpClient.PostAsync(this.config.TokenUrl, content);
+        HttpResponseMessage response = await this.httpClient.PostAsync(this.config.TokenUrl, content, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync();
-        var tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseContent);
+        string responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        TokenResponse? tokenResponse = JsonSerializer.Deserialize<TokenResponse>(responseContent);
 
         return new TokenInfo
         {
@@ -61,21 +61,21 @@ public class StravaService : IStravaService
         };
     }
 
-    public async Task<Athlete> GetAthleteProfileAsync(string accessToken)
+    public async Task<Athlete> GetAthleteProfileAsync(string accessToken, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(accessToken))
         {
             throw new InvalidStravaTokenException("Access token cannot be null or empty");
         }
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, "athlete");
+        using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "athlete");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        var response = await this.httpClient.SendAsync(request);
+        HttpResponseMessage response = await this.httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var content = await response.Content.ReadAsStringAsync();
-        var athleteProfile = JsonSerializer.Deserialize<AthleteProfile>(content);
+        string content = await response.Content.ReadAsStringAsync(cancellationToken);
+        AthleteProfile? athleteProfile = JsonSerializer.Deserialize<AthleteProfile>(content);
 
         return new Athlete
         {
@@ -92,7 +92,7 @@ public class StravaService : IStravaService
         };
     }
 
-    public async Task<IEnumerable<Activity>> GetActivitiesAsync(string accessToken, int page = 1, int perPage = 30)
+    public async Task<IEnumerable<Activity>> GetActivitiesAsync(string accessToken, CancellationToken cancellationToken, int page = 1, int perPage = 30)
     {
         // Token-Validierung
         if (string.IsNullOrWhiteSpace(accessToken))
@@ -102,21 +102,21 @@ public class StravaService : IStravaService
 
         Console.WriteLine($"Requesting activities with token: {accessToken?.Substring(0, 10)}...");
 
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"athlete/activities?page={page}&per_page={perPage}");
+        using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"athlete/activities?page={page}&per_page={perPage}");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
         Console.WriteLine($"Request URL: {this.httpClient.BaseAddress}{request.RequestUri}");
 
-        var response = await this.httpClient.SendAsync(request);
+        HttpResponseMessage response = await this.httpClient.SendAsync(request, cancellationToken);
 
         Console.WriteLine($"Response Status: {response.StatusCode}");
         Console.WriteLine($"Response Headers:");
-        foreach (var header in response.Headers)
+        foreach (KeyValuePair<string, IEnumerable<string>> header in response.Headers)
         {
             Console.WriteLine($"  {header.Key}: {string.Join(", ", header.Value)}");
         }
 
-        var content = await response.Content.ReadAsStringAsync();
+        string content = await response.Content.ReadAsStringAsync(cancellationToken);
         Console.WriteLine($"Response Content: {content}");
 
         // Spezifische HTTP-Status-Behandlung
@@ -140,10 +140,10 @@ public class StravaService : IStravaService
             throw new StravaApiException($"Strava API error: {response.ReasonPhrase}", (int)response.StatusCode);
         }
 
-        var stravaActivities = JsonSerializer.Deserialize<List<StravaActivity>>(content);
+        List<StravaActivity>? stravaActivities = JsonSerializer.Deserialize<List<StravaActivity>>(content);
 
-        var activities = new List<Activity>();
-        foreach (var stravaActivity in stravaActivities)
+        List<Activity> activities = new List<Activity>();
+        foreach (StravaActivity stravaActivity in stravaActivities)
         {
             activities.Add(MapToActivity(stravaActivity));
         }
@@ -151,35 +151,35 @@ public class StravaService : IStravaService
         return activities;
     }
 
-    public async Task<Activity> GetActivityDetailsByIdAsync(string accessToken, string activityId)
+    public async Task<Activity> GetActivityDetailsByIdAsync(string accessToken, string activityId, CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"activities/{activityId}");
+        using HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, $"activities/{activityId}");
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        var response = await this.httpClient.SendAsync(request);
+        HttpResponseMessage response = await this.httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var content = await response.Content.ReadAsStringAsync();
-        var stravaActivity = JsonSerializer.Deserialize<StravaActivity>(content);
+        string content = await response.Content.ReadAsStringAsync(cancellationToken);
+        StravaActivity? stravaActivity = JsonSerializer.Deserialize<StravaActivity>(content);
 
         return MapToActivity(stravaActivity);
     }
 
-    public async Task<(Athlete athlete, IEnumerable<Activity> activities)> ImportMyActivitiesAsync()
+    public async Task<(Athlete athlete, IEnumerable<Activity> activities)> ImportMyActivitiesAsync(CancellationToken cancellationToken)
     {
         Console.WriteLine("=== STRAVA AUTO-IMPORT STARTING ===");
 
         // Frischen Token generieren
-        string accessToken = await this.GenerateFreshTokenAsync();
+        string accessToken = await this.GenerateFreshTokenAsync(cancellationToken);
 
         // Athleten-Profil abrufen
         Console.WriteLine("Fetching your athlete profile...");
-        var athlete = await this.GetAthleteProfileAsync(accessToken);
+        Athlete athlete = await this.GetAthleteProfileAsync(accessToken, cancellationToken);
         Console.WriteLine($"✅ Profile loaded: {athlete.FirstName} {athlete.LastName}");
 
         // Alle Aktivitäten abrufen
         Console.WriteLine("Fetching your activities...");
-        var activities = await this.GetActivitiesAsync(accessToken);
+        IEnumerable<Activity> activities = await this.GetActivitiesAsync(accessToken, cancellationToken);
         Console.WriteLine($"✅ Retrieved {activities.Count()} activities");
 
         Console.WriteLine("=== STRAVA AUTO-IMPORT COMPLETE ===");
@@ -187,7 +187,7 @@ public class StravaService : IStravaService
         return (athlete, activities);
     }
 
-    private async Task<string> GenerateFreshTokenAsync()
+    private async Task<string> GenerateFreshTokenAsync(CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(this.config.ClientId) || string.IsNullOrEmpty(this.config.ClientSecret))
         {
@@ -198,7 +198,7 @@ public class StravaService : IStravaService
         Console.WriteLine("Step 1: Open this URL in your browser:");
 
         // Authorization URL generieren (mit korrektem Scope!)
-        var authUrl = $"{this.config.AuthorizeUrl}?" +
+        string authUrl = $"{this.config.AuthorizeUrl}?" +
                      $"client_id={this.config.ClientId}&" +
                      $"response_type=code&" +
                      $"redirect_uri=http://localhost&" +
@@ -222,7 +222,7 @@ public class StravaService : IStravaService
         Console.WriteLine("Exchanging code for access token...");
 
         // Token Exchange über bestehende Methode
-        var tokenInfo = await this.ExchangeCodeForTokenAsync(authCode);
+        TokenInfo tokenInfo = await this.ExchangeCodeForTokenAsync(authCode, cancellationToken);
 
         if (string.IsNullOrEmpty(tokenInfo.AccessToken))
         {

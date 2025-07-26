@@ -28,7 +28,7 @@ public class AIController : ControllerBase
             "AI motivation request for athlete: {AthleteName}",
             request.AthleteProfile?.Name ?? "Unknown");
 
-        var result = await this.aiAssistant.GetMotivationAsync(request, cancellationToken);
+        AIMotivationResponseDto result = await this.aiAssistant.GetMotivationAsync(request, cancellationToken);
 
         this.logger.LogInformation("AI motivation response generated from source: {Source}", result.Source);
 
@@ -44,7 +44,7 @@ public class AIController : ControllerBase
             "AI workout analysis request for {WorkoutCount} workouts, type: {AnalysisType}",
             request.RecentWorkouts?.Count ?? 0, request.AnalysisType ?? "General");
 
-        var result = await this.aiAssistant.GetWorkoutAnalysisAsync(request, cancellationToken);
+        AIWorkoutAnalysisResponseDto result = await this.aiAssistant.GetWorkoutAnalysisAsync(request, cancellationToken);
 
         this.logger.LogInformation("AI analysis response generated from source: {Source}", result.Source);
 
@@ -54,7 +54,7 @@ public class AIController : ControllerBase
     [HttpGet("health")]
     public async Task<ActionResult<object>> GetAIHealth(CancellationToken cancellationToken)
     {
-        var isHealthy = await this.aiAssistant.IsHealthyAsync(cancellationToken);
+        bool isHealthy = await this.aiAssistant.IsHealthyAsync(cancellationToken);
 
         return this.Ok(new
         {

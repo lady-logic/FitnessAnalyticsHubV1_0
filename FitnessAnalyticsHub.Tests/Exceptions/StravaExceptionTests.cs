@@ -10,10 +10,10 @@
         public void StravaServiceException_ShouldSetCorrectMessage()
         {
             // Arrange
-            var message = "Test strava service error";
+            string message = "Test strava service error";
 
             // Act
-            var exception = new StravaServiceException(message);
+            StravaServiceException exception = new StravaServiceException(message);
 
             // Assert
             Assert.Equal(message, exception.Message);
@@ -23,11 +23,11 @@
         public void StravaServiceException_ShouldSetInnerException()
         {
             // Arrange
-            var message = "Test error";
-            var innerException = new Exception("Inner error");
+            string message = "Test error";
+            Exception innerException = new Exception("Inner error");
 
             // Act
-            var exception = new StravaServiceException(message, innerException);
+            StravaServiceException exception = new StravaServiceException(message, innerException);
 
             // Assert
             Assert.Equal(message, exception.Message);
@@ -42,7 +42,7 @@
         public void InvalidStravaTokenException_DefaultConstructor_ShouldSetDefaultMessage()
         {
             // Act
-            var exception = new InvalidStravaTokenException();
+            InvalidStravaTokenException exception = new InvalidStravaTokenException();
 
             // Assert
             Assert.Equal("Invalid or expired Strava access token", exception.Message);
@@ -52,10 +52,10 @@
         public void InvalidStravaTokenException_WithMessage_ShouldSetCustomMessage()
         {
             // Arrange
-            var customMessage = "Custom token error message";
+            string customMessage = "Custom token error message";
 
             // Act
-            var exception = new InvalidStravaTokenException(customMessage);
+            InvalidStravaTokenException exception = new InvalidStravaTokenException(customMessage);
 
             // Assert
             Assert.Equal(customMessage, exception.Message);
@@ -65,7 +65,7 @@
         public void InvalidStravaTokenException_ShouldInheritFromStravaServiceException()
         {
             // Act
-            var exception = new InvalidStravaTokenException();
+            InvalidStravaTokenException exception = new InvalidStravaTokenException();
 
             // Assert
             Assert.IsAssignableFrom<StravaServiceException>(exception);
@@ -79,11 +79,11 @@
         public void StravaApiException_ShouldSetMessageAndStatusCode()
         {
             // Arrange
-            var message = "API error occurred";
-            var statusCode = 401;
+            string message = "API error occurred";
+            int statusCode = 401;
 
             // Act
-            var exception = new StravaApiException(message, statusCode);
+            StravaApiException exception = new StravaApiException(message, statusCode);
 
             // Assert
             Assert.Equal(message, exception.Message);
@@ -94,7 +94,7 @@
         public void StravaApiException_ShouldInheritFromStravaServiceException()
         {
             // Act
-            var exception = new StravaApiException("Error", 500);
+            StravaApiException exception = new StravaApiException("Error", 500);
 
             // Assert
             Assert.IsAssignableFrom<StravaServiceException>(exception);
@@ -109,10 +109,10 @@
         public void StravaApiException_ShouldWorkWithDifferentStatusCodes(int statusCode)
         {
             // Arrange
-            var message = "Test API error";
+            string message = "Test API error";
 
             // Act
-            var exception = new StravaApiException(message, statusCode);
+            StravaApiException exception = new StravaApiException(message, statusCode);
 
             // Assert
             Assert.Equal(statusCode, exception.StatusCode);
@@ -127,10 +127,10 @@
         public void StravaConfigurationException_ShouldPrefixMessage()
         {
             // Arrange
-            var originalMessage = "Missing client ID";
+            string originalMessage = "Missing client ID";
 
             // Act
-            var exception = new StravaConfigurationException(originalMessage);
+            StravaConfigurationException exception = new StravaConfigurationException(originalMessage);
 
             // Assert
             Assert.Equal("Strava configuration error: Missing client ID", exception.Message);
@@ -140,7 +140,7 @@
         public void StravaConfigurationException_ShouldInheritFromStravaServiceException()
         {
             // Act
-            var exception = new StravaConfigurationException("Config error");
+            StravaConfigurationException exception = new StravaConfigurationException("Config error");
 
             // Assert
             Assert.IsAssignableFrom<StravaServiceException>(exception);
@@ -154,10 +154,10 @@
         public void StravaAuthorizationException_ShouldPrefixMessage()
         {
             // Arrange
-            var originalMessage = "No auth code provided";
+            string originalMessage = "No auth code provided";
 
             // Act
-            var exception = new StravaAuthorizationException(originalMessage);
+            StravaAuthorizationException exception = new StravaAuthorizationException(originalMessage);
 
             // Assert
             Assert.Equal("Strava authorization error: No auth code provided", exception.Message);
@@ -167,7 +167,7 @@
         public void StravaAuthorizationException_ShouldInheritFromStravaServiceException()
         {
             // Act
-            var exception = new StravaAuthorizationException("Auth error");
+            StravaAuthorizationException exception = new StravaAuthorizationException("Auth error");
 
             // Assert
             Assert.IsAssignableFrom<StravaServiceException>(exception);
