@@ -11,7 +11,7 @@
 ![AI Integration](https://img.shields.io/badge/AI-HuggingFace%20%2B%20Llama-orange)
 ![License](https://img.shields.io/github/license/lady-logic/FitnessAnalyticsHubV1_0)
 ![Last Commit](https://img.shields.io/github/last-commit/lady-logic/FitnessAnalyticsHubV1_0)
-
+ 
 <!-- Logo -->
 <p align="center">
   <img src="logo.png" alt="FitnessAnalyticsHub Logo" width="200"/>
